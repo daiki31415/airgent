@@ -289,17 +289,25 @@ export class Storage {
 
   // ---- Compressed Entries ----
 
-  insertCompressedEntry(e: {
-    id: string; originalId: string; title: string; topics: string[];
+  private runInsertCompressedEntry(e: {
+    id: string; originalId: string; title: string; topics: string[]; timestamp: number;
     entities: string[]; files: string[]; commands: string[];
     errorKeywords: string[]; importanceScore: number; tokenCount: number; compressedContent: string;
   }): void {
     this.db.prepare(`
       INSERT INTO compressed_entries (id,original_id,title,topics,timestamp,entities,files,commands,error_keywords,importance_score,token_count,compressed_content)
       VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
-    `).run(e.id, e.originalId, e.title, JSON.stringify(e.topics), Date.now(),
+    `).run(e.id, e.originalId, e.title, JSON.stringify(e.topics), e.timestamp,
       JSON.stringify(e.entities), JSON.stringify(e.files), JSON.stringify(e.commands),
       JSON.stringify(e.errorKeywords), e.importanceScore, e.tokenCount, e.compressedContent);
+  }
+
+  insertCompressedEntry(e: {
+    id: string; originalId: string; title: string; topics: string[];
+    entities: string[]; files: string[]; commands: string[];
+    errorKeywords: string[]; importanceScore: number; tokenCount: number; compressedContent: string;
+  }): void {
+    this.runInsertCompressedEntry({ ...e, timestamp: Date.now() });
   }
 
   getCompressedByTopics(topics: string[]): CompressedRow[] {
@@ -361,12 +369,7 @@ export class Storage {
   saveCompressedEntry(entry: { id: string; originalId: string; title: string; topics: string[]; timestamp: number; entities: string[]; files: string[]; commands: string[]; errorKeywords: string[]; importanceScore: number; tokenCount: number; compressedContent: string }): void {
     const existing = this.db.prepare("SELECT id FROM compressed_entries WHERE id = ?").get(entry.id);
     if (existing) return;
-    this.db.prepare(`
-      INSERT INTO compressed_entries (id,original_id,title,topics,timestamp,entities,files,commands,error_keywords,importance_score,token_count,compressed_content)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
-    `).run(entry.id, entry.originalId, entry.title, JSON.stringify(entry.topics), entry.timestamp,
-      JSON.stringify(entry.entities), JSON.stringify(entry.files), JSON.stringify(entry.commands),
-      JSON.stringify(entry.errorKeywords), entry.importanceScore, entry.tokenCount, entry.compressedContent);
+    this.runInsertCompressedEntry(entry);
   }
 
   // ---- Maintenance ----

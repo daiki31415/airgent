@@ -51,7 +51,7 @@ export class ValidationAgent extends BaseAgent {
 
   private checkContradictions(report: ValidationReport): number {
     const contradictions = this.memorySystem.findContradictions();
-    for (const c of contradictions as Array<Record<string, unknown>>) {
+    for (const c of contradictions) {
       report.issues.push(`Contradiction: '${c.m1_cause}' vs '${c.m2_cause}'`);
     }
     return contradictions.length;
@@ -59,7 +59,7 @@ export class ValidationAgent extends BaseAgent {
 
   private checkCircularReferences(report: ValidationReport): number {
     const circular = this.memorySystem.findCircularReferences();
-    for (const c of circular as Array<Record<string, unknown>>) {
+    for (const c of circular) {
       report.issues.push(`Circular reference: ${c.source_id} -> ${c.target_id} -> ${c.cycle_point}`);
     }
     return circular.length;
@@ -69,9 +69,8 @@ export class ValidationAgent extends BaseAgent {
     const flagged: string[] = [];
     const memories = this.memorySystem.findRelevant([], 0);
 
-    for (const mem of memories as unknown as Array<Record<string, unknown>>) {
-      const links = (mem.links || []) as Array<{ confidence: number; target: string }>;
-      for (const link of links) {
+    for (const mem of memories) {
+      for (const link of mem.links) {
         if (link.confidence < 0.3) {
           flagged.push(`Low confidence: ${mem.id} -> ${link.target} (${link.confidence})`);
         }
@@ -86,9 +85,8 @@ export class ValidationAgent extends BaseAgent {
     let count = 0;
     const memories = this.memorySystem.findRelevant([], 0);
 
-    for (const mem of memories as unknown as Array<Record<string, unknown>>) {
-      const memId = (mem as { id: string }).id;
-      const evidence = this.memorySystem.getEvidence(memId);
+    for (const mem of memories) {
+      const evidence = this.memorySystem.getEvidence(mem.id);
       for (const ev of evidence) {
         if (ev.type === "observed" || ev.type === "verified") {
           const markers = ["probably", "likely", "might", "could", "i think", "possibly", "seems like"];
@@ -108,7 +106,7 @@ export class ValidationAgent extends BaseAgent {
     this.logger.info("Starting repair");
     let repaired = 0;
     const circular = this.memorySystem.findCircularReferences();
-    for (const c of circular as Array<Record<string, unknown>>) {
+    for (const c of circular) {
       this.logger.warn(`Circular: ${c.source_id} <-> ${c.target_id}`);
       repaired++;
     }

@@ -26,7 +26,7 @@ import { PromptManager } from "./prompt/index";
 import { UIManager } from "./ui/index";
 import { rootLogger, sanitizeError } from "./utils/logger";
 import { RateLimiter } from "./utils/rate-limiter";
-import type { AgentContext, ModelConfig, ModelEntry, Settings } from "./types";
+import type { AgentContext, ModelConfig, ModelEntry, MCPServerConfig, Settings } from "./types";
 import type { StatusInfo } from "./ui/index";
 
 type ModelRole = "planner" | "generate" | "compression" | "validation" | "watchdog";
@@ -195,7 +195,7 @@ export class Airgent {
           process.exit(0);
           return;
         case "/help":
-          this.ui.log("info", "airgent", "/quit /model /config /status /session /compress /providers /sync /cat <file>");
+          this.ui.log("info", "airgent", "/quit /model /mcp /setting /status /session /compress /providers /sync /cat /help /info");
           return;
         case "/info": {
           const health = await this.api.healthCheck();
@@ -255,6 +255,9 @@ export class Airgent {
           } else {
             this.ui.log("info", "cat", "Usage: /cat <file>");
           }
+          return;
+        case "/mcp":
+          await this.handleMCPCommand(args, line);
           return;
       }
     }
@@ -348,7 +351,7 @@ export class Airgent {
       content = res.content;
       this.ui.stream(`    ${content.slice(0, 500)}...`);
     }
-    (this.pipelineData as Record<string, any>)[dstField] = content;
+    this.pipelineData[dstField] = content;
     return content;
   }
 
@@ -721,6 +724,109 @@ export class Airgent {
     this.validation.switchModel(m.validation);
     this.watchdog.switchModel(m.watchdog);
     this.contextInspector.switchModel(m.validation);
+  }
+
+  private async handleMCPCommand(args: string[], line: string): Promise<void> {
+    const sub = args[0];
+
+    if (!sub || sub === "list") {
+      try {
+        const status = await this.api.listMCP();
+        const servers = this.configManager.loadMCPServers();
+        if (servers.length === 0) {
+          this.ui.log("info", "mcp", "No MCP servers configured");
+        } else {
+          for (const s of servers) {
+            const st = status[s.name]?.status || "unknown";
+            this.ui.log("info", "mcp", `${s.name} [${s.type}] ${st === "connected" ? "✓" : st}`);
+          }
+        }
+        this.ui.log("info", "mcp", "Usage: /mcp add <name> local <command...> | add-remote <name> <url> | connect <name> | disconnect <name> | remove <name>");
+      } catch (err) { this.ui.log("error", "mcp", sanitizeError(err)); }
+      return;
+    }
+
+    if (sub === "add") {
+      const name = args[1];
+      const type = args[2];
+      const restArgs = args.slice(3).filter((a): a is string => a !== undefined);
+      if (!name || !type || restArgs.length === 0) {
+        this.ui.log("warn", "mcp", "Usage: /mcp add <name> local <cmd> [arg...]");
+        return;
+      }
+      const servers = this.configManager.loadMCPServers();
+      if (servers.some(s => s.name === name)) {
+        this.ui.log("warn", "mcp", `Server "${name}" already exists`);
+        return;
+      }
+      const server: MCPServerConfig = {
+        name, type: type as "local",
+        command: restArgs,
+        enabled: true,
+      };
+      servers.push(server);
+      this.configManager.saveMCPServers(servers);
+      try {
+        await this.api.addMCP(name, { type: "local", command: restArgs, enabled: true } as unknown as Record<string, unknown>);
+        this.ui.log("info", "mcp", `Added: ${name}`);
+      } catch (err) { this.ui.log("error", "mcp", sanitizeError(err)); }
+      return;
+    }
+
+    if (sub === "add-remote") {
+      const name = args[1];
+      const url = args[2];
+      if (!name || !url) {
+        this.ui.log("warn", "mcp", "Usage: /mcp add-remote <name> <url>");
+        return;
+      }
+      const servers = this.configManager.loadMCPServers();
+      if (servers.some(s => s.name === name)) {
+        this.ui.log("warn", "mcp", `Server "${name}" already exists`);
+        return;
+      }
+      const server: MCPServerConfig = {
+        name, type: "remote", url, enabled: true,
+      };
+      servers.push(server);
+      this.configManager.saveMCPServers(servers);
+      try {
+        await this.api.addMCP(name, { type: "remote", url, enabled: true } as unknown as Record<string, unknown>);
+        this.ui.log("info", "mcp", `Added remote: ${name}`);
+      } catch (err) { this.ui.log("error", "mcp", sanitizeError(err)); }
+      return;
+    }
+
+    if (sub === "connect") {
+      const name = args[1];
+      if (!name) { this.ui.log("warn", "mcp", "Usage: /mcp connect <name>"); return; }
+      try {
+        await this.api.connectMCP(name);
+        this.ui.log("info", "mcp", `Connected: ${name}`);
+      } catch (err) { this.ui.log("error", "mcp", sanitizeError(err)); }
+      return;
+    }
+
+    if (sub === "disconnect") {
+      const name = args[1];
+      if (!name) { this.ui.log("warn", "mcp", "Usage: /mcp disconnect <name>"); return; }
+      try {
+        await this.api.disconnectMCP(name);
+        this.ui.log("info", "mcp", `Disconnected: ${name}`);
+      } catch (err) { this.ui.log("error", "mcp", sanitizeError(err)); }
+      return;
+    }
+
+    if (sub === "remove") {
+      const name = args[1];
+      if (!name) { this.ui.log("warn", "mcp", "Usage: /mcp remove <name>"); return; }
+      const servers = this.configManager.loadMCPServers().filter(s => s.name !== name);
+      this.configManager.saveMCPServers(servers);
+      this.ui.log("info", "mcp", `Removed: ${name}`);
+      return;
+    }
+
+    this.ui.log("warn", "mcp", `Unknown subcommand: ${sub}. See /mcp list`);
   }
 
   private buildAgentContext(task: string): AgentContext {

@@ -70,6 +70,19 @@ export class CompressionManager {
     }));
 
     const entry = await this.compress(messages);
+    this.storage.insertCompressedEntry({
+      id: entry.id,
+      originalId: entry.originalId,
+      title: entry.title,
+      topics: entry.topics,
+      entities: entry.entities,
+      files: entry.files,
+      commands: entry.commands,
+      errorKeywords: entry.errorKeywords,
+      importanceScore: entry.importanceScore,
+      tokenCount: entry.tokenCount,
+      compressedContent: entry.compressedContent,
+    });
     this.logger.info(`Compressed session ${sessionId}: ${messages.length} logs -> 1 entry`);
   }
 

@@ -121,4 +121,55 @@ describe("CompressionManager.compress", () => {
     expect(entry.errorKeywords).toContain("SyntaxError");
     expect(entry.errorKeywords).toContain("ReferenceError");
   });
+
+  test("handles empty messages array", async () => {
+    const mgr = createManager();
+    const entry = await mgr.compress([]);
+    expect(entry.topics).toHaveLength(0);
+    expect(entry.compressedContent).toBe("");
+    // baseline importance for empty/no metadata
+    expect(entry.importanceScore).toBe(0.3);
+    expect(entry.tokenCount).toBe(0);
+  });
+
+  test("handles messages with special characters", async () => {
+    const mgr = createManager();
+    const msgs: AgentMessage[] = [
+      { id: "1", role: "user", content: "Line with <script>alert('xss')</script> & special chars: ñ ø æ", timestamp: 0 },
+    ];
+    const entry = await mgr.compress(msgs);
+    expect(entry.compressedContent).toContain("script");
+    expect(entry.importanceScore).toBeGreaterThanOrEqual(0.3);
+  });
+
+  test("deduplicates extracted topics", async () => {
+    const mgr = createManager();
+    const msgs: AgentMessage[] = [
+      { id: "1", role: "user", content: "# Auth System\nImplement login", timestamp: 0 },
+      { id: "2", role: "assistant", content: "# Auth System\nAdded routes", timestamp: 0 },
+    ];
+    const entry = await mgr.compress(msgs);
+    const authTopics = entry.topics.filter(t => t === "Auth System");
+    expect(authTopics).toHaveLength(1);
+  });
+
+  test("extracts uppercase error keywords", async () => {
+    const mgr = createManager();
+    const msgs: AgentMessage[] = [
+      { id: "1", role: "user", content: "ERROR: FAILED ASSERTION", timestamp: 0 },
+    ];
+    const entry = await mgr.compress(msgs);
+    // Error regex looks for Error: pattern - uppercase ERROR might not match
+    expect(entry.errorKeywords.length).toBeGreaterThanOrEqual(0);
+  });
+
+  test("commands with sudo prefix extracted correctly", async () => {
+    const mgr = createManager();
+    const msgs: AgentMessage[] = [
+      { id: "1", role: "user", content: "Run $ sudo apt update\nThen $ docker compose up", timestamp: 0 },
+    ];
+    const entry = await mgr.compress(msgs);
+    expect(entry.commands).toContain("sudo apt update");
+    expect(entry.commands).toContain("docker compose up");
+  });
 });

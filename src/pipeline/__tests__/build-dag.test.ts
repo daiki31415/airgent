@@ -91,7 +91,3 @@ describe("buildDAG", () => {
     expect(byId.get("report")!.dependsOn).toEqual(["validate"]);
   });
 });
-
-function firstDep(dag: ReturnType<typeof buildDAG>, id: string): string[] {
-  return dag.nodes.find(n => n.id === id)!.dependsOn;
-}

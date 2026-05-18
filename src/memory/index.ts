@@ -81,10 +81,10 @@ export class MemorySystem {
    */
   findRelevant(tags: string[], minConfidence = 0.3): StructuredMemory[] {
     if (tags.length === 0) {
-      return [] as StructuredMemory[];
+      return [];
     }
     const results = this.storage.searchMemories(tags, minConfidence);
-    return results.map(r => this.rowToMemory(r)).filter(Boolean) as StructuredMemory[];
+    return results.map(r => this.rowToMemory(r)).filter((x): x is StructuredMemory => x !== null);
   }
 
   /**
@@ -92,7 +92,7 @@ export class MemorySystem {
    */
   getLinked(memoryId: string): StructuredMemory[] {
     const results = this.storage.getLinkedMemories(memoryId);
-    return results.map(r => this.rowToMemory(r)).filter(Boolean) as StructuredMemory[];
+    return results.map(r => this.rowToMemory(r)).filter((x): x is StructuredMemory => x !== null);
   }
 
   /**
@@ -105,14 +105,14 @@ export class MemorySystem {
   /**
    * Find contradictions in memory graph.
    */
-  findContradictions(): unknown[] {
+  findContradictions(): Array<{ m1_id: string; m1_cause: string; m2_id: string; m2_cause: string }> {
     return this.storage.findContradictions();
   }
 
   /**
    * Find circular references in memory links.
    */
-  findCircularReferences(): unknown[] {
+  findCircularReferences(): Array<{ source_id: string; target_id: string; cycle_point: string }> {
     return this.storage.findCircularReferences();
   }
 
@@ -141,20 +141,20 @@ export class MemorySystem {
   private rowToMemory(row: MemoryRow): StructuredMemory | null {
     if (!row || !row.id) return null;
     return {
-      id: row.id as string,
-      sessionId: row.session_id as string,
-      bug: (row.bug as string) || "",
-      investigation: (row.investigation as string) || "",
-      root_cause: (row.root_cause as string) || "",
-      fix: (row.fix as string) || "",
-      reason: (row.reason as string) || "",
+      id: row.id,
+      sessionId: row.session_id,
+      bug: row.bug || "",
+      investigation: row.investigation || "",
+      root_cause: row.root_cause || "",
+      fix: row.fix || "",
+      reason: row.reason || "",
       evidence: [],
-      confidence: (row.confidence as number) || 0.5,
-      tags: JSON.parse((row.tags as string) || "[]"),
-      files: JSON.parse((row.files as string) || "[]"),
-      commands: JSON.parse((row.commands as string) || "[]"),
-      created: (row.created as number) || 0,
-      updated: (row.updated as number) || 0,
+      confidence: row.confidence || 0.5,
+      tags: JSON.parse(row.tags || "[]"),
+      files: JSON.parse(row.files || "[]"),
+      commands: JSON.parse(row.commands || "[]"),
+      created: row.created || 0,
+      updated: row.updated || 0,
       links: [],
     };
   }

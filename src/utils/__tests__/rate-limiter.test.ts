@@ -89,4 +89,37 @@ describe("RateLimiter", () => {
     expect(rl.tryConsume()).toBe(false);
     expect(rl.currentTokens).toBe(0);
   });
+
+  test("handles negative maxTokens", () => {
+    const rl = new RateLimiter(-1, 1000, 5);
+    expect(rl.tryConsume()).toBe(false); // tokens starts at -1, always <= 0
+  });
+
+  test("does not overflow beyond maxTokens on rapid refill cycles", async () => {
+    const rl = new RateLimiter(3, 10, 10);
+    for (let i = 0; i < 3; i++) rl.tryConsume();
+    expect(rl.tryConsume()).toBe(false);
+    await new Promise(r => setTimeout(r, 30));
+    expect(rl.currentTokens).toBeLessThanOrEqual(3);
+  });
+
+  test("lazy refill on first consume after long idle", async () => {
+    const rl = new RateLimiter(5, 50, 2);
+    rl.tryConsume();
+    rl.tryConsume();
+    expect(rl.currentTokens).toBe(3);
+    await new Promise(r => setTimeout(r, 200));
+    rl.tryConsume(); // triggers lazy refill
+    // Should have 1 consumed, rest refilled and capped
+    expect(rl.currentTokens).toBeLessThanOrEqual(4);
+    expect(rl.currentTokens).toBeGreaterThanOrEqual(0);
+  });
+
+  test("currentTokens never exceeds maxTokens", async () => {
+    const rl = new RateLimiter(2, 20, 5);
+    await new Promise(r => setTimeout(r, 100));
+    // After idle, lazy refill would happen on consume, but currentTokens just tracks
+    expect(rl.currentTokens).toBeLessThanOrEqual(2);
+  });
+
 });

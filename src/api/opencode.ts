@@ -207,78 +207,14 @@ export class OpenCodeAPI {
     }
   }
 
-  async chat(
+  private buildPromptSpec(
     model: ModelEntry,
     messages: Array<{ role: string; content: string }>
-  ): Promise<OpenCodeResponse> {
-    const startTime = Date.now();
-
-    // Convert messages array to a single text prompt
-    // The last user message is the prompt, previous messages provide context
+  ): { fullPrompt: string; systemPrompt: string; providerID: string; modelID: string } {
     const userMessages = messages.filter(m => m.role === "user");
     const systemMessages = messages.filter(m => m.role === "system");
     const lastUserMessage = userMessages[userMessages.length - 1];
 
-    if (!lastUserMessage) {
-      throw new Error("No user message in request");
-    }
-
-    // Build context from previous messages
-    let contextText = "";
-    if (userMessages.length > 1) {
-      contextText = userMessages.slice(0, -1).map(m => `[Previous] ${m.content}`).join("\n\n");
-    }
-
-    const fullPrompt = contextText ? `${contextText}\n\n[Current] ${lastUserMessage.content}` : lastUserMessage.content;
-    const systemPrompt = systemMessages.map(m => m.content).join("\n");
-
-    // Parse model string: "provider/model" or use model.provider + model.model
-    let providerID: string;
-    let modelID: string;
-    if (model.model.includes("/")) {
-      const sep = model.model.indexOf("/");
-      providerID = model.model.slice(0, sep);
-      modelID = model.model.slice(sep + 1);
-    } else {
-      providerID = model.provider || "opencode";
-      modelID = model.model;
-    }
-
-    logger.debug(`chat() ${providerID}/${modelID} - ${messages.length} messages`);
-
-    const result = await this.withTempSession(sessionId =>
-      this.sendMessage(sessionId, { providerID, modelID }, fullPrompt, {
-        system: systemPrompt || undefined,
-      })
-    );
-
-    const elapsed = Date.now() - startTime;
-    logger.debug(`Response in ${elapsed}ms`);
-
-    // Extract text content from parts
-    const content = result.parts
-      .filter(p => p.type === "text")
-      .map(p => p.text || p.content || "")
-      .join("\n");
-
-    return {
-      id: result.info.id,
-      content,
-      model: `${providerID}/${modelID}`,
-      usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
-    };
-  }
-
-  async *streamChat(
-    model: ModelEntry,
-    messages: Array<{ role: string; content: string }>
-  ): AsyncGenerator<string> {
-    const startTime = Date.now();
-
-    // Build prompt from messages (same as chat())
-    const userMessages = messages.filter(m => m.role === "user");
-    const systemMessages = messages.filter(m => m.role === "system");
-    const lastUserMessage = userMessages[userMessages.length - 1];
     if (!lastUserMessage) throw new Error("No user message in request");
 
     let contextText = "";
@@ -298,6 +234,47 @@ export class OpenCodeAPI {
       providerID = model.provider || "opencode";
       modelID = model.model;
     }
+
+    return { fullPrompt, systemPrompt, providerID, modelID };
+  }
+
+  async chat(
+    model: ModelEntry,
+    messages: Array<{ role: string; content: string }>
+  ): Promise<OpenCodeResponse> {
+    const startTime = Date.now();
+    const { fullPrompt, systemPrompt, providerID, modelID } = this.buildPromptSpec(model, messages);
+
+    logger.debug(`chat() ${providerID}/${modelID} - ${messages.length} messages`);
+
+    const result = await this.withTempSession(sessionId =>
+      this.sendMessage(sessionId, { providerID, modelID }, fullPrompt, {
+        system: systemPrompt || undefined,
+      })
+    );
+
+    const elapsed = Date.now() - startTime;
+    logger.debug(`Response in ${elapsed}ms`);
+
+    const content = result.parts
+      .filter(p => p.type === "text")
+      .map(p => p.text || p.content || "")
+      .join("\n");
+
+    return {
+      id: result.info.id,
+      content,
+      model: `${providerID}/${modelID}`,
+      usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+    };
+  }
+
+  async *streamChat(
+    model: ModelEntry,
+    messages: Array<{ role: string; content: string }>
+  ): AsyncGenerator<string> {
+    const startTime = Date.now();
+    const { fullPrompt, systemPrompt, providerID, modelID } = this.buildPromptSpec(model, messages);
 
     logger.debug(`streamChat() ${providerID}/${modelID} - ${messages.length} messages`);
 
@@ -395,5 +372,39 @@ export class OpenCodeAPI {
   async getProviders(): Promise<string[]> {
     const data = await this.listProviders();
     return data.all.map(p => p.id);
+  }
+
+  // ---- MCP ----
+
+  async listMCP(): Promise<Record<string, { status: string; error?: string }>> {
+    const res = await fetch(`${this.baseUrl}/mcp`, { headers: this.headers() });
+    if (!res.ok) throw new Error(`Failed to list MCP servers: ${res.status}`);
+    return res.json() as Promise<Record<string, { status: string; error?: string }>>;
+  }
+
+  async addMCP(name: string, config: Record<string, unknown>): Promise<Record<string, { status: string }>> {
+    const res = await fetch(`${this.baseUrl}/mcp`, {
+      method: "POST",
+      headers: this.headers(),
+      body: JSON.stringify({ name, config }),
+    });
+    if (!res.ok) throw new Error(`Failed to add MCP server: ${res.status}`);
+    return res.json() as Promise<Record<string, { status: string }>>;
+  }
+
+  async connectMCP(name: string): Promise<void> {
+    const res = await fetch(`${this.baseUrl}/mcp/${encodeURIComponent(name)}/connect`, {
+      method: "POST",
+      headers: this.headers(),
+    });
+    if (!res.ok) throw new Error(`Failed to connect MCP server: ${res.status}`);
+  }
+
+  async disconnectMCP(name: string): Promise<void> {
+    const res = await fetch(`${this.baseUrl}/mcp/${encodeURIComponent(name)}/disconnect`, {
+      method: "POST",
+      headers: this.headers(),
+    });
+    if (!res.ok) throw new Error(`Failed to disconnect MCP server: ${res.status}`);
   }
 }

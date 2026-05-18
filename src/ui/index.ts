@@ -20,6 +20,19 @@ import type {
 
 const logger = rootLogger.child("ui");
 
+const SOURCE_COLORS: Record<string, string> = {
+  user: "#7dcfff",
+  ai: "#9ece6a",
+  airgent: "#e0af68",
+  error: "#f7768e",
+  warn: "#ff9e64",
+  info: "#c0caf5",
+  debug: "#565f89",
+};
+function sourceColor(source: string): string {
+  return SOURCE_COLORS[source] || "#c0caf5";
+}
+
 export interface StatusInfo {
   sessionId: string;
   status: string;
@@ -36,6 +49,10 @@ export interface UIOptions {
   onShutdown?: () => void;
 }
 
+const GOLDEN = 1.618;
+const SILVER = 1.414;
+const BRONZE = 3.303;
+
 export class UIManager {
   private options: UIOptions;
   ready = false;
@@ -50,6 +67,8 @@ export class UIManager {
   private renderer: CliRenderer | null = null;
   private scrollbox: ScrollBoxRenderable | null = null;
   private input: InputRenderable | null = null;
+  private headerBox: any = null;
+  private statusBar: any = null;
   private _copyInProgress = false;
   private _sigintCount = 0;
   private _sigintTimer: ReturnType<typeof setTimeout> | null = null;
@@ -73,9 +92,36 @@ export class UIManager {
         this.renderer = renderer;
         renderer.root.flexDirection = "column";
 
+        const headerVNode = Box({
+          id: "header",
+          width: "100%",
+          height: 3,
+          borderStyle: "rounded",
+          borderColor: "#3b4261",
+          backgroundColor: "#1f2335",
+          flexDirection: "row",
+          alignItems: "center",
+        });
+        renderer.root.add(headerVNode);
+        this.headerBox = renderer.root.findDescendantById("header");
+
+        const titleText = Text({
+          id: "header-title",
+          content: " Airgent ",
+          fg: "#7aa2f7",
+        });
+        this.headerBox.add(titleText);
+
+        const statusText = Text({
+          id: "header-status",
+          content: "● idle",
+          fg: "#565f89",
+        });
+        this.headerBox.add(statusText);
+
         const scrollboxVNode = ScrollBox({
           id: "log-area",
-          flexGrow: 1,
+          flexGrow: GOLDEN,
           width: "100%",
           stickyScroll: true,
           stickyStart: "bottom",
@@ -86,6 +132,25 @@ export class UIManager {
         });
         renderer.root.add(scrollboxVNode);
         this.scrollbox = renderer.root.findDescendantById("log-area") as ScrollBoxRenderable | null;
+
+        const footerVNode = Box({
+          id: "footer",
+          width: "100%",
+          height: 1,
+          borderStyle: "rounded",
+          borderColor: "#3b4261",
+          backgroundColor: "#1f2335",
+          flexDirection: "row",
+        });
+        renderer.root.add(footerVNode);
+        this.statusBar = renderer.root.findDescendantById("footer");
+
+        const footerText = Text({
+          id: "footer-text",
+          content: " ready",
+          fg: "#565f89",
+        });
+        this.statusBar.add(footerText);
 
         const inputVNode = Input({
           id: "input-line",
@@ -115,7 +180,6 @@ export class UIManager {
 
         renderer.on("selection", (sel: Selection) => this.handleSelection(sel, renderer));
 
-        // Ctrl+C handling: first press warns, second press shuts down
         renderer.keyInput.on("keypress", (event: any) => {
           if (event.ctrl && event.name === "c") {
             event.preventDefault();
@@ -173,30 +237,61 @@ export class UIManager {
     logger.info("UI stopped");
   }
 
-  private addLine(line: string, fg?: string): void {
+  private addLine(line: string, source = "info"): void {
     if (this.scrollbox) {
-      this.scrollbox.add(Text({ content: line, width: "100%", fg: fg || "#c0caf5" }));
+      const fg = sourceColor(source);
+      this.scrollbox.add(Text({ content: line, width: "100%", fg }));
     } else if (!this.isTTY) {
       console.log(line);
     }
   }
 
   log(level: string, source: string, message: string): void {
-    const now = new Date();
-    const ts = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}:${now.getSeconds().toString().padStart(2, "0")}`;
-    this.addLine(`${ts} ${level.padEnd(5)} ${source} ${message}`);
+    const fg = sourceColor(source);
+    if (level === "info") {
+      this.addLine(`${source} ${message}`, source);
+    } else {
+      this.addLine(`${level.toUpperCase()} ${source} ${message}`, level);
+    }
   }
 
-  stream(line: string, fg?: string): void {
-    this.addLine(line, fg);
+  stream(line: string, source?: string): void {
+    this.addLine(line, source || "info");
   }
 
   notice(message: string): void {
-    this.addLine(message, "#00ff00");
+    this.addLine(message, "ai");
   }
 
   updateStatus(info: Partial<StatusInfo>): void {
     Object.assign(this.statusInfo, info);
+    this.refreshHeaderAndFooter();
+  }
+
+  private refreshHeaderAndFooter(): void {
+    if (!this.headerBox || !this.statusBar) return;
+    try {
+      const si = this.statusInfo;
+      const uptime = Math.floor((Date.now() - this.startTime) / 1000);
+      const statusDot = si.status === "running" ? "●" : si.status === "error" ? "●" : "●";
+      const statusFg = si.status === "error" ? "#f7768e" : "#9ece6a";
+
+      const hTitle = this.headerBox.findDescendantById("header-title");
+      if (hTitle) hTitle.content = ` Airgent `;
+
+      const hStatus = this.headerBox.findDescendantById("header-status");
+      if (hStatus) {
+        hStatus.content = `  ${statusDot} ${si.status}  `;
+        hStatus.fg = statusFg;
+      }
+
+      const fText = this.statusBar.findDescendantById("footer-text");
+      if (fText) {
+        fText.content = ` ${uptime}s  |  sess: ${si.sessionId.slice(0, 8) || "-"}  |  tok: ${si.tokenUsage}  |  mem: ${si.memoryCount}  |  err: ${si.errorCount}  |  node: ${si.pipelineNode || "-"}`;
+      }
+    } catch {
+      // ignore render errors during update
+    }
   }
 
   async prompt(question: string): Promise<string> {
@@ -210,65 +305,7 @@ export class UIManager {
     title: string,
     options: Array<{ name: string; description: string; value: any }>
   ): Promise<any> {
-    if (!this.renderer || !this.scrollbox) {
-      return this.selectModelFallback(title, options);
-    }
-
-    return new Promise((resolve) => {
-      const root = this.renderer!.root;
-
-      const overlayVNode = Box({
-        id: "select-overlay",
-        position: "absolute",
-        top: 0, left: 0, right: 0, bottom: 0,
-        zIndex: 999,
-        backgroundColor: "#1a1b26",
-        flexDirection: "column",
-        paddingX: 2,
-        paddingY: 2,
-      });
-      root.add(overlayVNode);
-      const overlay = root.findDescendantById("select-overlay")!;
-
-      overlay.add(Text({
-        content: `  ${title}  (↑↓ Enter)`,
-        width: "100%", fg: "#7aa2f7",
-      }));
-
-      const selectVNode = Select({
-        id: "model-select",
-        width: "100%",
-        flexGrow: 1,
-        options,
-        backgroundColor: "#1a1b26",
-        textColor: "#c0caf5",
-        focusedBackgroundColor: "#2f3449",
-        focusedTextColor: "#c0caf5",
-        selectedBackgroundColor: "#414868",
-        selectedTextColor: "#7dcfff",
-        descriptionColor: "#565f89",
-      });
-      selectVNode.on(SelectRenderableEvents.ITEM_SELECTED, () => {
-        const option = (root.findDescendantById("model-select") as SelectRenderable | null)?.getSelectedOption();
-        setTimeout(() => {
-          root.remove("select-overlay");
-          this.renderer!.requestRender();
-          if (this.input) this.renderer!.focusRenderable(this.input);
-          resolve(option?.value ?? null);
-        }, 0);
-      });
-
-      overlay.add(selectVNode);
-      this.renderer!.requestRender();
-
-      setTimeout(() => {
-        const s = root.findDescendantById("model-select") as SelectRenderable | null;
-        if (s) {
-          s.focusable = true;
-          s.focus();
-        }
-      }, 0);
-    });
+    return this.showSelectMenu(title, options);
   }
 
   async showSelectMenu(

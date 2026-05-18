@@ -9,7 +9,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { homedir } from "os";
 import { rootLogger, sanitizeError } from "../utils/logger";
-import type { AirgentConfig, Constitution, Persona, ModelConfig, Settings } from "../types";
+import type { AirgentConfig, Constitution, Persona, ModelConfig, Settings, MCPServerConfig } from "../types";
 
 const CONFIG_DIR = path.join(homedir(), ".config", "Airgent");
 
@@ -162,6 +162,26 @@ export class ConfigManager {
 
   getModels(): ModelConfig {
     return { ...this.cache!.models };
+  }
+
+  // ---- MCP ----
+
+  loadMCPServers(): MCPServerConfig[] {
+    const filePath = path.join(CONFIG_DIR, "mcp.json");
+    const raw = this.readOrCreate(filePath, JSON.stringify({ servers: [] }, null, 2));
+    try {
+      const data = JSON.parse(raw);
+      return data.servers || [];
+    } catch {
+      this.logger.warn("Invalid mcp.json, using empty config");
+      return [];
+    }
+  }
+
+  saveMCPServers(servers: MCPServerConfig[]): void {
+    const filePath = path.join(CONFIG_DIR, "mcp.json");
+    fs.writeFileSync(filePath, JSON.stringify({ servers }, null, 2), { mode: 0o600, encoding: "utf-8" });
+    this.logger.info("MCP servers saved");
   }
 
   private readOrCreate(filePath: string, defaultContent: string): string {

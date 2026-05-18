@@ -9,6 +9,12 @@ import { MemorySystem } from "../memory";
 import type { EvidenceEntry, EvidenceType } from "../types";
 import type { RawLogRow } from "../storage/index";
 
+interface LogPattern {
+  bug: string; investigation: string; rootCause: string; fix: string; reason: string;
+  evidenceItems: Array<{ content: string; source: string }>;
+  files: string[]; commands: string[];
+}
+
 export class MemoryOrganizerAgent extends BaseAgent {
   private memorySystem: MemorySystem;
 
@@ -66,14 +72,10 @@ export class MemoryOrganizerAgent extends BaseAgent {
     return { count: memories.length, memories };
   }
 
-  private analyzeLogs(logs: RawLogRow[]): Array<{
-    bug: string; investigation: string; rootCause: string; fix: string; reason: string;
-    evidenceItems: Array<{ content: string; source: string }>;
-    files: string[]; commands: string[];
-  }> {
+  private analyzeLogs(logs: RawLogRow[]): LogPattern[] {
     const combinedLog = logs.map(l => l.content).join("\n");
     const lines = combinedLog.split("\n");
-    const patterns: any[] = [];
+    const patterns: LogPattern[] = [];
 
     let currentBug = "", currentInvestigation = "", currentFix = "", currentReason = "";
 

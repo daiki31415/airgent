@@ -45,6 +45,16 @@ export interface ModelEntry {
   reasoning?: boolean;
 }
 
+export interface MCPServerConfig {
+  name: string;
+  type: "local" | "remote";
+  command?: string[];
+  url?: string;
+  enabled: boolean;
+  env?: Record<string, string>;
+  headers?: Record<string, string>;
+}
+
 export interface Settings {
   maxSystemPromptTokens: number;
   maxContextTokens: number;
@@ -280,14 +290,3 @@ export interface OpenCodeResponse {
   };
 }
 
-// ============================================================
-// UI Types
-// ============================================================
-
-export type UIPanel =
-  | "main"
-  | "agent"
-  | "memory"
-  | "pipeline"
-  | "debug"
-  | "settings";

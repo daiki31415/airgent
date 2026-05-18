@@ -54,4 +54,20 @@ describe("resolveSafePath", () => {
       try { rmSync(homePath); } catch {}
     }
   });
+
+  test("rejects file with same name as allowed dir root but different path", () => {
+    // Allowed dirs contain process.cwd() - test a sibling
+    const parent = join(tmpDir, "..");
+    expect(() => resolveSafePath(join(parent, "nonexistent.txt"))).toThrow();
+  });
+
+  test("normalizes mixed slashes", () => {
+    const result = resolveSafePath(tmpDir + "/./subdir/../subdir/nested.txt");
+    expect(result).toContain("nested.txt");
+  });
+
+  test("resolves path with trailing dot", () => {
+    const result = resolveSafePath(tmpDir + "/./safe.txt");
+    expect(result).toContain("safe.txt");
+  });
 });
