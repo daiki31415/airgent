@@ -191,22 +191,27 @@ export class OpenCodeAPI {
 
   // ---- Legacy compatibility ----
   // Wraps the server API to match the old ModelEntry-based interface used by agents.
+  // Each call creates a temporary session on the opencode server and deletes it
+  // afterwards so airgent sessions don't pollute the opencode session list.
 
-  private _lastSessionId: string | null = null;
+  private async withTempSession<T>(
+    fn: (sessionId: string) => Promise<T>
+  ): Promise<T> {
+    const session = await this.createSession();
+    try {
+      return await fn(session.id);
+    } finally {
+      this.deleteSession(session.id).catch(err =>
+        logger.warn(`Failed to clean up session ${session.id}: ${err}`)
+      );
+    }
+  }
 
   async chat(
     model: ModelEntry,
     messages: Array<{ role: string; content: string }>
   ): Promise<OpenCodeResponse> {
     const startTime = Date.now();
-
-    // Ensure we have a session
-    let sessionId = this._lastSessionId;
-    if (!sessionId) {
-      const session = await this.createSession("airgent");
-      sessionId = session.id;
-      this._lastSessionId = sessionId;
-    }
 
     // Convert messages array to a single text prompt
     // The last user message is the prompt, previous messages provide context
@@ -241,9 +246,11 @@ export class OpenCodeAPI {
 
     logger.debug(`chat() ${providerID}/${modelID} - ${messages.length} messages`);
 
-    const result = await this.sendMessage(sessionId, { providerID, modelID }, fullPrompt, {
-      system: systemPrompt || undefined,
-    });
+    const result = await this.withTempSession(sessionId =>
+      this.sendMessage(sessionId, { providerID, modelID }, fullPrompt, {
+        system: systemPrompt || undefined,
+      })
+    );
 
     const elapsed = Date.now() - startTime;
     logger.debug(`Response in ${elapsed}ms`);
@@ -266,13 +273,7 @@ export class OpenCodeAPI {
     model: ModelEntry,
     messages: Array<{ role: string; content: string }>
   ): AsyncGenerator<string> {
-    // Ensure a session exists
-    let sessionId = this._lastSessionId;
-    if (!sessionId) {
-      const session = await this.createSession("airgent");
-      sessionId = session.id;
-      this._lastSessionId = sessionId;
-    }
+    const startTime = Date.now();
 
     // Build prompt from messages (same as chat())
     const userMessages = messages.filter(m => m.role === "user");
@@ -298,22 +299,28 @@ export class OpenCodeAPI {
       modelID = model.model;
     }
 
-    // Try SSE streaming via POST with Accept: text/event-stream
-    const url = `${this.baseUrl}/session/${sessionId}/message`;
-    const body: Record<string, unknown> = {
-      model: { providerID, modelID },
-      parts: [{ type: "text", text: fullPrompt }],
-      stream: true,
-    };
-    if (systemPrompt) body.system = systemPrompt;
+    logger.debug(`streamChat() ${providerID}/${modelID} - ${messages.length} messages`);
 
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      Accept: "text/event-stream",
-    };
-    if (this.authHeader) headers.Authorization = this.authHeader;
+    // Create a temporary session for this stream
+    const session = await this.createSession();
+    const sessionId = session.id;
 
     try {
+      // Try SSE streaming via POST with Accept: text/event-stream
+      const url = `${this.baseUrl}/session/${sessionId}/message`;
+      const body: Record<string, unknown> = {
+        model: { providerID, modelID },
+        parts: [{ type: "text", text: fullPrompt }],
+        stream: true,
+      };
+      if (systemPrompt) body.system = systemPrompt;
+
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        Accept: "text/event-stream",
+      };
+      if (this.authHeader) headers.Authorization = this.authHeader;
+
       const res = await fetch(url, { method: "POST", headers, body: JSON.stringify(body) });
 
       if (!res.ok) {
@@ -327,7 +334,7 @@ export class OpenCodeAPI {
       // Read SSE stream
       const reader = res.body?.getReader();
       if (!reader) {
-        yield fullPrompt; // No body reader - return the prompt as-is
+        yield fullPrompt;
         return;
       }
 
@@ -356,16 +363,23 @@ export class OpenCodeAPI {
                 yield parsed.text;
               }
             } catch {
-              // Not JSON - treat as plain text content
               if (data) yield data;
             }
           }
         }
       }
+
+      const elapsed = Date.now() - startTime;
+      logger.debug(`Stream completed in ${elapsed}ms`);
     } catch (err) {
       logger.warn(`Streaming failed: ${err}, falling back to non-streaming`);
       const result = await this.chat(model, messages);
       yield result.content;
+    } finally {
+      // Clean up the temporary session
+      this.deleteSession(sessionId).catch(err =>
+        logger.warn(`Failed to clean up session ${sessionId}: ${err}`)
+      );
     }
   }
 

@@ -2,7 +2,7 @@ import { spawnSync } from "node:child_process";
 import { resolve, normalize } from "node:path";
 import { existsSync } from "node:fs";
 
-const ALLOWED_DIRS = [
+export const ALLOWED_DIRS = [
   resolve(process.cwd()),
   ...(process.env.HOME ? [process.env.HOME] : []),
 ].map(d => normalize(resolve(d)));
@@ -21,7 +21,7 @@ function archiveExtension(file: string): boolean {
   return ARCHIVE_EXTS.some(ext => lower.endsWith(ext)) || /\.(tar\.gz|tar\.xz|tar\.bz2)$/.test(lower);
 }
 
-function resolveSafePath(file: string): string {
+export function resolveSafePath(file: string): string {
   const resolved = normalize(resolve(file));
 
   if (!existsSync(resolved)) {

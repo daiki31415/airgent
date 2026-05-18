@@ -2,12 +2,11 @@
  * Planner Agent
  *
  * Responsibility: Task decomposition and pipeline node selection.
- * Rules-based node selector with task analysis.
+ * LLM-based selector that decides which pipeline stages to run.
  */
 
 import { BaseAgent } from "./base";
 import type { PipelineNode } from "../types";
-import { buildDAG } from "../pipeline";
 
 const ALL_NODES: PipelineNode[] = ["clarify", "plan", "prompt", "generate", "test", "merge", "validate", "report"];
 
@@ -16,44 +15,37 @@ export class PlannerAgent extends BaseAgent {
     super("planner", model, api);
   }
 
-  /**
-   * Analyze a user request and return selected pipeline nodes.
-   */
-  analyzeTask(task: string): PipelineNode[] {
+  async analyzeTask(task: string): Promise<PipelineNode[]> {
     this.logger.info(`Planning: ${task.slice(0, 100)}`);
-    const nodes = this.selectNodes(task);
+    const nodes = await this.selectNodes(task);
     this.logger.info(`Nodes: ${nodes.join(" -> ")}`);
     return nodes;
   }
 
-  selectNodes(task: string): PipelineNode[] {
-    const lower = task.toLowerCase();
+  async selectNodes(task: string): Promise<PipelineNode[]> {
+    const prompt = [
+      "You select pipeline stages for a coding task.",
+      "Available: clarify, plan, prompt, generate, test, merge, validate, report.",
+      "generate + report are mandatory. Others as needed.",
+      "",
+      `Task: ${task}`,
+      "",
+      "Return comma-separated node names:",
+    ].join("\n");
+
+    const result = await this.think(prompt);
+    const names = result.split(",").map(s => s.trim().toLowerCase());
     const set = new Set<PipelineNode>();
-
-    set.add("clarify");
-    set.add("plan");
-
-    if (/code|implement|function|class|fix|refactor|feature|write/.test(lower)) {
-      set.add("prompt");
-      set.add("generate");
-      set.add("test");
+    for (const n of names) {
+      if ((ALL_NODES as readonly string[]).includes(n)) {
+        set.add(n as PipelineNode);
+      }
     }
-
-    if (/merge|combine|integrate|branch/.test(lower)) {
-      set.add("merge");
-    }
-
-    if (/review|validate|check|audit/.test(lower)) {
-      set.add("validate");
-    }
-
+    set.add("generate");
     set.add("report");
     return Array.from(set);
   }
 
-  /**
-   * Re-plan based on failure feedback.
-   */
   async replan(previousPlan: string, failureContext: string): Promise<string> {
     const prompt = [
       "The previous plan failed. Create an alternative plan.",

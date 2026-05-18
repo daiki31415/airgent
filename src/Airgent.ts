@@ -25,28 +25,11 @@ import { SkillsManager } from "./skills/index";
 import { PromptManager } from "./prompt/index";
 import { UIManager } from "./ui/index";
 import { rootLogger, sanitizeError } from "./utils/logger";
-import type { AgentContext, ModelConfig, ModelEntry, PipelineNode } from "./types";
+import { RateLimiter } from "./utils/rate-limiter";
+import type { AgentContext, ModelConfig, ModelEntry } from "./types";
 import type { StatusInfo } from "./ui/index";
 
 type ModelRole = "planner" | "generate" | "compression" | "validation" | "watchdog";
-
-class RateLimiter {
-  private tokens: number;
-  private lastRefill: number;
-  constructor(private maxTokens: number, private refillIntervalMs: number, private refillAmount: number) {
-    this.tokens = maxTokens;
-    this.lastRefill = Date.now();
-  }
-  tryConsume(): boolean {
-    const now = Date.now();
-    const elapsed = now - this.lastRefill;
-    this.tokens = Math.min(this.maxTokens, this.tokens + Math.floor(elapsed / this.refillIntervalMs) * this.refillAmount);
-    this.lastRefill = now;
-    if (this.tokens <= 0) return false;
-    this.tokens--;
-    return true;
-  }
-}
 
 const ROLE_CONFIGS: Array<{ key: ModelRole; label: string }> = [
   { key: "planner", label: "Planner (task decomposition)" },
@@ -87,6 +70,13 @@ export class Airgent {
   private opencodeProcess: import("bun").Subprocess | null = null;
   private rateLimiter = new RateLimiter(100, 1000, 100);
   private logger = rootLogger.child("airgent");
+  private pipelineData: {
+    clarifiedTask?: string;
+    plan?: string;
+    prompt?: string;
+    generatedOutput?: string;
+    testResult?: string;
+  } = {};
 
   constructor() {
     rootLogger.setDebug(this.config.settings.debug);
@@ -272,27 +262,38 @@ export class Airgent {
     if (!this.sessionId) throw new Error("Not started");
 
     this.currentTask = task;
+    this.pipelineData = {};
     this.updateStatus({ status: "running" });
     this.ui.log("info", "airgent", "Processing task...");
 
     try {
-      // 1. Plan
+      // 1. Build context and init agents
+      const context = this.buildAgentContext(task);
+      this.planner.init(context);
+      this.worker.init(context);
+      this.compression.init(context);
+      this.validation.init(context);
+      this.watchdog.init(context);
+      this.contextInspector.init(context);
+
+      // 2. Plan
       this.updateStatus({ pipelineNode: "plan" });
-      const selectedNodes = this.planner.analyzeTask(task);
+      const selectedNodes = await this.planner.analyzeTask(task);
       this.ui.log("info", "planner", `Nodes: ${selectedNodes.join(", ")}`);
 
-      // 2. Build DAG and init agents
+      // 3. Build DAG
       const dag = buildDAG(selectedNodes);
-      const context = this.buildAgentContext(task);
-      for (const agent of [this.planner, this.worker, this.compression, this.validation, this.watchdog, this.contextInspector]) {
-        agent.init(context);
-      }
 
       // 3. Execute pipeline (generate → validate → report via DAG)
       this.updateStatus({ pipelineNode: "execute" });
       await this.pipeline.execute(this.sessionId, dag);
 
-      // 4. Context inspection
+      // 4. Display generated output to user
+      if (this.pipelineData.generatedOutput) {
+        this.ui.log("info", "ai", this.pipelineData.generatedOutput);
+      }
+
+      // 5. Context inspection
       const inspResult = this.contextInspector.inspect({
         currentFocus: task, errors: [], todos: [], messages: [],
       });
@@ -300,7 +301,7 @@ export class Airgent {
         this.ui.log("warn", "inspector", `Corruption score: ${inspResult.score.toFixed(2)}`);
       }
 
-      // 5. Watchdog
+      // 6. Watchdog
       const wdResult = this.watchdog.check({ failures: {}, retries: {} });
       if (!wdResult.healthy) {
         this.ui.log("warn", "watchdog", wdResult.actions.map(a => a.type).join(", "));
@@ -315,11 +316,71 @@ export class Airgent {
   }
 
   private registerPipelineHandlers(): void {
+    this.pipeline.registerHandler("clarify", async () => {
+      const response = await this.api.chat(this.config.models.planner, [
+        { role: "system", content: "You analyze tasks and extract: goal, constraints, affected files, ambiguities. Be concise." },
+        { role: "user", content: `Analyze this task:\n${this.currentTask}` },
+      ]);
+      this.pipelineData.clarifiedTask = response.content;
+      this.ui.log("info", "clarify", `Analyzed task`);
+      return { content: response.content };
+    });
+
+    this.pipeline.registerHandler("plan", async () => {
+      const source = this.pipelineData.clarifiedTask || this.currentTask;
+      const response = await this.api.chat(this.config.models.planner, [
+        { role: "system", content: "You create step-by-step implementation plans. Be specific and actionable." },
+        { role: "user", content: `Create a plan based on the requirements:\n\n${source}` },
+      ]);
+      this.pipelineData.plan = response.content;
+      this.ui.log("info", "plan", `Created plan`);
+      return { content: response.content };
+    });
+
+    this.pipeline.registerHandler("prompt", async () => {
+      const memories = this.memory.findRelevant([this.currentTask]).slice(0, 3);
+      const memoryStr = memories.map(m => `- ${m.bug}: ${m.fix}`).join("\n");
+      const parts = [
+        memoryStr ? `Relevant context:\n${memoryStr}` : "",
+        this.pipelineData.plan ? `Approach:\n${this.pipelineData.plan}` : "",
+        this.pipelineData.clarifiedTask ? `Requirements:\n${this.pipelineData.clarifiedTask}` : "",
+        `Task: ${this.currentTask}`,
+      ].filter(Boolean);
+      this.pipelineData.prompt = parts.join("\n\n");
+      this.ui.log("info", "prompt", `Built prompt: ${this.pipelineData.prompt.length} chars`);
+      return { content: this.pipelineData.prompt };
+    });
+
     this.pipeline.registerHandler("generate", async () => {
-      const result = await this.worker.execute(this.currentTask);
-      this.ui.log("info", "generate", `Generated: ${result.content.slice(0, 100)}...`);
-      this.memory.recordRaw(this.sessionId!, "worker", result.content, Math.ceil(result.content.length / 4));
+      const generationPrompt = this.pipelineData.prompt || this.currentTask;
+      const result = await this.worker.execute(generationPrompt);
+      this.pipelineData.generatedOutput = result.content;
+      this.ui.log("info", "generate", `Generated: ${result.content.length} chars`);
       return result;
+    });
+
+    this.pipeline.registerHandler("test", async () => {
+      if (!this.pipelineData.generatedOutput) return { status: "skipped", reason: "no output" };
+      const response = await this.api.chat(this.config.models.validation, [
+        { role: "system", content: "Review the following output for correctness, edge cases, and potential issues. Be critical but constructive." },
+        { role: "user", content: `Task: ${this.currentTask}\n\nOutput:\n${this.pipelineData.generatedOutput.slice(0, 4000)}` },
+      ]);
+      this.pipelineData.testResult = response.content;
+      const hasIssues = /(?:bug|error|issue|incorrect|wrong|missing)/i.test(response.content);
+      this.ui.log("info", "test", hasIssues ? `Issues found` : "No issues detected");
+      return { content: response.content, passed: !hasIssues };
+    });
+
+    this.pipeline.registerHandler("merge", async () => {
+      const testStatus = this.pipelineData.testResult
+        ? /(?:bug|error|issue|incorrect|wrong|missing)/i.test(this.pipelineData.testResult)
+          ? "issues found"
+          : "passed"
+        : "skipped";
+      return {
+        status: "completed",
+        summary: `Task: ${this.currentTask} | Generated: ${(this.pipelineData.generatedOutput || "").length} chars | Tests: ${testStatus}`,
+      };
     });
 
     this.pipeline.registerHandler("validate", async () => {
@@ -337,11 +398,6 @@ export class Airgent {
       }
       return { status: "completed" };
     });
-
-    // No-op handlers for remaining nodes
-    for (const node of ["clarify", "plan", "prompt", "test", "merge"] as PipelineNode[]) {
-      this.pipeline.registerHandler(node, async () => ({ status: "completed" }));
-    }
   }
 
   private async configureModels(): Promise<void> {
