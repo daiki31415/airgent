@@ -76,7 +76,7 @@ export class OpenCodeAPI {
 
   async healthCheck(): Promise<{ healthy: boolean; version?: string }> {
     try {
-      const res = await fetch(`${this.baseUrl}/global/health`, { headers: this.headers() });
+      const res = await fetch(`${this.baseUrl}/global/health`, { headers: this.headers(), signal: AbortSignal.timeout(2000) });
       if (!res.ok) return { healthy: false };
       const data = await res.json() as { healthy: boolean; version?: string };
       return data;

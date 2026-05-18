@@ -7,10 +7,11 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import { rootLogger } from "../utils/logger";
+import { homedir } from "os";
+import { rootLogger, sanitizeError } from "../utils/logger";
 import type { AirgentConfig, Constitution, Persona, ModelConfig, Settings } from "../types";
 
-const CONFIG_DIR = path.join(process.env.HOME || "/home/daiki", ".config", "Airgent");
+const CONFIG_DIR = path.join(homedir(), ".config", "Airgent");
 
 const DEFAULT_CONSTITUTION = `---
 name: Airgent Constitution
@@ -38,11 +39,11 @@ tone: professional
 `;
 
 const DEFAULT_MODELS: ModelConfig = {
-  planner: { provider: "", model: "", maxTokens: 4096, temperature: 0.3 },
-  generate: { provider: "", model: "", maxTokens: 4096, temperature: 0.3 },
-  compression: { provider: "", model: "", maxTokens: 2048, temperature: 0.2 },
-  validation: { provider: "", model: "", maxTokens: 2048, temperature: 0.2 },
-  watchdog: { provider: "", model: "", maxTokens: 1024, temperature: 0.1 },
+  planner: { provider: "", model: "" },
+  generate: { provider: "", model: "" },
+  compression: { provider: "", model: "" },
+  validation: { provider: "", model: "" },
+  watchdog: { provider: "", model: "" },
   fallback: [],
 };
 
@@ -135,8 +136,18 @@ export class ConfigManager {
   saveModels(models: Partial<ModelConfig>): void {
     const filePath = path.join(CONFIG_DIR, "models.json");
     const updated = { ...this.cache!.models, ...models };
+
+    // Strip apiKey before persisting to disk
+    const serialized = JSON.parse(JSON.stringify(updated)) as Record<string, unknown>;
+    for (const [key, val] of Object.entries(serialized)) {
+      if (typeof val === "object" && val !== null && "apiKey" in val) {
+        const entry = val as Record<string, unknown>;
+        delete entry.apiKey;
+      }
+    }
+
     this.cache!.models = updated as ModelConfig;
-    fs.writeFileSync(filePath, JSON.stringify(updated, null, 2), "utf-8");
+    fs.writeFileSync(filePath, JSON.stringify(serialized, null, 2), { mode: 0o600, encoding: "utf-8" });
     this.logger.info("Models saved");
   }
 
@@ -149,11 +160,11 @@ export class ConfigManager {
       if (fs.existsSync(filePath)) {
         return fs.readFileSync(filePath, "utf-8");
       }
-      fs.writeFileSync(filePath, defaultContent, "utf-8");
+      fs.writeFileSync(filePath, defaultContent, { mode: 0o600, encoding: "utf-8" });
       this.logger.info(`Created default config: ${filePath}`);
       return defaultContent;
     } catch (err) {
-      this.logger.warn(`Config error: ${err}`);
+      this.logger.warn(`Config error: ${sanitizeError(err)}`);
       return defaultContent;
     }
   }

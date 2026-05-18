@@ -42,8 +42,6 @@ export interface ModelEntry {
   model: string;
   baseUrl?: string;
   apiKey?: string;
-  maxTokens: number;
-  temperature: number;
   reasoning?: boolean;
 }
 
@@ -269,14 +267,6 @@ export interface InspectionResult {
 // ============================================================
 // API Types
 // ============================================================
-
-export interface OpenCodeRequest {
-  model: string;
-  messages: Array<{ role: string; content: string }>;
-  maxTokens: number;
-  temperature: number;
-  stream?: boolean;
-}
 
 export interface OpenCodeResponse {
   id: string;

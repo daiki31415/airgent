@@ -56,7 +56,7 @@ export class DeviceSync {
     const sessions = this.storage.getRecentSessions(50);
 
     const data = { compressed, metadata, sessions, exportedAt: new Date().toISOString() };
-    writeFileSync(EXPORT_FILE, JSON.stringify(data, null, 2));
+    writeFileSync(EXPORT_FILE, JSON.stringify(data, null, 2), { mode: 0o600 });
     this.logger.info(`Exported ${compressed.length} compressed, ${Object.keys(metadata).length} metadata, ${sessions.length} sessions`);
   }
 

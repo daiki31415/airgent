@@ -70,3 +70,29 @@ export class Logger {
 }
 
 export const rootLogger = new Logger("airgent", "info", false);
+
+const HOME_DIR = typeof process !== "undefined" && process.env?.HOME ? process.env.HOME : "";
+
+export function sanitizeError(err: unknown): string {
+  let msg: string;
+  if (err instanceof Error) {
+    msg = err.message;
+  } else {
+    msg = String(err);
+  }
+
+  // Strip stack traces (keep only first line)
+  const newlineIdx = msg.indexOf("\n");
+  if (newlineIdx !== -1) msg = msg.substring(0, newlineIdx);
+
+  // Redact home directory paths
+  if (HOME_DIR) {
+    const escaped = HOME_DIR.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    msg = msg.replace(new RegExp(escaped, "g"), "~");
+  }
+
+  // Cap length to prevent log flooding
+  if (msg.length > 500) msg = msg.substring(0, 500) + "...";
+
+  return msg;
+}

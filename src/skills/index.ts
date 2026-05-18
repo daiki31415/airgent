@@ -7,10 +7,12 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import { rootLogger } from "../utils/logger";
+import { homedir } from "os";
+import { rootLogger, sanitizeError } from "../utils/logger";
 import type { SkillIndex, SkillDef } from "../types";
 
-const SKILLS_DIR = path.join(process.env.HOME || "/home/daiki", ".config", "Airgent", "skills");
+const SKILLS_DIR = path.join(homedir(), ".config", "Airgent", "skills");
+const SKILLS_DIR_RESOLVED = path.resolve(SKILLS_DIR);
 
 export class SkillsManager {
   private index: SkillIndex = { skills: [] };
@@ -50,7 +52,12 @@ export class SkillsManager {
     }
 
     try {
-      const content = fs.readFileSync(summary.filePath, "utf-8");
+      const skillPath = path.resolve(summary.filePath);
+      if (!skillPath.startsWith(SKILLS_DIR_RESOLVED + "/") && skillPath !== SKILLS_DIR_RESOLVED) {
+        this.logger.warn(`Skill path outside skills directory: ${summary.name}`);
+        return null;
+      }
+      const content = fs.readFileSync(skillPath, "utf-8");
       const skill: SkillDef = {
         name: summary.name,
         description: summary.description,
@@ -62,7 +69,7 @@ export class SkillsManager {
       this.logger.info(`Loaded skill: ${name}`);
       return skill;
     } catch (err) {
-      this.logger.warn(`Failed to load skill ${name}: ${err}`);
+      this.logger.warn(`Failed to load skill ${name}: ${sanitizeError(err)}`);
       return null;
     }
   }
@@ -91,10 +98,10 @@ export class SkillsManager {
         this.logger.info("No skills index found, creating default");
         fs.mkdirSync(SKILLS_DIR, { recursive: true });
         this.index = { skills: [] };
-        fs.writeFileSync(indexPath, JSON.stringify(this.index, null, 2));
+        fs.writeFileSync(indexPath, JSON.stringify(this.index, null, 2), { mode: 0o600 });
       }
     } catch (err) {
-      this.logger.warn(`Failed to load skills: ${err}`);
+      this.logger.warn(`Failed to load skills: ${sanitizeError(err)}`);
       this.index = { skills: [] };
     }
   }

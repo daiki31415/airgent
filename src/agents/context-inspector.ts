@@ -154,6 +154,6 @@ export class ContextInspectorAgent extends BaseAgent {
     if (result.assumptionFixed) issues.push("- Assumptions fixed");
     if (result.errorChangeUnrecognized) issues.push("- Error context shifted");
     const prompt = ["Analyze and suggest remediation:", "", ...issues].join("\n");
-    return this.think(prompt, { maxTokens: 1024 });
+    return this.think(prompt);
   }
 }

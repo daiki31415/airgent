@@ -90,7 +90,7 @@ export class WatchdogAgent extends BaseAgent {
         return {
           type: "model_switch",
           reason: `${key} retried ${count}x`,
-          model: { provider: "opencode", model: "fallback", maxTokens: 4096, temperature: 0.3 },
+          model: { provider: "opencode", model: "fallback" },
         };
       }
     }

@@ -8,6 +8,7 @@
 import { Database } from "bun:sqlite";
 import * as path from "path";
 import * as fs from "fs";
+import * as os from "os";
 import { rootLogger } from "../utils/logger";
 
 export interface RawLogRow {
@@ -34,7 +35,7 @@ export interface CompressedRow {
 }
 
 const STORAGE_DIR = path.join(
-  process.env.HOME || "/home/daiki",
+  os.homedir(),
   ".config",
   "Airgent",
   "memory"

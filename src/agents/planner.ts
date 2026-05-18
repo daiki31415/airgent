@@ -64,6 +64,6 @@ export class PlannerAgent extends BaseAgent {
       "Consider: different approach, simpler solution, smaller steps.",
     ].join("\n");
 
-    return this.think(prompt, { maxTokens: 2048 });
+    return this.think(prompt);
   }
 }

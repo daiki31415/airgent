@@ -35,8 +35,7 @@ export abstract class BaseAgent {
    * Send a prompt to the model and get the response text.
    */
   protected async think(
-    prompt: string,
-    options?: { maxTokens?: number; temperature?: number }
+    prompt: string
   ): Promise<string> {
     if (!this.context) {
       throw new Error("Agent not initialized - call init() first");
@@ -47,13 +46,7 @@ export abstract class BaseAgent {
       { role: "user", content: prompt },
     ];
 
-    const modelConfig: ModelEntry = {
-      ...this.model,
-      maxTokens: options?.maxTokens ?? this.model.maxTokens,
-      temperature: options?.temperature ?? this.model.temperature,
-    };
-
-    const response = await this.api.chat(modelConfig, messages);
+    const response = await this.api.chat(this.model, messages);
     return response.content;
   }
 

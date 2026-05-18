@@ -46,8 +46,6 @@ export class PromptManager {
     // Layer 3: Runtime config
     layers.push([
       "[Runtime]",
-      `Max tokens per response: ${this.config.models.generate.maxTokens}`,
-      `Temperature: ${this.config.models.generate.temperature}`,
       `Debug: ${this.config.settings.debug}`,
     ].join("\n"));
 

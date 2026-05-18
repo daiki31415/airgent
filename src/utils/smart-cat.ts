@@ -1,4 +1,11 @@
 import { spawnSync } from "node:child_process";
+import { resolve, normalize } from "node:path";
+import { existsSync } from "node:fs";
+
+const ALLOWED_DIRS = [
+  resolve(process.cwd()),
+  ...(process.env.HOME ? [process.env.HOME] : []),
+].map(d => normalize(resolve(d)));
 
 const CAT_MAP: Record<string, string> = {
   ".gz": "zcat",
@@ -14,6 +21,21 @@ function archiveExtension(file: string): boolean {
   return ARCHIVE_EXTS.some(ext => lower.endsWith(ext)) || /\.(tar\.gz|tar\.xz|tar\.bz2)$/.test(lower);
 }
 
+function resolveSafePath(file: string): string {
+  const resolved = normalize(resolve(file));
+
+  if (!existsSync(resolved)) {
+    throw new Error(`File not found: ${file}`);
+  }
+
+  const allowed = ALLOWED_DIRS.some(dir => resolved.startsWith(dir + "/") || resolved === dir);
+  if (!allowed) {
+    throw new Error(`Access denied: ${file} is outside allowed directories`);
+  }
+
+  return resolved;
+}
+
 export function smartCat(
   file: string,
   options?: { maxLines?: number; lineNumbers?: boolean }
@@ -22,10 +44,12 @@ export function smartCat(
     throw new Error(`Refusing to read archive: ${file}`);
   }
 
-  const ext = "." + file.split(".").pop()?.toLowerCase();
+  const safePath = resolveSafePath(file);
+
+  const ext = "." + safePath.split(".").pop()?.toLowerCase();
   const cmd = CAT_MAP[ext] || "cat";
 
-  const result = spawnSync(cmd, [file], { encoding: "utf-8" });
+  const result = spawnSync(cmd, [safePath], { encoding: "utf-8" });
 
   if (result.error) {
     throw new Error(`smartCat failed for ${file}: ${result.error.message}`);

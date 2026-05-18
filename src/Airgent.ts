@@ -24,18 +24,36 @@ import { CompressionManager } from "./compression/index";
 import { SkillsManager } from "./skills/index";
 import { PromptManager } from "./prompt/index";
 import { UIManager } from "./ui/index";
-import { rootLogger } from "./utils/logger";
+import { rootLogger, sanitizeError } from "./utils/logger";
 import type { AgentContext, ModelConfig, ModelEntry, PipelineNode } from "./types";
 import type { StatusInfo } from "./ui/index";
 
 type ModelRole = "planner" | "generate" | "compression" | "validation" | "watchdog";
 
-const ROLE_CONFIGS: Array<{ key: ModelRole; label: string; maxTokens: number; temperature: number }> = [
-  { key: "planner", label: "Planner (task decomposition)", maxTokens: 4096, temperature: 0.3 },
-  { key: "generate", label: "Generate (primary generation)", maxTokens: 4096, temperature: 0.3 },
-  { key: "compression", label: "Compression (context compression)", maxTokens: 2048, temperature: 0.2 },
-  { key: "validation", label: "Validation (quality check)", maxTokens: 2048, temperature: 0.2 },
-  { key: "watchdog", label: "Watchdog (error detection)", maxTokens: 1024, temperature: 0.1 },
+class RateLimiter {
+  private tokens: number;
+  private lastRefill: number;
+  constructor(private maxTokens: number, private refillIntervalMs: number, private refillAmount: number) {
+    this.tokens = maxTokens;
+    this.lastRefill = Date.now();
+  }
+  tryConsume(): boolean {
+    const now = Date.now();
+    const elapsed = now - this.lastRefill;
+    this.tokens = Math.min(this.maxTokens, this.tokens + Math.floor(elapsed / this.refillIntervalMs) * this.refillAmount);
+    this.lastRefill = now;
+    if (this.tokens <= 0) return false;
+    this.tokens--;
+    return true;
+  }
+}
+
+const ROLE_CONFIGS: Array<{ key: ModelRole; label: string }> = [
+  { key: "planner", label: "Planner (task decomposition)" },
+  { key: "generate", label: "Generate (primary generation)" },
+  { key: "compression", label: "Compression (context compression)" },
+  { key: "validation", label: "Validation (quality check)" },
+  { key: "watchdog", label: "Watchdog (error detection)" },
 ];
 
 export class Airgent {
@@ -67,6 +85,7 @@ export class Airgent {
   private currentTask = "";
   private deviceSync = new DeviceSync(this.storage);
   private opencodeProcess: import("bun").Subprocess | null = null;
+  private rateLimiter = new RateLimiter(100, 1000, 100);
   private logger = rootLogger.child("airgent");
 
   constructor() {
@@ -88,9 +107,18 @@ export class Airgent {
     let health = await this.api.healthCheck();
     if (!health.healthy) {
       this.ui.log("info", "airgent", "Starting OpenCode server...");
+      const SAFE_ENV_KEYS = [
+        "HOME", "PATH", "USER", "SHELL", "TERM", "LANG",
+        "OPENCODE_SERVER_PASSWORD", "OPENCODE_SERVER_USERNAME",
+        "OPENCODE_BASE_URL", "NODE_ENV",
+      ];
+      const safeEnv: Record<string, string> = {};
+      for (const key of SAFE_ENV_KEYS) {
+        if (process.env[key]) safeEnv[key] = process.env[key]!;
+      }
       try {
         const proc = Bun.spawn(["opencode", "serve"], {
-          env: { ...process.env },
+          env: safeEnv,
           stdout: "pipe",
           stderr: "pipe",
         });
@@ -128,7 +156,7 @@ export class Airgent {
           if (health.healthy) break;
         }
       } catch (err) {
-        this.ui.log("error", "airgent", `Failed to start OpenCode server: ${err}`);
+        this.ui.log("error", "airgent", `Failed to start OpenCode server: ${sanitizeError(err)}`);
       }
     }
 
@@ -161,6 +189,10 @@ export class Airgent {
   }
 
   private async handleInput(line: string): Promise<void> {
+    if (!this.rateLimiter.tryConsume()) {
+      this.ui.log("warn", "airgent", "Rate limit exceeded. Slow down.");
+      return;
+    }
     this.ui.log("info", "user", line);
     const lower = line.toLowerCase();
 
@@ -204,7 +236,7 @@ export class Airgent {
             this.ui.log("info", "providers", "Connected: " + providers.connected.join(", "));
             this.ui.log("info", "providers", "Available: " + providers.all.map(p => p.id).join(", "));
           } catch (err) {
-            this.ui.log("error", "providers", String(err));
+            this.ui.log("error", "providers", sanitizeError(err));
           }
           return;
         case "/sync":
@@ -212,10 +244,10 @@ export class Airgent {
             const url = args.slice(1).join(" ");
             if (url) this.deviceSync.initGit(url);
             try { this.deviceSync.push(); this.ui.log("info", "sync", "Push done"); }
-            catch (err) { this.ui.log("error", "sync", String(err)); }
+            catch (err) { this.ui.log("error", "sync", sanitizeError(err)); }
           } else if (args[0] === "pull") {
             try { this.deviceSync.pull(); this.ui.log("info", "sync", "Pull done"); }
-            catch (err) { this.ui.log("error", "sync", String(err)); }
+            catch (err) { this.ui.log("error", "sync", sanitizeError(err)); }
           } else {
             this.ui.log("info", "sync", "Usage: /sync push <remote-url>  |  /sync pull");
           }
@@ -225,7 +257,7 @@ export class Airgent {
             try {
               const content = smartCat(line.slice(5).trim());
               this.ui.log("info", "cat", content.slice(0, 2000));
-            } catch (err) { this.ui.log("error", "cat", String(err)); }
+            } catch (err) { this.ui.log("error", "cat", sanitizeError(err)); }
           } else {
             this.ui.log("info", "cat", "Usage: /cat <file>");
           }
@@ -277,8 +309,7 @@ export class Airgent {
       this.updateStatus({ status: "completed", pipelineNode: "" });
       this.ui.log("info", "airgent", "Task completed");
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      this.ui.log("error", "airgent", msg);
+      this.ui.log("error", "airgent", sanitizeError(err));
       this.updateStatus({ status: "error" });
     }
   }
@@ -319,13 +350,13 @@ export class Airgent {
 
     this.ui.log("info", "airgent", "Model selection — choose a model for each role:");
     const updates: Partial<ModelConfig> = {};
-    for (const { key, label, maxTokens, temperature } of ROLE_CONFIGS) {
+    for (const { key, label } of ROLE_CONFIGS) {
       const selected = await this.ui.selectModel(label, entries);
       if (!selected) {
         this.ui.log("warn", "airgent", "Skipped " + key);
         continue;
       }
-      updates[key] = { ...selected, maxTokens, temperature };
+      updates[key] = { ...selected };
     }
 
     if (Object.keys(updates).length > 0) {
@@ -347,7 +378,7 @@ export class Airgent {
       return;
     }
 
-    const update = { [role]: { ...selected, maxTokens: cfg.maxTokens, temperature: cfg.temperature } };
+    const update = { [role]: { ...selected } };
     this.configManager.saveModels(update);
     this.applyModelConfig();
     this.ui.notice(`Model for ${role} saved: ${selected.provider}/${selected.model}`);
@@ -364,8 +395,8 @@ export class Airgent {
     }
 
     const updates: Partial<ModelConfig> = {};
-    for (const { key, maxTokens, temperature } of ROLE_CONFIGS) {
-      updates[key] = { ...selected, maxTokens, temperature };
+    for (const { key } of ROLE_CONFIGS) {
+      updates[key] = { ...selected };
     }
     this.configManager.saveModels(updates);
     this.applyModelConfig();
@@ -377,7 +408,7 @@ export class Airgent {
     try {
       providers = await this.api.listProviders();
     } catch (err) {
-      this.ui.log("error", "airgent", `Cannot list providers: ${err}`);
+      this.ui.log("error", "airgent", `Cannot list providers: ${sanitizeError(err)}`);
       return null;
     }
 
@@ -390,7 +421,7 @@ export class Airgent {
           entries.push({
             name: `${p.id}/${id}`,
             description: info?.name ?? "",
-            value: { provider: p.id, model: id, maxTokens: 4096, temperature: 0.3 },
+            value: { provider: p.id, model: id },
           });
         }
       }
