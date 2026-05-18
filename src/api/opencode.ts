@@ -324,17 +324,26 @@ export class OpenCodeAPI {
       const res = await fetch(url, { method: "POST", headers, body: JSON.stringify(body) });
 
       if (!res.ok) {
-        // Non-streaming fallback
-        logger.debug("SSE not available, falling back to non-streaming");
         const result = await this.chat(model, messages);
         yield result.content;
         return;
       }
 
-      // Read SSE stream
+      const contentType = res.headers.get("content-type") || "";
+      if (!contentType.includes("text/event-stream")) {
+        const data = await res.json() as PromptResult;
+        const textContent = data.parts
+          .filter(p => p.type === "text")
+          .map(p => p.text || p.content || "")
+          .join("\n");
+        yield textContent;
+        return;
+      }
+
       const reader = res.body?.getReader();
       if (!reader) {
-        yield fullPrompt;
+        const result = await this.chat(model, messages);
+        yield result.content;
         return;
       }
 

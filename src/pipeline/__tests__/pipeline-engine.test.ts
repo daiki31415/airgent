@@ -68,12 +68,10 @@ describe("PipelineEngine execute", () => {
     });
     engine.registerHandler("plan", async () => ({ content: "p" }));
 
-    // Execute full chain twice (session reused)
     const dag = buildDAG(["clarify", "plan"]);
     await engine.execute("session-6", dag);
-    await engine.execute("session-6", dag); // Second run
+    await engine.execute("session-6", dag);
 
-    // clarify should only execute once per session
     expect(clarificationCalls.length).toBe(1);
   });
 
@@ -99,5 +97,51 @@ describe("PipelineEngine execute", () => {
     engine.reset("session-8");
 
     expect(engine.getState("session-8")).toBeUndefined();
+  });
+
+  test("allows multiple independent sessions", async () => {
+    const engine = new PipelineEngine();
+    let counter = 0;
+    engine.registerHandler("clarify", async () => ({ content: `${counter++}` }));
+
+    const dag = buildDAG(["clarify"]);
+    const r1 = await engine.execute("sess-a", dag);
+    const r2 = await engine.execute("sess-b", dag);
+
+    expect(r1.get("clarify")).toEqual({ content: "0" });
+    expect(r2.get("clarify")).toEqual({ content: "1" });
+  });
+
+  test("handler error propagates correctly", async () => {
+    const engine = new PipelineEngine();
+    engine.registerHandler("clarify", async () => { throw new Error("handler-error"); });
+
+    const dag = buildDAG(["clarify"]);
+    expect(engine.execute("session-e1", dag)).rejects.toThrow("handler-error");
+  });
+
+  test("empty DAG executes without error", async () => {
+    const engine = new PipelineEngine();
+    const dag = buildDAG([]);
+    const results = await engine.execute("session-empty", dag);
+    expect(results.size).toBe(0);
+  });
+
+  test("completed nodes are tracked in state", async () => {
+    const engine = new PipelineEngine();
+    engine.registerHandler("clarify", async () => ({ content: "c" }));
+    engine.registerHandler("plan", async () => ({ content: "p" }));
+
+    const dag = buildDAG(["clarify", "plan"]);
+    await engine.execute("session-s1", dag);
+
+    const state = engine.getState("session-s1");
+    expect(state!.completedNodes).toEqual(["clarify", "plan"]);
+  });
+
+  test("reset works on state with no data", () => {
+    const engine = new PipelineEngine();
+    engine.reset("nonexistent");
+    expect(engine.getState("nonexistent")).toBeUndefined();
   });
 });

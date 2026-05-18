@@ -45,4 +45,53 @@ describe("buildDAG", () => {
     expect(idx("merge")!).toBeLessThan(idx("validate")!);
     expect(idx("validate")!).toBeLessThan(idx("report")!);
   });
+
+  test("single clarify node", () => {
+    const dag = buildDAG(["clarify"]);
+    expect(dag.nodes.length).toBe(1);
+    expect(dag.nodes[0]!.id).toBe("clarify");
+    expect(dag.entryPoints).toEqual(["clarify"]);
+  });
+
+  test("single plan node includes clarify dependency", () => {
+    const dag = buildDAG(["plan"]);
+    const ids = dag.nodes.map(n => n.id);
+    expect(ids).toContain("clarify");
+    expect(ids).toContain("plan");
+    expect(ids.indexOf("clarify")).toBeLessThan(ids.indexOf("plan")!);
+  });
+
+  test("validate depends on merge", () => {
+    const dag = buildDAG(["validate"]);
+    const ids = dag.nodes.map(n => n.id);
+    expect(ids).toEqual(["clarify", "plan", "prompt", "generate", "test", "merge", "validate"]);
+  });
+
+  test("report pulls in entire pipeline", () => {
+    const dag = buildDAG(["report"]);
+    const ids = dag.nodes.map(n => n.id);
+    expect(ids).toEqual(["clarify", "plan", "prompt", "generate", "test", "merge", "validate", "report"]);
+  });
+
+  test("clarify has no dependencies", () => {
+    const dag = buildDAG(["clarify"]);
+    expect(dag.nodes[0]!.dependsOn).toEqual([]);
+  });
+
+  test("each node has correct dependency edges", () => {
+    const dag = buildDAG(["clarify", "plan", "prompt", "generate", "test", "merge", "validate", "report"]);
+    const byId = new Map(dag.nodes.map(n => [n.id, n]));
+    expect(byId.get("clarify")!.dependsOn).toEqual([]);
+    expect(byId.get("plan")!.dependsOn).toEqual(["clarify"]);
+    expect(byId.get("prompt")!.dependsOn).toEqual(["plan"]);
+    expect(byId.get("generate")!.dependsOn).toEqual(["prompt"]);
+    expect(byId.get("test")!.dependsOn).toEqual(["generate"]);
+    expect(byId.get("merge")!.dependsOn).toEqual(["test"]);
+    expect(byId.get("validate")!.dependsOn).toEqual(["merge"]);
+    expect(byId.get("report")!.dependsOn).toEqual(["validate"]);
+  });
 });
+
+function firstDep(dag: ReturnType<typeof buildDAG>, id: string): string[] {
+  return dag.nodes.find(n => n.id === id)!.dependsOn;
+}

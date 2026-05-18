@@ -26,7 +26,7 @@ import { PromptManager } from "./prompt/index";
 import { UIManager } from "./ui/index";
 import { rootLogger, sanitizeError } from "./utils/logger";
 import { RateLimiter } from "./utils/rate-limiter";
-import type { AgentContext, ModelConfig, ModelEntry } from "./types";
+import type { AgentContext, ModelConfig, ModelEntry, Settings } from "./types";
 import type { StatusInfo } from "./ui/index";
 
 type ModelRole = "planner" | "generate" | "compression" | "validation" | "watchdog";
@@ -52,6 +52,7 @@ export class Airgent {
   ui = new UIManager({
     refreshIntervalMs: this.config.settings.uiRefreshIntervalMs,
     onInput: (line) => this.handleInput(line),
+    onShutdown: () => this.stop(),
   });
 
   private planner = new PlannerAgent(this.config.models.planner, this.api);
@@ -216,6 +217,9 @@ export class Airgent {
         case "/model":
           await this.handleModelCommand(args);
           return;
+        case "/setting":
+          await this.handleSettingCommand();
+          return;
         case "/compress":
           if (this.sessionId) await this.compressionManager.compressSession(this.sessionId);
           this.ui.log("info", "airgent", "Compression done");
@@ -315,12 +319,51 @@ export class Airgent {
     }
   }
 
+  private async streamNodeOutput(
+    model: ModelEntry,
+    messages: Array<{ role: string; content: string }>,
+    nodeName: string,
+    dstField: keyof typeof this.pipelineData
+  ): Promise<string> {
+    this.ui.stream(`  → ${nodeName}`);
+    let buffer = "";
+    let content = "";
+    try {
+      for await (const chunk of this.api.streamChat(model, messages)) {
+        content += chunk;
+        buffer += chunk;
+        if (buffer.includes("\n")) {
+          const lines = buffer.split("\n");
+          for (let i = 0; i < lines.length - 1; i++) {
+            const l = lines[i]!.trim();
+            if (l) this.ui.stream(`    ${l}`);
+          }
+          buffer = lines[lines.length - 1]!;
+        }
+      }
+      if (buffer.trim()) this.ui.stream(`    ${buffer.trim()}`);
+    } catch {
+      // fallback: non-streaming
+      const res = await this.api.chat(model, messages);
+      content = res.content;
+      this.ui.stream(`    ${content.slice(0, 500)}...`);
+    }
+    (this.pipelineData as Record<string, any>)[dstField] = content;
+    return content;
+  }
+
   private registerPipelineHandlers(): void {
     this.pipeline.registerHandler("clarify", async () => {
-      const response = await this.api.chat(this.config.models.planner, [
-        { role: "system", content: "You analyze tasks and extract: goal, constraints, affected files, ambiguities. Be concise." },
-        { role: "user", content: `Analyze this task:\n${this.currentTask}` },
-      ]);
+      const messages = [
+        { role: "system" as const, content: "You analyze tasks and extract: goal, constraints, affected files, ambiguities. Be concise." },
+        { role: "user" as const, content: `Analyze this task:\n${this.currentTask}` },
+      ];
+      if (this.config.settings.showPipelineProgress) {
+        this.ui.stream(`  → clarify input: ${this.currentTask.slice(0, 200)}`);
+        const content = await this.streamNodeOutput(this.config.models.planner, messages, "clarify output", "clarifiedTask");
+        return { content };
+      }
+      const response = await this.api.chat(this.config.models.planner, messages);
       this.pipelineData.clarifiedTask = response.content;
       this.ui.log("info", "clarify", `Analyzed task`);
       return { content: response.content };
@@ -328,10 +371,16 @@ export class Airgent {
 
     this.pipeline.registerHandler("plan", async () => {
       const source = this.pipelineData.clarifiedTask || this.currentTask;
-      const response = await this.api.chat(this.config.models.planner, [
-        { role: "system", content: "You create step-by-step implementation plans. Be specific and actionable." },
-        { role: "user", content: `Create a plan based on the requirements:\n\n${source}` },
-      ]);
+      const messages = [
+        { role: "system" as const, content: "You create step-by-step implementation plans. Be specific and actionable." },
+        { role: "user" as const, content: `Create a plan based on the requirements:\n\n${source}` },
+      ];
+      if (this.config.settings.showPipelineProgress) {
+        this.ui.stream(`  → plan input: ${source.slice(0, 200)}`);
+        const content = await this.streamNodeOutput(this.config.models.planner, messages, "plan output", "plan");
+        return { content };
+      }
+      const response = await this.api.chat(this.config.models.planner, messages);
       this.pipelineData.plan = response.content;
       this.ui.log("info", "plan", `Created plan`);
       return { content: response.content };
@@ -347,12 +396,29 @@ export class Airgent {
         `Task: ${this.currentTask}`,
       ].filter(Boolean);
       this.pipelineData.prompt = parts.join("\n\n");
+      if (this.config.settings.showPipelineProgress) {
+        this.ui.stream(`  → prompt assembled: ${this.pipelineData.prompt.length} chars`);
+        for (const line of this.pipelineData.prompt.split("\n")) {
+          if (line.trim()) this.ui.stream(`    ${line.trim()}`);
+        }
+      }
       this.ui.log("info", "prompt", `Built prompt: ${this.pipelineData.prompt.length} chars`);
       return { content: this.pipelineData.prompt };
     });
 
     this.pipeline.registerHandler("generate", async () => {
       const generationPrompt = this.pipelineData.prompt || this.currentTask;
+      if (this.config.settings.showPipelineProgress) {
+        this.ui.stream(`  → generate input: ${generationPrompt.slice(0, 300)}`);
+        this.ui.stream(`  → generate output:`);
+        const systemPrompt = this.buildAgentContext(this.currentTask).systemPrompt;
+        const messages = [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: generationPrompt },
+        ];
+        const content = await this.streamNodeOutput(this.config.models.generate, messages, "", "generatedOutput");
+        return { content };
+      }
       const result = await this.worker.execute(generationPrompt);
       this.pipelineData.generatedOutput = result.content;
       this.ui.log("info", "generate", `Generated: ${result.content.length} chars`);
@@ -361,10 +427,18 @@ export class Airgent {
 
     this.pipeline.registerHandler("test", async () => {
       if (!this.pipelineData.generatedOutput) return { status: "skipped", reason: "no output" };
-      const response = await this.api.chat(this.config.models.validation, [
-        { role: "system", content: "Review the following output for correctness, edge cases, and potential issues. Be critical but constructive." },
-        { role: "user", content: `Task: ${this.currentTask}\n\nOutput:\n${this.pipelineData.generatedOutput.slice(0, 4000)}` },
-      ]);
+      const messages = [
+        { role: "system" as const, content: "Review the following output for correctness, edge cases, and potential issues. Be critical but constructive." },
+        { role: "user" as const, content: `Task: ${this.currentTask}\n\nOutput:\n${this.pipelineData.generatedOutput.slice(0, 4000)}` },
+      ];
+      if (this.config.settings.showPipelineProgress) {
+        this.ui.stream(`  → test input: ${this.pipelineData.generatedOutput.slice(0, 200)}`);
+        const content = await this.streamNodeOutput(this.config.models.validation, messages, "test result", "testResult");
+        const hasIssues = /(?:bug|error|issue|incorrect|wrong|missing)/i.test(content);
+        this.ui.stream(`  → test ${hasIssues ? "⚠ issues found" : "✓ passed"}`);
+        return { content, passed: !hasIssues };
+      }
+      const response = await this.api.chat(this.config.models.validation, messages);
       this.pipelineData.testResult = response.content;
       const hasIssues = /(?:bug|error|issue|incorrect|wrong|missing)/i.test(response.content);
       this.ui.log("info", "test", hasIssues ? `Issues found` : "No issues detected");
@@ -504,6 +578,138 @@ export class Airgent {
       }
       this.ui.log("info", "airgent", "Usage: /model <role> | all — roles: " + ROLE_CONFIGS.map(r => r.key).join(", "));
     }
+  }
+
+  private async handleSettingCommand(): Promise<void> {
+    const category = await this.ui.showSelectMenu("Settings", [
+      { name: "Models", description: "Configure model per role", value: "models" },
+      { name: "Providers", description: "Set API keys for providers", value: "providers" },
+      { name: "General", description: "Edit settings values", value: "general" },
+      { name: "View Config", description: "Show current configuration", value: "view" },
+    ]);
+    if (!category) return;
+
+    switch (category) {
+      case "models":
+        await this.handleSettingModels();
+        break;
+      case "providers":
+        await this.handleSettingProviders();
+        break;
+      case "general":
+        await this.handleSettingGeneral();
+        break;
+      case "view":
+        this.handleSettingViewConfig();
+        break;
+    }
+  }
+
+  private async handleSettingModels(): Promise<void> {
+    const roleOptions = [
+      { name: "All roles", description: "Set one model for every role", value: "__all__" },
+      ...ROLE_CONFIGS.map(r => ({ name: r.label, description: "", value: r.key })),
+    ];
+    const selected = await this.ui.showSelectMenu("Select Role", roleOptions);
+    if (!selected) return;
+    if (selected === "__all__") {
+      await this.configureModelForAll();
+    } else {
+      const role = ROLE_CONFIGS.find(r => r.key === selected);
+      if (role) {
+        const entries = await this.fetchModelEntries();
+        if (!entries) return;
+        const model = await this.ui.selectModel(role.label, entries);
+        if (model) {
+          this.configManager.saveModels({ [selected]: { ...model } });
+          this.applyModelConfig();
+          this.ui.notice(`Model for ${selected} updated`);
+        }
+      }
+    }
+  }
+
+  private async handleSettingProviders(): Promise<void> {
+    try {
+      const providers = await this.api.listProviders();
+      const connected = providers.connected;
+      if (connected.length === 0) {
+        this.ui.log("warn", "settings", "No connected providers");
+        return;
+      }
+      const options = connected.map(id => {
+        const info = providers.all.find(p => p.id === id);
+        return { name: id, description: info?.name || "", value: id };
+      });
+      const selected = await this.ui.showSelectMenu("Set API Key", options);
+      if (!selected) return;
+      const apiKey = await this.ui.prompt(`API key for ${selected}: `);
+      if (!apiKey) return;
+      await this.api.setAuth(selected, apiKey);
+      this.ui.log("info", "settings", `API key set for ${selected}`);
+    } catch (err) {
+      this.ui.log("error", "settings", sanitizeError(err));
+    }
+  }
+
+  private async handleSettingGeneral(): Promise<void> {
+    const settings = this.config.settings;
+    const settingEntries = [
+      { key: "maxSystemPromptTokens" as const, label: "Max system prompt tokens", type: "number" as const },
+      { key: "maxContextTokens" as const, label: "Max context tokens", type: "number" as const },
+      { key: "uiRefreshIntervalMs" as const, label: "UI refresh interval (ms)", type: "number" as const },
+      { key: "autoCompressThreshold" as const, label: "Auto-compress threshold", type: "number" as const },
+      { key: "watchdogIntervalMs" as const, label: "Watchdog interval (ms)", type: "number" as const },
+      { key: "maxRetriesPerNode" as const, label: "Max retries per node", type: "number" as const },
+      { key: "memoryAutoLink" as const, label: "Memory auto-link", type: "boolean" as const },
+      { key: "showPipelineProgress" as const, label: "Show pipeline progress", type: "boolean" as const },
+      { key: "debug" as const, label: "Debug mode", type: "boolean" as const },
+    ];
+
+    const options = settingEntries.map(e => ({
+      name: e.label,
+      description: String(settings[e.key]),
+      value: e,
+    }));
+    const raw = await this.ui.showSelectMenu("Edit Setting", options);
+    if (!raw) return;
+    const sel = raw as { key: keyof Settings; label: string; type: "number" | "boolean" };
+
+    let newValue: any;
+    if (sel.type === "boolean") {
+      const choice = await this.ui.showSelectMenu(sel.label, [
+        { name: "true", description: "Enable", value: true },
+        { name: "false", description: "Disable", value: false },
+      ]);
+      if (choice === null) return;
+      newValue = choice;
+    } else {
+      const input = await this.ui.prompt(`${sel.label} [${settings[sel.key]}]: `);
+      if (!input) return;
+      if (sel.type === "number") {
+        newValue = sel.key === "autoCompressThreshold" ? parseFloat(input) : parseInt(input, 10);
+        if (isNaN(newValue)) {
+          this.ui.log("warn", "settings", "Invalid number");
+          return;
+        }
+      } else {
+        newValue = input;
+      }
+    }
+
+    this.configManager.saveSettings({ [sel.key]: newValue });
+    this.ui.log("info", "settings", `${sel.label} → ${newValue}`);
+  }
+
+  private handleSettingViewConfig(): void {
+    const m = this.config.models;
+    for (const { key, label } of ROLE_CONFIGS) {
+      this.ui.log("info", "config", `${label}: ${m[key].provider}/${m[key].model}`);
+    }
+    const s = this.config.settings;
+    this.ui.log("info", "config", `maxTokens: ${s.maxSystemPromptTokens} | context: ${s.maxContextTokens}`);
+    this.ui.log("info", "config", `debug: ${s.debug} | autoLink: ${s.memoryAutoLink} | progress: ${s.showPipelineProgress}`);
+    this.ui.log("info", "config", `retries: ${s.maxRetriesPerNode} | compress: ${s.autoCompressThreshold} | ui: ${s.uiRefreshIntervalMs}ms`);
   }
 
   private applyModelConfig(): void {

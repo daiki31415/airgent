@@ -10,6 +10,8 @@ describe("resolveSafePath", () => {
     mkdirSync(tmpDir, { recursive: true });
     writeFileSync(join(tmpDir, "safe.txt"), "safe content");
     writeFileSync(join(tmpDir, "sub_file.txt"), "sub content");
+    mkdirSync(join(tmpDir, "subdir"), { recursive: true });
+    writeFileSync(join(tmpDir, "subdir", "nested.txt"), "nested");
   });
 
   afterAll(() => {
@@ -27,5 +29,29 @@ describe("resolveSafePath", () => {
 
   test("throws on path traversal attempt", () => {
     expect(() => resolveSafePath("/etc/passwd")).toThrow("Access denied");
+  });
+
+  test("resolves file in subdirectory", () => {
+    const result = resolveSafePath(join(tmpDir, "subdir", "nested.txt"));
+    expect(result).toContain("nested.txt");
+  });
+
+  test("throws on traversal via ../ beyond allowed dirs", () => {
+    expect(() => resolveSafePath(join(tmpDir, "..", "safe.txt"))).toThrow(/Access denied|File not found/);
+  });
+
+  test("throws on absolute path pointing outside allowed dirs", () => {
+    expect(() => resolveSafePath("/etc/hostname")).toThrow("Access denied");
+  });
+
+  test("resolves file within HOME directory", () => {
+    const homePath = join(process.env.HOME || "/home/daiki", "test-allowed.txt");
+    try { writeFileSync(homePath, "home test"); } catch {}
+    try {
+      const result = resolveSafePath(homePath);
+      expect(result).toContain("test-allowed.txt");
+    } finally {
+      try { rmSync(homePath); } catch {}
+    }
   });
 });

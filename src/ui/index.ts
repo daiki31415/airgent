@@ -33,6 +33,7 @@ export interface StatusInfo {
 export interface UIOptions {
   refreshIntervalMs: number;
   onInput?: (line: string) => void;
+  onShutdown?: () => void;
 }
 
 export class UIManager {
@@ -49,7 +50,9 @@ export class UIManager {
   private renderer: CliRenderer | null = null;
   private scrollbox: ScrollBoxRenderable | null = null;
   private input: InputRenderable | null = null;
-  private toastTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private _copyInProgress = false;
+  private _sigintCount = 0;
+  private _sigintTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(options: UIOptions) {
     this.options = options;
@@ -64,7 +67,7 @@ export class UIManager {
     if (this.isTTY) {
       try {
         const renderer = await createCliRenderer({
-          exitOnCtrlC: true,
+          exitOnCtrlC: false,
           backgroundColor: "#1a1b26",
         });
         this.renderer = renderer;
@@ -110,18 +113,19 @@ export class UIManager {
         renderer.root.add(inputVNode);
         this.input = renderer.root.findDescendantById("input-line") as InputRenderable | null;
 
+        renderer.on("selection", (sel: Selection) => this.handleSelection(sel, renderer));
+
+        // Ctrl+C handling: first press warns, second press shuts down
+        renderer.keyInput.on("keypress", (event: any) => {
+          if (event.ctrl && event.name === "c") {
+            event.preventDefault();
+            this.handleCtrlC();
+          }
+        });
+
         renderer.start();
 
         if (this.input) renderer.focusRenderable(this.input);
-
-        renderer.on("selection", (sel: Selection) => {
-          if (!sel.isDragging && sel.isActive) {
-            const text = sel.getSelectedText();
-            if (text && renderer.copyToClipboardOSC52(text)) {
-              this.showToast();
-            }
-          }
-        });
       } catch (err) {
         logger.warn("opentui init failed", err);
       }
@@ -130,10 +134,36 @@ export class UIManager {
     logger.info("UI started");
   }
 
+  private handleSelection(sel: Selection, renderer: CliRenderer): void {
+    if (this._copyInProgress) return;
+    try {
+      this._copyInProgress = true;
+      const text = sel.getSelectedText();
+      if (text && /\S/.test(text)) {
+        renderer.copyToClipboardOSC52(text);
+      }
+    } catch {
+      // ignore selection API errors
+    } finally {
+      this._copyInProgress = false;
+    }
+  }
+
+  private handleCtrlC(): void {
+    this._sigintCount++;
+    if (this._sigintCount === 1) {
+      this.log("warn", "airgent", "Press Ctrl+C again to shut down");
+      this._sigintTimer = setTimeout(() => { this._sigintCount = 0; }, 3000);
+    } else {
+      if (this._sigintTimer) clearTimeout(this._sigintTimer);
+      this.log("info", "airgent", "Shutting down...");
+      process.nextTick(() => this.options.onShutdown?.());
+    }
+  }
+
   stop(): void {
     this.running = false;
-    if (this.toastTimeoutId) clearTimeout(this.toastTimeoutId);
-    this.toastTimeoutId = null;
+    if (this._sigintTimer) clearTimeout(this._sigintTimer);
     if (this.renderer) {
       this.renderer.destroy();
     }
@@ -155,6 +185,10 @@ export class UIManager {
     const now = new Date();
     const ts = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}:${now.getSeconds().toString().padStart(2, "0")}`;
     this.addLine(`${ts} ${level.padEnd(5)} ${source} ${message}`);
+  }
+
+  stream(line: string, fg?: string): void {
+    this.addLine(line, fg);
   }
 
   notice(message: string): void {
@@ -237,6 +271,74 @@ export class UIManager {
     });
   }
 
+  async showSelectMenu(
+    title: string,
+    options: Array<{ name: string; description: string; value: any }>
+  ): Promise<any> {
+    if (!this.renderer || !this.scrollbox) {
+      return this.selectModelFallback(title, options);
+    }
+
+    const id = `overlay-${Date.now()}`;
+    const selectId = `${id}-select`;
+
+    return new Promise((resolve) => {
+      const root = this.renderer!.root;
+
+      const overlayVNode = Box({
+        id,
+        position: "absolute",
+        top: 0, left: 0, right: 0, bottom: 0,
+        zIndex: 999,
+        backgroundColor: "#1a1b26",
+        flexDirection: "column",
+        paddingX: 2,
+        paddingY: 2,
+      });
+      root.add(overlayVNode);
+      const overlay = root.findDescendantById(id)!;
+
+      overlay.add(Text({
+        content: `  ${title}  (↑↓ Enter)`,
+        width: "100%", fg: "#7aa2f7",
+      }));
+
+      const selectVNode = Select({
+        id: selectId,
+        width: "100%",
+        flexGrow: 1,
+        options,
+        backgroundColor: "#1a1b26",
+        textColor: "#c0caf5",
+        focusedBackgroundColor: "#2f3449",
+        focusedTextColor: "#c0caf5",
+        selectedBackgroundColor: "#414868",
+        selectedTextColor: "#7dcfff",
+        descriptionColor: "#565f89",
+      });
+      selectVNode.on(SelectRenderableEvents.ITEM_SELECTED, () => {
+        const option = (root.findDescendantById(selectId) as SelectRenderable | null)?.getSelectedOption();
+        setTimeout(() => {
+          root.remove(id);
+          this.renderer!.requestRender();
+          if (this.input) this.renderer!.focusRenderable(this.input);
+          resolve(option?.value ?? null);
+        }, 0);
+      });
+
+      overlay.add(selectVNode);
+      this.renderer!.requestRender();
+
+      setTimeout(() => {
+        const s = root.findDescendantById(selectId) as SelectRenderable | null;
+        if (s) {
+          s.focusable = true;
+          s.focus();
+        }
+      }, 0);
+    });
+  }
+
   private async selectModelFallback(
     title: string,
     options: Array<{ name: string; description: string; value: unknown }>
@@ -253,38 +355,5 @@ export class UIManager {
     });
   }
 
-  private showToast(): void {
-    if (!this.renderer) return;
-    if (this.toastTimeoutId) clearTimeout(this.toastTimeoutId);
 
-    const existingToast = this.renderer.root.findDescendantById("toast-copied");
-    if (existingToast) this.renderer.root.remove(existingToast.id);
-
-    const toastVNode = Box({
-      id: "toast-copied",
-      focusable: false,
-      position: "absolute",
-      top: 1,
-      right: 2,
-      zIndex: 999,
-      backgroundColor: "#1a1b26",
-      borderStyle: "rounded",
-      border: true,
-      borderColor: "#00ff00",
-      paddingX: 2,
-      paddingY: 1,
-    });
-    this.renderer.root.add(toastVNode);
-    const toast = this.renderer.root.findDescendantById("toast-copied");
-    if (toast) toast.add(Text({ content: "Copied!", fg: "#00ff00" }));
-
-    this.renderer.requestRender();
-    if (this.input) this.renderer.focusRenderable(this.input);
-
-    this.toastTimeoutId = setTimeout(() => {
-      this.renderer?.root.remove("toast-copied");
-      this.toastTimeoutId = null;
-      if (this.input) this.renderer?.focusRenderable(this.input);
-    }, 3000);
-  }
 }

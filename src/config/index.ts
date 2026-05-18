@@ -55,6 +55,7 @@ const DEFAULT_SETTINGS: Settings = {
   watchdogIntervalMs: 5000,
   maxRetriesPerNode: 3,
   memoryAutoLink: true,
+  showPipelineProgress: false,
   debug: false,
 };
 
@@ -131,6 +132,14 @@ export class ConfigManager {
       || !m.compression.provider || !m.compression.model
       || !m.validation.provider || !m.validation.model
       || !m.watchdog.provider || !m.watchdog.model;
+  }
+
+  saveSettings(partial: Partial<Settings>): void {
+    const filePath = path.join(CONFIG_DIR, "settings.json");
+    const updated = { ...this.cache!.settings, ...partial };
+    this.cache!.settings = updated;
+    fs.writeFileSync(filePath, JSON.stringify(updated, null, 2), { mode: 0o600, encoding: "utf-8" });
+    this.logger.info("Settings saved");
   }
 
   saveModels(models: Partial<ModelConfig>): void {

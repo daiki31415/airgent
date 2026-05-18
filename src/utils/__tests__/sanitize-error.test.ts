@@ -40,4 +40,38 @@ describe("sanitizeError", () => {
     const result = sanitizeError(err);
     expect(typeof result).toBe("string");
   });
+
+  test("redacts home directory paths", () => {
+    const result = sanitizeError(new Error("Error at /home/daiki/project/src/file.ts:10"));
+    expect(result).toContain("~/project/src/file.ts:10");
+    expect(result).not.toContain("/home/daiki");
+  });
+
+  test("redacts multiple home directory occurrences", () => {
+    const result = sanitizeError(new Error("paths: /home/daiki/a, /home/daiki/b"));
+    expect(result).toContain("~/a, ~/b");
+    expect((result.match(/~/g) || []).length).toBe(2);
+  });
+
+  test("handles exactly 500 char boundary", () => {
+    const msg = "a".repeat(500);
+    const result = sanitizeError(msg);
+    expect(result.length).toBe(500);
+    expect(result).not.toContain("...");
+  });
+
+  test("handles 501 chars with triple-dot truncation", () => {
+    const msg = "a".repeat(501);
+    const result = sanitizeError(msg);
+    expect(result.length).toBe(503);
+    expect(result.endsWith("...")).toBe(true);
+  });
+
+  test("handles number 0", () => {
+    expect(sanitizeError(0)).toBe("0");
+  });
+
+  test("handles boolean false", () => {
+    expect(sanitizeError(false)).toBe("false");
+  });
 });

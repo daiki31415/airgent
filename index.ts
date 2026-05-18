@@ -22,7 +22,7 @@ async function main(): Promise<void> {
 
   const agent = new Airgent();
 
-  // Handle clean shutdown
+  // Handle shutdown (SIGINT: backup for when terminal is in cooked mode)
   process.on("SIGINT", async () => {
     console.log("\nShutting down...");
     await agent.stop();

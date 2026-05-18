@@ -53,6 +53,7 @@ export interface Settings {
   watchdogIntervalMs: number;
   maxRetriesPerNode: number;
   memoryAutoLink: boolean;
+  showPipelineProgress: boolean;
   debug: boolean;
 }
 
