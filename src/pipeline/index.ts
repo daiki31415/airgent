@@ -1,39 +1,39 @@
 /**
  * Pipeline Engine - DAG-based Execution
  *
- * Builds DAG from selected nodes and executes them.
- * All 8 node types with dependency resolution.
+ * Builds DAG from selected nodes and executes them in topological order.
+ * Supports timeout enforcement and retry strategies.
  */
 
-import type { DAGDefinition, DAGNode, PipelineNode, PipelineState, RetryDecision } from "../types";
+import type { DAGDefinition, DAGNode, PipelineNode, PipelineState, RetryContext, RetryDecision } from "../types";
 import { rootLogger } from "../utils/logger";
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error("timeout")), timeoutMs);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer!));
+}
 
 const ALL_NODES: DAGNode[] = [
   { id: "clarify", dependsOn: [], handler: "clarify", maxRetries: 2, timeout: 30000 },
   { id: "plan", dependsOn: ["clarify"], handler: "plan", maxRetries: 2, timeout: 30000 },
-  { id: "prompt", dependsOn: ["plan"], handler: "prompt", maxRetries: 2, timeout: 15000 },
-  { id: "generate", dependsOn: ["prompt"], handler: "generate", maxRetries: 3, timeout: 120000 },
+  { id: "generate", dependsOn: ["plan"], handler: "generate", maxRetries: 3, timeout: 120000 },
   { id: "test", dependsOn: ["generate"], handler: "test", maxRetries: 2, timeout: 60000 },
-  { id: "merge", dependsOn: ["test"], handler: "merge", maxRetries: 2, timeout: 15000 },
-  { id: "validate", dependsOn: ["merge"], handler: "validate", maxRetries: 2, timeout: 30000 },
+  { id: "validate", dependsOn: ["test"], handler: "validate", maxRetries: 2, timeout: 30000 },
   { id: "report", dependsOn: ["validate"], handler: "report", maxRetries: 1, timeout: 15000 },
 ];
 
 export class PipelineEngine {
   private states = new Map<string, PipelineState>();
-  private handlers = new Map<PipelineNode, (input: unknown) => Promise<unknown>>();
+  private handlers = new Map<PipelineNode, (input: unknown, retryCtx?: RetryContext) => Promise<unknown>>();
   private logger = rootLogger.child("pipeline");
 
-  /**
-   * Register a handler for a pipeline node type.
-   */
-  registerHandler(node: PipelineNode, handler: (input: unknown) => Promise<unknown>): void {
+  registerHandler(node: PipelineNode, handler: (input: unknown, retryCtx?: RetryContext) => Promise<unknown>): void {
     this.handlers.set(node, handler);
   }
 
-  /**
-   * Execute a DAG definition for a session.
-   */
   async execute(sessionId: string, dag: DAGDefinition): Promise<Map<PipelineNode, unknown>> {
     let state = this.states.get(sessionId);
     if (!state) {
@@ -51,29 +51,19 @@ export class PipelineEngine {
     this.logger.info(`Executing: ${dag.nodes.map(n => n.id).join(" -> ")}`);
 
     const results = new Map<PipelineNode, unknown>();
-    await this.executeNodes(state, dag.nodes, new Set(), results);
+    for (const node of dag.nodes) {
+      if (state.completedNodes.includes(node.id)) continue;
+      const result = await this.executeNode(state, node, results);
+      results.set(node.id, result);
+    }
     return results;
   }
 
-  private async executeNodes(state: PipelineState, nodes: DAGNode[], visited: Set<string>, results: Map<PipelineNode, unknown>): Promise<void> {
-    for (const node of nodes) {
-      if (state.completedNodes.includes(node.id)) continue;
-      if (visited.has(node.id)) {
-        this.logger.warn(`Circular: ${node.id}`);
-        continue;
-      }
-
-      if (node.dependsOn.length > 0) {
-        const deps = nodes.filter(n => node.dependsOn.includes(n.id));
-        await this.executeNodes(state, deps, new Set(visited), results);
-      }
-
-      const result = await this.executeNode(state, node);
-      results.set(node.id, result);
-    }
-  }
-
-  private async executeNode(state: PipelineState, node: DAGNode): Promise<unknown> {
+  private async executeNode(
+    state: PipelineState,
+    node: DAGNode,
+    results: Map<PipelineNode, unknown>,
+  ): Promise<unknown> {
     state.currentNode = node.id;
     this.logger.info(`Executing: ${node.id}`);
 
@@ -88,8 +78,11 @@ export class PipelineEngine {
         state.retryCounts[node.id] = attempt;
       }
 
+      const retryCtx: RetryContext | undefined =
+        attempt > 0 ? { attempt, strategy: this.decideRetryStrategy(node, attempt, lastError!).strategy } : undefined;
+
       try {
-        const result = await handler({});
+        const result = await withTimeout(handler(results, retryCtx), node.timeout);
         state.completedNodes.push(node.id);
         this.logger.info(`Completed: ${node.id}`);
         return result;
@@ -123,10 +116,6 @@ export class PipelineEngine {
   }
 }
 
-/**
- * Build a DAG definition from a set of selected pipeline nodes.
- * Resolves full dependency chains.
- */
 export function buildDAG(selectedNodes: PipelineNode[]): DAGDefinition {
   const nodeMap = new Map(ALL_NODES.map(n => [n.id, n]));
   const nodes: DAGNode[] = [];
@@ -143,8 +132,5 @@ export function buildDAG(selectedNodes: PipelineNode[]): DAGDefinition {
 
   for (const id of selectedNodes) resolve(id);
 
-  return {
-    nodes,
-    entryPoints: nodes.filter(n => n.dependsOn.length === 0).map(n => n.id),
-  };
+  return { nodes };
 }

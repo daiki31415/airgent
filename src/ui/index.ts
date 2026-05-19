@@ -1,5 +1,7 @@
 import * as readline from "readline";
 import { rootLogger } from "../utils/logger";
+import { copyToClipboard } from "../utils/clipboard";
+import type { CopyResult } from "../utils/clipboard";
 import {
   createCliRenderer,
   InputRenderableEvents,
@@ -70,6 +72,7 @@ export class UIManager {
   private headerBox: any = null;
   private statusBar: any = null;
   private _copyInProgress = false;
+  private _copyToastTimer: ReturnType<typeof setTimeout> | null = null;
   private _sigintCount = 0;
   private _sigintTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -133,32 +136,18 @@ export class UIManager {
         renderer.root.add(scrollboxVNode);
         this.scrollbox = renderer.root.findDescendantById("log-area") as ScrollBoxRenderable | null;
 
-        const footerVNode = Box({
-          id: "footer",
-          width: "100%",
-          height: 1,
-          borderStyle: "rounded",
-          borderColor: "#3b4261",
-          backgroundColor: "#1f2335",
-          flexDirection: "row",
-        });
-        renderer.root.add(footerVNode);
-        this.statusBar = renderer.root.findDescendantById("footer");
-
-        const footerText = Text({
-          id: "footer-text",
-          content: " ready",
-          fg: "#565f89",
-        });
-        this.statusBar.add(footerText);
-
         const inputVNode = Input({
           id: "input-line",
           width: "100%",
+          height: 3,
+          borderStyle: "rounded",
+          borderColor: "#3b4261",
+          focusedBorderColor: "#7aa2f7",
           backgroundColor: "#24283b",
           focusedBackgroundColor: "#2f3449",
           textColor: "#c0caf5",
           cursorColor: "#7aa2f7",
+          placeholder: "›  ",
         });
         inputVNode.on(InputRenderableEvents.ENTER, (value: string) => {
           if (!this.ready) {
@@ -177,6 +166,26 @@ export class UIManager {
         inputVNode.focus();
         renderer.root.add(inputVNode);
         this.input = renderer.root.findDescendantById("input-line") as InputRenderable | null;
+
+        const footerVNode = Box({
+          id: "footer",
+          width: "100%",
+          height: 3,
+          borderStyle: "rounded",
+          borderColor: "#3b4261",
+          backgroundColor: "#1f2335",
+          flexDirection: "row",
+          alignItems: "center",
+        });
+        renderer.root.add(footerVNode);
+        this.statusBar = renderer.root.findDescendantById("footer");
+
+        const footerText = Text({
+          id: "footer-text",
+          content: " ready",
+          fg: "#565f89",
+        });
+        this.statusBar.add(footerText);
 
         renderer.on("selection", (sel: Selection) => this.handleSelection(sel, renderer));
 
@@ -204,13 +213,65 @@ export class UIManager {
       this._copyInProgress = true;
       const text = sel.getSelectedText();
       if (text && /\S/.test(text)) {
-        renderer.copyToClipboardOSC52(text);
+        const result = copyToClipboard(text, (t) => renderer.copyToClipboardOSC52(t));
+        this.showCopyToast(result);
       }
     } catch {
       // ignore selection API errors
     } finally {
       this._copyInProgress = false;
     }
+  }
+
+  copy(text: string): CopyResult {
+    const result = copyToClipboard(
+      text,
+      this.renderer ? (t) => this.renderer!.copyToClipboardOSC52(t) : undefined,
+    );
+    this.showCopyToast(result);
+    return result;
+  }
+
+  private showCopyToast(result: CopyResult): void {
+    if (!this.renderer) return;
+
+    if (this._copyToastTimer) clearTimeout(this._copyToastTimer);
+
+    const existing = this.renderer.root.findDescendantById("toast-copy");
+    if (existing) this.renderer.root.remove("toast-copy");
+
+    const toastVNode = Box({
+      id: "toast-copy",
+      focusable: false,
+      position: "absolute",
+      top: 1,
+      right: 2,
+      zIndex: 999,
+      backgroundColor: "#1a1b26",
+      borderStyle: "rounded",
+      borderColor: result.success ? "#9ece6a" : "#f7768e",
+      paddingX: 2,
+      paddingY: 1,
+    });
+    this.renderer.root.add(toastVNode);
+    const toast = this.renderer.root.findDescendantById("toast-copy");
+    if (toast) {
+      const msg = result.success
+        ? result.method === "file"
+          ? `Copied to ${result.filePath}`
+          : "Copied!"
+        : "Copy failed";
+      toast.add(Text({ content: msg, fg: result.success ? "#9ece6a" : "#f7768e" }));
+    }
+    this.renderer.requestRender();
+    if (this.input) this.renderer.focusRenderable(this.input);
+
+    this._copyToastTimer = setTimeout(() => {
+      this.renderer?.root.remove("toast-copy");
+      this.renderer?.requestRender();
+      if (this.input) this.renderer?.focusRenderable(this.input);
+      this._copyToastTimer = null;
+    }, 3000);
   }
 
   private handleCtrlC(): void {
@@ -228,6 +289,7 @@ export class UIManager {
   stop(): void {
     this.running = false;
     if (this._sigintTimer) clearTimeout(this._sigintTimer);
+    if (this._copyToastTimer) clearTimeout(this._copyToastTimer);
     if (this.renderer) {
       this.renderer.destroy();
     }

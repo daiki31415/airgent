@@ -109,13 +109,24 @@ export interface MemoryContext {
 // Pipeline Types
 // ============================================================
 
+export type RetryStrategy =
+  | "rollback"
+  | "retry"
+  | "model_switch"
+  | "alternate_strategy";
+
+
+
+export interface RetryContext {
+  attempt: number;
+  strategy: RetryStrategy;
+}
+
 export type PipelineNode =
   | "clarify"
   | "plan"
-  | "prompt"
   | "generate"
   | "test"
-  | "merge"
   | "validate"
   | "report";
 
@@ -129,7 +140,6 @@ export interface DAGNode {
 
 export interface DAGDefinition {
   nodes: DAGNode[];
-  entryPoints: PipelineNode[];
 }
 
 export interface PipelineState {
@@ -140,12 +150,6 @@ export interface PipelineState {
   retryCounts: Record<string, number>;
   startTime: number;
 }
-
-export type RetryStrategy =
-  | "rollback"
-  | "retry"
-  | "model_switch"
-  | "alternate_strategy";
 
 export interface RetryDecision {
   strategy: RetryStrategy;

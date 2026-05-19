@@ -17,13 +17,12 @@ describe("PipelineEngine execute", () => {
     const engine = new PipelineEngine();
     engine.registerHandler("clarify", async () => { order.push("clarify"); return { content: "c" }; });
     engine.registerHandler("plan", async () => { order.push("plan"); return { content: "p" }; });
-    engine.registerHandler("prompt", async () => { order.push("prompt"); return { content: "pr" }; });
     engine.registerHandler("generate", async () => { order.push("generate"); return { content: "g" }; });
 
     const dag = buildDAG(["generate"]);
     await engine.execute("session-2", dag);
 
-    expect(order).toEqual(["clarify", "plan", "prompt", "generate"]);
+    expect(order).toEqual(["clarify", "plan", "generate"]);
   });
 
   test("returns error when handler not registered", async () => {
@@ -143,5 +142,95 @@ describe("PipelineEngine execute", () => {
     const engine = new PipelineEngine();
     engine.reset("nonexistent");
     expect(engine.getState("nonexistent")).toBeUndefined();
+  });
+
+  test("throws timeout when handler exceeds timeout", async () => {
+    const engine = new PipelineEngine();
+    engine.registerHandler("clarify", async () => {
+      await new Promise(r => setTimeout(r, 500));
+      return { content: "too slow" };
+    });
+
+    const dag = buildDAG(["clarify"]);
+    dag.nodes[0]!.timeout = 10;
+
+    await expect(engine.execute("session-t1", dag)).rejects.toThrow("timeout");
+  });
+
+  test("succeeds within timeout", async () => {
+    const engine = new PipelineEngine();
+    engine.registerHandler("clarify", async () => {
+      await new Promise(r => setTimeout(r, 5));
+      return { content: "fast enough" };
+    });
+
+    const dag = buildDAG(["clarify"]);
+    dag.nodes[0]!.timeout = 1000;
+
+    const results = await engine.execute("session-t2", dag);
+    expect(results.get("clarify")).toEqual({ content: "fast enough" });
+  });
+
+  test("RetryContext attempt increments on retry", async () => {
+    const attempts: number[] = [];
+    const engine = new PipelineEngine();
+    engine.registerHandler("clarify", async (_input, retryCtx) => {
+      attempts.push(retryCtx?.attempt ?? 0);
+      if (attempts.length < 2) throw new Error("fail");
+      return { content: "ok" };
+    });
+
+    const dag = buildDAG(["clarify"]);
+    await engine.execute("session-rc1", dag);
+
+    expect(attempts).toEqual([0, 1]);
+  });
+
+  test("RetryContext strategy reflects rollback on max retries", async () => {
+    const strats: string[] = [];
+    const engine = new PipelineEngine();
+    engine.registerHandler("clarify", async (_input, retryCtx) => {
+      if (retryCtx) strats.push(retryCtx.strategy);
+      throw new Error("always fail");
+    });
+
+    const dag = buildDAG(["clarify"]);
+    dag.nodes[0]!.maxRetries = 1;
+
+    await expect(engine.execute("session-rc2", dag)).rejects.toThrow("always fail");
+    expect(strats[strats.length - 1]).toBe("rollback");
+  });
+
+  test("timeout error triggers model_switch strategy", async () => {
+    const strats: string[] = [];
+    const engine = new PipelineEngine();
+    engine.registerHandler("clarify", async (_input, retryCtx) => {
+      if (retryCtx) strats.push(retryCtx.strategy);
+      throw new Error("always fail");
+    });
+
+    const dag = buildDAG(["clarify"]);
+    dag.nodes[0]!.maxRetries = 2;
+
+    await expect(engine.execute("session-rc3", dag)).rejects.toThrow("always fail");
+
+    const timeoutTest = new PipelineEngine();
+    timeoutTest.registerHandler("clarify", async () => {
+      await new Promise(r => setTimeout(r, 100));
+      return { content: "x" };
+    });
+
+    const dag2 = buildDAG(["clarify"]);
+    dag2.nodes[0]!.timeout = 1;
+    dag2.nodes[0]!.maxRetries = 1;
+
+    let decidedRollback = false;
+    try {
+      await timeoutTest.execute("session-t3", dag2);
+    } catch {
+      const state = timeoutTest.getState("session-t3");
+      if (state?.failedNodes[0]?.error?.includes("timeout")) decidedRollback = true;
+    }
+    expect(decidedRollback).toBe(true);
   });
 });

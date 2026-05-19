@@ -34,9 +34,7 @@ export abstract class BaseAgent {
   /**
    * Send a prompt to the model and get the response text.
    */
-  protected async think(
-    prompt: string
-  ): Promise<string> {
+  protected async think(prompt: string): Promise<string> {
     if (!this.context) {
       throw new Error("Agent not initialized - call init() first");
     }
@@ -48,6 +46,22 @@ export abstract class BaseAgent {
 
     const response = await this.api.chat(this.model, messages);
     return response.content;
+  }
+
+  /**
+   * Stream a prompt and yield chunks as they arrive.
+   */
+  protected async *thinkStream(prompt: string): AsyncGenerator<string> {
+    if (!this.context) {
+      throw new Error("Agent not initialized - call init() first");
+    }
+
+    const messages: Array<{ role: string; content: string }> = [
+      { role: "system", content: this.context.systemPrompt },
+      { role: "user", content: prompt },
+    ];
+
+    yield* this.api.streamChat(this.model, messages);
   }
 
   /**

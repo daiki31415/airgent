@@ -29,10 +29,7 @@ export class WorkerAgent extends BaseAgent {
     this.memorySystem = memorySystem;
   }
 
-  /**
-   * Execute a task with context enhancement.
-   */
-  async execute(prompt: string): Promise<{ content: string }> {
+  async execute(prompt: string, onChunk?: (chunk: string) => void): Promise<{ content: string }> {
     this.logger.info(`Executing: ${prompt.slice(0, 100)}`);
 
     const decompressed = this.findRelevantContext(prompt);
@@ -45,11 +42,19 @@ export class WorkerAgent extends BaseAgent {
 
     const fullPrompt = [contextEnhancement, prompt].filter(Boolean).join("\n\n");
 
-    // Log to RAW
     this.memorySystem.recordRaw(this.context?.sessionId || "", "worker", fullPrompt, this.estimateTokens(fullPrompt));
 
-    const result = await this.think(fullPrompt);
+    if (onChunk) {
+      let content = "";
+      for await (const chunk of this.thinkStream(fullPrompt)) {
+        content += chunk;
+        onChunk(chunk);
+      }
+      this.memorySystem.recordRaw(this.context?.sessionId || "", "worker_response", content, this.estimateTokens(content));
+      return { content };
+    }
 
+    const result = await this.think(fullPrompt);
     this.memorySystem.recordRaw(this.context?.sessionId || "", "worker_response", result, this.estimateTokens(result));
     return { content: result };
   }

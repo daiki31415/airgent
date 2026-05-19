@@ -6,7 +6,6 @@ describe("buildDAG", () => {
   test("returns empty nodes for empty input", () => {
     const dag = buildDAG([]);
     expect(dag.nodes).toEqual([]);
-    expect(dag.entryPoints).toEqual([]);
   });
 
   test("resolves full dependency chain for generate", () => {
@@ -14,19 +13,15 @@ describe("buildDAG", () => {
     const ids = dag.nodes.map(n => n.id);
     expect(ids).toContain("clarify");
     expect(ids).toContain("plan");
-    expect(ids).toContain("prompt");
     expect(ids).toContain("generate");
     expect(ids.indexOf("clarify")).toBeLessThan(ids.indexOf("plan")!);
-    expect(ids.indexOf("plan")!).toBeLessThan(ids.indexOf("prompt")!);
-    expect(ids.indexOf("prompt")!).toBeLessThan(ids.indexOf("generate")!);
-    expect(dag.entryPoints).toContain("clarify");
+    expect(ids.indexOf("plan")!).toBeLessThan(ids.indexOf("generate")!);
   });
 
   test("resolves all nodes for full pipeline", () => {
-    const allNodes: PipelineNode[] = ["clarify", "plan", "prompt", "generate", "test", "merge", "validate", "report"];
+    const allNodes: PipelineNode[] = ["clarify", "plan", "generate", "test", "validate", "report"];
     const dag = buildDAG(allNodes);
-    expect(dag.nodes.length).toBe(8);
-    expect(dag.entryPoints).toEqual(["clarify"]);
+    expect(dag.nodes.length).toBe(6);
   });
 
   test("does not duplicate nodes", () => {
@@ -41,8 +36,7 @@ describe("buildDAG", () => {
     const ids = dag.nodes.map(n => n.id);
     const idx = (id: string) => ids.indexOf(id as PipelineNode);
     expect(idx("generate")).toBeLessThan(idx("test")!);
-    expect(idx("test")!).toBeLessThan(idx("merge")!);
-    expect(idx("merge")!).toBeLessThan(idx("validate")!);
+    expect(idx("test")!).toBeLessThan(idx("validate")!);
     expect(idx("validate")!).toBeLessThan(idx("report")!);
   });
 
@@ -50,7 +44,6 @@ describe("buildDAG", () => {
     const dag = buildDAG(["clarify"]);
     expect(dag.nodes.length).toBe(1);
     expect(dag.nodes[0]!.id).toBe("clarify");
-    expect(dag.entryPoints).toEqual(["clarify"]);
   });
 
   test("single plan node includes clarify dependency", () => {
@@ -61,16 +54,16 @@ describe("buildDAG", () => {
     expect(ids.indexOf("clarify")).toBeLessThan(ids.indexOf("plan")!);
   });
 
-  test("validate depends on merge", () => {
+  test("validate depends on generate and test", () => {
     const dag = buildDAG(["validate"]);
     const ids = dag.nodes.map(n => n.id);
-    expect(ids).toEqual(["clarify", "plan", "prompt", "generate", "test", "merge", "validate"]);
+    expect(ids).toEqual(["clarify", "plan", "generate", "test", "validate"]);
   });
 
   test("report pulls in entire pipeline", () => {
     const dag = buildDAG(["report"]);
     const ids = dag.nodes.map(n => n.id);
-    expect(ids).toEqual(["clarify", "plan", "prompt", "generate", "test", "merge", "validate", "report"]);
+    expect(ids).toEqual(["clarify", "plan", "generate", "test", "validate", "report"]);
   });
 
   test("clarify has no dependencies", () => {
@@ -79,15 +72,27 @@ describe("buildDAG", () => {
   });
 
   test("each node has correct dependency edges", () => {
-    const dag = buildDAG(["clarify", "plan", "prompt", "generate", "test", "merge", "validate", "report"]);
+    const dag = buildDAG(["clarify", "plan", "generate", "test", "validate", "report"]);
     const byId = new Map(dag.nodes.map(n => [n.id, n]));
     expect(byId.get("clarify")!.dependsOn).toEqual([]);
     expect(byId.get("plan")!.dependsOn).toEqual(["clarify"]);
-    expect(byId.get("prompt")!.dependsOn).toEqual(["plan"]);
-    expect(byId.get("generate")!.dependsOn).toEqual(["prompt"]);
+    expect(byId.get("generate")!.dependsOn).toEqual(["plan"]);
     expect(byId.get("test")!.dependsOn).toEqual(["generate"]);
-    expect(byId.get("merge")!.dependsOn).toEqual(["test"]);
-    expect(byId.get("validate")!.dependsOn).toEqual(["merge"]);
+    expect(byId.get("validate")!.dependsOn).toEqual(["test"]);
     expect(byId.get("report")!.dependsOn).toEqual(["validate"]);
+  });
+
+  test("timeout is set on each node", () => {
+    const dag = buildDAG(["generate"]);
+    for (const node of dag.nodes) {
+      expect(node.timeout).toBeGreaterThan(0);
+    }
+  });
+
+  test("each node has maxRetries defined", () => {
+    const dag = buildDAG(["report"]);
+    for (const node of dag.nodes) {
+      expect(node.maxRetries).toBeGreaterThanOrEqual(1);
+    }
   });
 });

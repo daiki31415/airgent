@@ -8,7 +8,7 @@
 import { BaseAgent } from "./base";
 import type { PipelineNode } from "../types";
 
-const ALL_NODES: PipelineNode[] = ["clarify", "plan", "prompt", "generate", "test", "merge", "validate", "report"];
+const ALL_NODES: PipelineNode[] = ["clarify", "plan", "generate", "test", "validate", "report"];
 
 export class PlannerAgent extends BaseAgent {
   constructor(model: import("../types").ModelEntry, api: import("../api/opencode").OpenCodeAPI) {
@@ -25,7 +25,7 @@ export class PlannerAgent extends BaseAgent {
   async selectNodes(task: string): Promise<PipelineNode[]> {
     const prompt = [
       "You select pipeline stages for a coding task.",
-      "Available: clarify, plan, prompt, generate, test, merge, validate, report.",
+      "Available: clarify, plan, generate, test, validate, report.",
       "generate + report are mandatory. Others as needed.",
       "",
       `Task: ${task}`,

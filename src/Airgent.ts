@@ -74,7 +74,6 @@ export class Airgent {
   private pipelineData: {
     clarifiedTask?: string;
     plan?: string;
-    prompt?: string;
     generatedOutput?: string;
     testResult?: string;
   } = {};
@@ -195,11 +194,11 @@ export class Airgent {
           process.exit(0);
           return;
         case "/help":
-          this.ui.log("info", "airgent", "/quit /model /mcp /setting /status /session /compress /providers /sync /cat /help /info");
+          this.ui.log("info", "airgent", "/quit /model /mcp /setting /status /session /compress /providers /sync /cat /copy /help /info");
           return;
         case "/info": {
           const health = await this.api.healthCheck();
-          this.ui.notice("Commands: /quit /help /status /info /session /compress /providers /sync /cat");
+          this.ui.notice("Commands: /quit /help /status /info /session /compress /providers /sync /cat /copy");
           this.ui.notice("Airgent v1.0.0");
           this.ui.notice(
             health.healthy
@@ -256,6 +255,20 @@ export class Airgent {
             this.ui.log("info", "cat", "Usage: /cat <file>");
           }
           return;
+        case "/copy": {
+          const copyText = args.join(" ") || this.pipelineData.generatedOutput || "";
+          if (!copyText) {
+            this.ui.log("warn", "airgent", "Nothing to copy. Usage: /copy [text]");
+            return;
+          }
+          const result = this.ui.copy(copyText);
+          if (result.success) {
+            this.ui.log("info", "airgent", `Copied via ${result.method}`);
+          } else {
+            this.ui.log("error", "airgent", `Copy failed: ${result.error}`);
+          }
+          return;
+        }
         case "/mcp":
           await this.handleMCPCommand(args, line);
           return;
@@ -389,7 +402,7 @@ export class Airgent {
       return { content: response.content };
     });
 
-    this.pipeline.registerHandler("prompt", async () => {
+    this.pipeline.registerHandler("generate", async () => {
       const memories = this.memory.findRelevant([this.currentTask]).slice(0, 3);
       const memoryStr = memories.map(m => `- ${m.bug}: ${m.fix}`).join("\n");
       const parts = [
@@ -398,29 +411,19 @@ export class Airgent {
         this.pipelineData.clarifiedTask ? `Requirements:\n${this.pipelineData.clarifiedTask}` : "",
         `Task: ${this.currentTask}`,
       ].filter(Boolean);
-      this.pipelineData.prompt = parts.join("\n\n");
-      if (this.config.settings.showPipelineProgress) {
-        this.ui.stream(`  → prompt assembled: ${this.pipelineData.prompt.length} chars`);
-        for (const line of this.pipelineData.prompt.split("\n")) {
-          if (line.trim()) this.ui.stream(`    ${line.trim()}`);
-        }
-      }
-      this.ui.log("info", "prompt", `Built prompt: ${this.pipelineData.prompt.length} chars`);
-      return { content: this.pipelineData.prompt };
-    });
-
-    this.pipeline.registerHandler("generate", async () => {
-      const generationPrompt = this.pipelineData.prompt || this.currentTask;
+      const generationPrompt = parts.join("\n\n");
       if (this.config.settings.showPipelineProgress) {
         this.ui.stream(`  → generate input: ${generationPrompt.slice(0, 300)}`);
         this.ui.stream(`  → generate output:`);
-        const systemPrompt = this.buildAgentContext(this.currentTask).systemPrompt;
-        const messages = [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: generationPrompt },
-        ];
-        const content = await this.streamNodeOutput(this.config.models.generate, messages, "", "generatedOutput");
-        return { content };
+        const result = await this.worker.execute(generationPrompt, (chunk: string) => {
+          const lines = chunk.split("\n");
+          for (const l of lines) {
+            const trimmed = l.trim();
+            if (trimmed) this.ui.stream(`    ${trimmed}`);
+          }
+        });
+        this.pipelineData.generatedOutput = result.content;
+        return result;
       }
       const result = await this.worker.execute(generationPrompt);
       this.pipelineData.generatedOutput = result.content;
@@ -446,18 +449,6 @@ export class Airgent {
       const hasIssues = /(?:bug|error|issue|incorrect|wrong|missing)/i.test(response.content);
       this.ui.log("info", "test", hasIssues ? `Issues found` : "No issues detected");
       return { content: response.content, passed: !hasIssues };
-    });
-
-    this.pipeline.registerHandler("merge", async () => {
-      const testStatus = this.pipelineData.testResult
-        ? /(?:bug|error|issue|incorrect|wrong|missing)/i.test(this.pipelineData.testResult)
-          ? "issues found"
-          : "passed"
-        : "skipped";
-      return {
-        status: "completed",
-        summary: `Task: ${this.currentTask} | Generated: ${(this.pipelineData.generatedOutput || "").length} chars | Tests: ${testStatus}`,
-      };
     });
 
     this.pipeline.registerHandler("validate", async () => {
