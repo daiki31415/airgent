@@ -147,6 +147,7 @@ export interface PipelineState {
   failedNodes: Array<{ node: PipelineNode; error: string }>;
   retryCounts: Record<string, number>;
   startTime: number;
+  dagNodes: DAGNode[];
 }
 
 export interface RetryDecision {

@@ -144,6 +144,29 @@ describe("PipelineEngine execute", () => {
     expect(engine.getState("nonexistent")).toBeUndefined();
   });
 
+  test("executes independent branches in parallel", async () => {
+    const order: string[] = [];
+    const engine = new PipelineEngine();
+    engine.registerHandler("clarify", async () => { order.push("clarify"); return {}; });
+    engine.registerHandler("plan", async () => { order.push("plan"); return {}; });
+    engine.registerHandler("generate", async () => { order.push("generate"); return {}; });
+    engine.registerHandler("test", async () => { order.push("test"); return {}; });
+    engine.registerHandler("validate", async () => { order.push("validate"); return {}; });
+    engine.registerHandler("report", async () => { order.push("report"); return {}; });
+
+    const dag = buildDAG(["report"]);
+    await engine.execute("session-parallel", dag);
+
+    expect(order[0]).toBe("clarify");
+    expect(order[1]).toBe("plan");
+    expect(order[2]).toBe("generate");
+    expect(order.indexOf("validate")).toBeGreaterThan(order.indexOf("generate")!);
+    expect(order.indexOf("test")).toBeGreaterThan(order.indexOf("generate")!);
+    expect(order.indexOf("report")).toBeGreaterThan(order.indexOf("test")!);
+    expect(order.indexOf("report")).toBeGreaterThan(order.indexOf("validate")!);
+    expect(order.indexOf("report")).toBe(order.length - 1);
+  });
+
   test("throws timeout when handler exceeds timeout", async () => {
     const engine = new PipelineEngine();
     engine.registerHandler("clarify", async () => {
@@ -184,6 +207,108 @@ describe("PipelineEngine execute", () => {
     await engine.execute("session-rc1", dag);
 
     expect(attempts).toEqual([0, 1]);
+  });
+
+  describe("dynamic DAG mutation", () => {
+    test("handler can dynamically add a known node by name", async () => {
+      const engine = new PipelineEngine();
+      const order: string[] = [];
+
+      engine.registerHandler("clarify", async () => { order.push("clarify"); return {}; });
+      engine.registerHandler("plan", async () => { order.push("plan"); return {}; });
+      engine.registerHandler("generate", async () => {
+        order.push("generate");
+        engine.addNode("dyn-add", "test");
+        return {};
+      });
+      engine.registerHandler("test", async () => { order.push("test"); return { passed: true }; });
+      engine.registerHandler("validate", async () => { order.push("validate"); return {}; });
+
+      const dag = buildDAG(["clarify", "plan", "generate", "validate"]);
+      const results = await engine.execute("dyn-add", dag);
+
+      expect(results.has("test")).toBe(true);
+      expect(results.get("test")).toEqual({ passed: true });
+      expect(order.indexOf("test")).toBeGreaterThan(order.indexOf("generate")!);
+    });
+
+    test("handler can dynamically add a custom DAGNode", async () => {
+      const engine = new PipelineEngine();
+
+      engine.registerHandler("clarify", async () => { return {}; });
+      engine.registerHandler("generate", async () => {
+        engine.addNode("dyn-custom", {
+          id: "test",
+          dependsOn: ["generate"],
+          handler: "test",
+          maxRetries: 0,
+          timeout: 5000,
+        });
+        return {};
+      });
+      engine.registerHandler("test", async () => ({ passed: true }));
+      engine.registerHandler("plan", async () => { return {}; });
+
+      const dag = buildDAG(["clarify", "plan", "generate"]);
+      const results = await engine.execute("dyn-custom", dag);
+
+      expect(results.has("test")).toBe(true);
+      expect(results.get("test")).toEqual({ passed: true });
+    });
+
+    test("dynamically added node runs after its dependencies complete", async () => {
+      const engine = new PipelineEngine();
+      const order: string[] = [];
+
+      engine.registerHandler("generate", async () => {
+        order.push("generate");
+        engine.addNode("dyn-order", "test");
+        return {};
+      });
+      engine.registerHandler("test", async () => { order.push("test"); return {}; });
+      engine.registerHandler("clarify", async () => { order.push("clarify"); return {}; });
+      engine.registerHandler("plan", async () => { order.push("plan"); return {}; });
+
+      const dag = buildDAG(["clarify", "plan", "generate"]);
+      await engine.execute("dyn-order", dag);
+
+      expect(order.indexOf("test")).toBeGreaterThan(order.indexOf("generate")!);
+    });
+
+    test("handler can dynamically remove a node from the DAG", async () => {
+      const engine = new PipelineEngine();
+      const order: string[] = [];
+
+      engine.registerHandler("clarify", async () => { order.push("clarify"); return {}; });
+      engine.registerHandler("plan", async () => {
+        order.push("plan");
+        engine.removeNode("dyn-remove", "validate");
+        return {};
+      });
+      engine.registerHandler("generate", async () => { order.push("generate"); return {}; });
+      engine.registerHandler("validate", async () => { order.push("validate"); return {}; });
+
+      const dag = buildDAG(["clarify", "plan", "generate", "validate"]);
+      const results = await engine.execute("dyn-remove", dag);
+
+      expect(results.has("validate")).toBe(false);
+      expect(order).not.toContain("validate");
+    });
+
+    test("removing a node that another node depends on causes deadlock", async () => {
+      const engine = new PipelineEngine();
+
+      engine.registerHandler("clarify", async () => { return {}; });
+      engine.registerHandler("plan", async () => {
+        engine.removeNode("dyn-deadlock", "generate");
+        return {};
+      });
+      engine.registerHandler("generate", async () => ({ content: "g" }));
+      engine.registerHandler("test", async () => ({ passed: true }));
+
+      const dag = buildDAG(["clarify", "plan", "generate", "test"]);
+      await expect(engine.execute("dyn-deadlock", dag)).rejects.toThrow("DAG deadlock");
+    });
   });
 
   test("RetryContext strategy reflects rollback on max retries", async () => {

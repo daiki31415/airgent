@@ -35,8 +35,11 @@ describe("buildDAG", () => {
     const dag = buildDAG(["report"]);
     const ids = dag.nodes.map(n => n.id);
     const idx = (id: string) => ids.indexOf(id as PipelineNode);
-    expect(idx("generate")).toBeLessThan(idx("test")!);
-    expect(idx("test")!).toBeLessThan(idx("validate")!);
+    expect(idx("clarify")).toBeLessThan(idx("plan")!);
+    expect(idx("plan")!).toBeLessThan(idx("generate")!);
+    expect(idx("generate")!).toBeLessThan(idx("test")!);
+    expect(idx("generate")!).toBeLessThan(idx("validate")!);
+    expect(idx("test")!).toBeLessThan(idx("report")!);
     expect(idx("validate")!).toBeLessThan(idx("report")!);
   });
 
@@ -54,10 +57,10 @@ describe("buildDAG", () => {
     expect(ids.indexOf("clarify")).toBeLessThan(ids.indexOf("plan")!);
   });
 
-  test("validate depends on generate and test", () => {
+  test("validate depends on generate (parallel sibling of test)", () => {
     const dag = buildDAG(["validate"]);
     const ids = dag.nodes.map(n => n.id);
-    expect(ids).toEqual(["clarify", "plan", "generate", "test", "validate"]);
+    expect(ids).toEqual(["clarify", "plan", "generate", "validate"]);
   });
 
   test("report pulls in entire pipeline", () => {
@@ -78,8 +81,8 @@ describe("buildDAG", () => {
     expect(byId.get("plan")!.dependsOn).toEqual(["clarify"]);
     expect(byId.get("generate")!.dependsOn).toEqual(["plan"]);
     expect(byId.get("test")!.dependsOn).toEqual(["generate"]);
-    expect(byId.get("validate")!.dependsOn).toEqual(["test"]);
-    expect(byId.get("report")!.dependsOn).toEqual(["validate"]);
+    expect(byId.get("validate")!.dependsOn).toEqual(["generate"]);
+    expect(byId.get("report")!.dependsOn).toEqual(["test", "validate"]);
   });
 
   test("timeout is set on each node", () => {

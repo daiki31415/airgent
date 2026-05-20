@@ -21,8 +21,8 @@ const ALL_NODES: DAGNode[] = [
   { id: "plan", dependsOn: ["clarify"], handler: "plan", maxRetries: 2, timeout: 30000 },
   { id: "generate", dependsOn: ["plan"], handler: "generate", maxRetries: 3, timeout: 120000 },
   { id: "test", dependsOn: ["generate"], handler: "test", maxRetries: 2, timeout: 60000 },
-  { id: "validate", dependsOn: ["test"], handler: "validate", maxRetries: 2, timeout: 30000 },
-  { id: "report", dependsOn: ["validate"], handler: "report", maxRetries: 1, timeout: 15000 },
+  { id: "validate", dependsOn: ["generate"], handler: "validate", maxRetries: 2, timeout: 30000 },
+  { id: "report", dependsOn: ["test", "validate"], handler: "report", maxRetries: 1, timeout: 15000 },
 ];
 
 export class PipelineEngine {
@@ -44,18 +44,43 @@ export class PipelineEngine {
         failedNodes: [],
         retryCounts: {},
         startTime: Date.now(),
+        dagNodes: [],
       };
       this.states.set(sessionId, state);
     }
 
-    this.logger.info(`Executing: ${dag.nodes.map(n => n.id).join(" -> ")}`);
+    state.dagNodes = [...dag.nodes];
+
+    this.logger.info(`Executing DAG: ${dag.nodes.map(n => n.id).join(" -> ")}`);
 
     const results = new Map<PipelineNode, unknown>();
-    for (const node of dag.nodes) {
-      if (state.completedNodes.includes(node.id)) continue;
-      const result = await this.executeNode(state, node, results);
-      results.set(node.id, result);
+
+    while (true) {
+      const remaining = state.dagNodes.filter(
+        n => !state!.completedNodes.includes(n.id) && !results.has(n.id),
+      );
+      if (remaining.length === 0) break;
+
+      const ready = remaining.filter(n =>
+        n.dependsOn.every(dep => results.has(dep) || state!.completedNodes.includes(dep)),
+      );
+
+      if (ready.length === 0) {
+        throw new Error(`DAG deadlock: cannot resolve ${remaining.map(n => n.id).join(", ")}`);
+      }
+
+      const batch = await Promise.all(
+        ready.map(async node => {
+          const result = await this.executeNode(state, node, results);
+          return { id: node.id, result };
+        }),
+      );
+
+      for (const { id, result } of batch) {
+        results.set(id, result);
+      }
     }
+
     return results;
   }
 
@@ -113,6 +138,39 @@ export class PipelineEngine {
 
   reset(sessionId: string): void {
     this.states.delete(sessionId);
+  }
+
+  addNode(sessionId: string, idOrNode: PipelineNode | DAGNode): void {
+    const state = this.states.get(sessionId);
+    if (!state) return;
+
+    if (typeof idOrNode === "string") {
+      this.addNodeWithDeps(state, idOrNode);
+    } else {
+      if (!state.dagNodes.find(n => n.id === idOrNode.id)) {
+        state.dagNodes.push(idOrNode);
+      }
+    }
+  }
+
+  removeNode(sessionId: string, id: string): void {
+    const state = this.states.get(sessionId);
+    if (!state) return;
+    const idx = state.dagNodes.findIndex(n => n.id === id);
+    if (idx >= 0) state.dagNodes.splice(idx, 1);
+  }
+
+  private addNodeWithDeps(state: PipelineState, id: PipelineNode): void {
+    if (state.dagNodes.find(n => n.id === id) || state.completedNodes.includes(id)) return;
+
+    const node = ALL_NODES.find(n => n.id === id);
+    if (!node) throw new Error(`Unknown node: ${id}`);
+
+    for (const dep of node.dependsOn) {
+      this.addNodeWithDeps(state, dep);
+    }
+
+    state.dagNodes.push({ ...node });
   }
 }
 
