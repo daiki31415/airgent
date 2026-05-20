@@ -74,4 +74,59 @@ describe("sanitizeError", () => {
   test("handles boolean false", () => {
     expect(sanitizeError(false)).toBe("false");
   });
+
+  test("strips multiple newlines from Error message", () => {
+    const err = new Error("line1\nline2\nline3\nline4");
+    const result = sanitizeError(err);
+    expect(result).toBe("line1");
+  });
+
+  test("handles Error with only stack and no message", () => {
+    const err = new Error();
+    err.stack = "Error\n    at foo (bar.ts:1)";
+    const result = sanitizeError(err);
+    // Error.message is empty string when no message passed
+    expect(result).toBe("");
+  });
+
+  test("redacts multiple distinct HOME paths", () => {
+    const home = process.env.HOME || "/home/user";
+    const msg = `Error at ${home}/a and ${home}/b`;
+    const result = sanitizeError(msg);
+    expect(result).toContain("~/a and ~/b");
+  });
+
+  test("handles Array as error", () => {
+    const result = sanitizeError(["err1", "err2"]);
+    expect(result).toBe("err1,err2");
+  });
+
+  test("handles plain object as error", () => {
+    const result = sanitizeError({ message: "custom" });
+    expect(result).toBe("[object Object]");
+  });
+
+  test("handles Error with special regex chars in message", () => {
+    const err = new Error("Error at /home/user/path+with[special]chars$");
+    const result = sanitizeError(err);
+    expect(result).toBeDefined();
+  });
+
+  test("does not modify safe short messages", () => {
+    const msg = "simple error";
+    const result = sanitizeError(msg);
+    expect(result).toBe(msg);
+  });
+
+  test("handles very long error with existing newlines truncates to first line", () => {
+    const longWithNewlines = "short first line\n" + "b".repeat(600);
+    const result = sanitizeError(longWithNewlines);
+    expect(result).toBe("short first line");
+  });
+
+  test("handles Error with multi-byte unicode characters", () => {
+    const err = new Error("エラーが発生しました: something broke");
+    const result = sanitizeError(err);
+    expect(result).toContain("エラー");
+  });
 });

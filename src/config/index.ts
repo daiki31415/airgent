@@ -11,7 +11,7 @@ import { homedir } from "os";
 import { rootLogger, sanitizeError } from "../utils/logger";
 import type { AirgentConfig, Constitution, Persona, ModelConfig, Settings, MCPServerConfig } from "../types";
 
-const CONFIG_DIR = path.join(homedir(), ".config", "Airgent");
+const DEFAULT_CONFIG_DIR = path.join(homedir(), ".config", "Airgent");
 
 const DEFAULT_CONSTITUTION = `---
 name: Airgent Constitution
@@ -62,11 +62,16 @@ const DEFAULT_SETTINGS: Settings = {
 export class ConfigManager {
   private logger = rootLogger.child("config");
   private cache: AirgentConfig | null = null;
+  private configDir: string;
+
+  constructor(options?: { configDir?: string }) {
+    this.configDir = options?.configDir ?? DEFAULT_CONFIG_DIR;
+  }
 
   load(): AirgentConfig {
     if (this.cache) return this.cache;
 
-    fs.mkdirSync(CONFIG_DIR, { recursive: true });
+    fs.mkdirSync(this.configDir, { recursive: true });
 
     const config: AirgentConfig = {
       constitution: this.loadConstitution(),
@@ -81,7 +86,7 @@ export class ConfigManager {
   }
 
   private loadConstitution(): Constitution {
-    const filePath = path.join(CONFIG_DIR, "constitution.md");
+    const filePath = path.join(this.configDir, "constitution.md");
     const raw = this.readOrCreate(filePath, DEFAULT_CONSTITUTION);
     return {
       name: this.extractFrontmatter(raw, "name") || "Airgent",
@@ -93,7 +98,7 @@ export class ConfigManager {
   }
 
   private loadPersona(): Persona {
-    const filePath = path.join(CONFIG_DIR, "persona.md");
+    const filePath = path.join(this.configDir, "persona.md");
     const raw = this.readOrCreate(filePath, DEFAULT_PERSONA);
     return {
       name: this.extractFrontmatter(raw, "name") || "Assistant",
@@ -104,7 +109,7 @@ export class ConfigManager {
   }
 
   private loadModels(): ModelConfig {
-    const filePath = path.join(CONFIG_DIR, "models.json");
+    const filePath = path.join(this.configDir, "models.json");
     const raw = this.readOrCreate(filePath, JSON.stringify(DEFAULT_MODELS, null, 2));
     try {
       return JSON.parse(raw);
@@ -115,7 +120,7 @@ export class ConfigManager {
   }
 
   private loadSettings(): Settings {
-    const filePath = path.join(CONFIG_DIR, "settings.json");
+    const filePath = path.join(this.configDir, "settings.json");
     const raw = this.readOrCreate(filePath, JSON.stringify(DEFAULT_SETTINGS, null, 2));
     try {
       return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
@@ -135,7 +140,7 @@ export class ConfigManager {
   }
 
   saveSettings(partial: Partial<Settings>): void {
-    const filePath = path.join(CONFIG_DIR, "settings.json");
+    const filePath = path.join(this.configDir, "settings.json");
     const updated = { ...this.cache!.settings, ...partial };
     this.cache!.settings = updated;
     fs.writeFileSync(filePath, JSON.stringify(updated, null, 2), { mode: 0o600, encoding: "utf-8" });
@@ -143,7 +148,7 @@ export class ConfigManager {
   }
 
   saveModels(models: Partial<ModelConfig>): void {
-    const filePath = path.join(CONFIG_DIR, "models.json");
+    const filePath = path.join(this.configDir, "models.json");
     const updated = { ...this.cache!.models, ...models };
 
     // Strip apiKey before persisting to disk
@@ -167,7 +172,7 @@ export class ConfigManager {
   // ---- MCP ----
 
   loadMCPServers(): MCPServerConfig[] {
-    const filePath = path.join(CONFIG_DIR, "mcp.json");
+    const filePath = path.join(this.configDir, "mcp.json");
     const raw = this.readOrCreate(filePath, JSON.stringify({ servers: [] }, null, 2));
     try {
       const data = JSON.parse(raw);
@@ -179,7 +184,7 @@ export class ConfigManager {
   }
 
   saveMCPServers(servers: MCPServerConfig[]): void {
-    const filePath = path.join(CONFIG_DIR, "mcp.json");
+    const filePath = path.join(this.configDir, "mcp.json");
     fs.writeFileSync(filePath, JSON.stringify({ servers }, null, 2), { mode: 0o600, encoding: "utf-8" });
     this.logger.info("MCP servers saved");
   }

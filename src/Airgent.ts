@@ -26,7 +26,7 @@ import { PromptManager } from "./prompt/index";
 import { UIManager } from "./ui/index";
 import { rootLogger, sanitizeError } from "./utils/logger";
 import { RateLimiter } from "./utils/rate-limiter";
-import type { AgentContext, ModelConfig, ModelEntry, MCPServerConfig, Settings } from "./types";
+import type { AgentContext, ModelConfig, ModelEntry, MCPServerConfig, Question, Settings } from "./types";
 import type { StatusInfo } from "./ui/index";
 
 type ModelRole = "planner" | "generate" | "compression" | "validation" | "watchdog";
@@ -335,6 +335,34 @@ export class Airgent {
     }
   }
 
+  private extractQuestion(text: string): Question | null {
+    const m = text.match(/\[QUESTION\]([\s\S]*?)\[\/QUESTION\]/);
+    if (!m) return null;
+    try {
+      return JSON.parse(m[1].trim());
+    } catch {
+      return null;
+    }
+  }
+
+  private async chatWithQuestion(
+    model: ModelEntry,
+    messages: Array<{ role: string; content: string }>,
+  ): Promise<string> {
+    for (let i = 0; i < 5; i++) {
+      const response = await this.api.chat(model, messages);
+      const q = this.extractQuestion(response.content);
+      if (!q) return response.content;
+      const clean = response.content.replace(/\[QUESTION\][\s\S]*?\[\/QUESTION\]/, "").trim();
+      if (clean) {
+        messages.push({ role: "assistant", content: clean });
+      }
+      const answer = await this.ui.askQuestion(q);
+      messages.push({ role: "user", content: `[Your answer: ${answer}]` });
+    }
+    throw new Error("chatWithQuestion: too many question rounds");
+  }
+
   private async streamNodeOutput(
     model: ModelEntry,
     messages: Array<{ role: string; content: string }>,
@@ -371,7 +399,7 @@ export class Airgent {
   private registerPipelineHandlers(): void {
     this.pipeline.registerHandler("clarify", async () => {
       const messages = [
-        { role: "system" as const, content: "You analyze tasks and extract: goal, constraints, affected files, ambiguities. Be concise." },
+        { role: "system" as const, content: this.promptManager.buildNodePrompt("clarify") },
         { role: "user" as const, content: `Analyze this task:\n${this.currentTask}` },
       ];
       if (this.config.settings.showPipelineProgress) {
@@ -379,16 +407,16 @@ export class Airgent {
         const content = await this.streamNodeOutput(this.config.models.planner, messages, "clarify output", "clarifiedTask");
         return { content };
       }
-      const response = await this.api.chat(this.config.models.planner, messages);
-      this.pipelineData.clarifiedTask = response.content;
+      const content = await this.chatWithQuestion(this.config.models.planner, messages);
+      this.pipelineData.clarifiedTask = content;
       this.ui.log("info", "clarify", `Analyzed task`);
-      return { content: response.content };
+      return { content };
     });
 
     this.pipeline.registerHandler("plan", async () => {
       const source = this.pipelineData.clarifiedTask || this.currentTask;
       const messages = [
-        { role: "system" as const, content: "You create step-by-step implementation plans. Be specific and actionable." },
+        { role: "system" as const, content: `${this.promptManager.buildNodePrompt("plan")}` },
         { role: "user" as const, content: `Create a plan based on the requirements:\n\n${source}` },
       ];
       if (this.config.settings.showPipelineProgress) {
@@ -396,10 +424,10 @@ export class Airgent {
         const content = await this.streamNodeOutput(this.config.models.planner, messages, "plan output", "plan");
         return { content };
       }
-      const response = await this.api.chat(this.config.models.planner, messages);
-      this.pipelineData.plan = response.content;
+      const content = await this.chatWithQuestion(this.config.models.planner, messages);
+      this.pipelineData.plan = content;
       this.ui.log("info", "plan", `Created plan`);
-      return { content: response.content };
+      return { content };
     });
 
     this.pipeline.registerHandler("generate", async () => {
@@ -434,7 +462,7 @@ export class Airgent {
     this.pipeline.registerHandler("test", async () => {
       if (!this.pipelineData.generatedOutput) return { status: "skipped", reason: "no output" };
       const messages = [
-        { role: "system" as const, content: "Review the following output for correctness, edge cases, and potential issues. Be critical but constructive." },
+        { role: "system" as const, content: this.promptManager.buildNodePrompt("test") },
         { role: "user" as const, content: `Task: ${this.currentTask}\n\nOutput:\n${this.pipelineData.generatedOutput.slice(0, 4000)}` },
       ];
       if (this.config.settings.showPipelineProgress) {
@@ -444,11 +472,11 @@ export class Airgent {
         this.ui.stream(`  → test ${hasIssues ? "⚠ issues found" : "✓ passed"}`);
         return { content, passed: !hasIssues };
       }
-      const response = await this.api.chat(this.config.models.validation, messages);
-      this.pipelineData.testResult = response.content;
-      const hasIssues = /(?:bug|error|issue|incorrect|wrong|missing)/i.test(response.content);
+      const content = await this.chatWithQuestion(this.config.models.validation, messages);
+      this.pipelineData.testResult = content;
+      const hasIssues = /(?:bug|error|issue|incorrect|wrong|missing)/i.test(content);
       this.ui.log("info", "test", hasIssues ? `Issues found` : "No issues detected");
-      return { content: response.content, passed: !hasIssues };
+      return { content, passed: !hasIssues };
     });
 
     this.pipeline.registerHandler("validate", async () => {

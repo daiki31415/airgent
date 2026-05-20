@@ -155,7 +155,7 @@ export class CompressionManager {
       }
 
       // Extract file paths
-      const fileMatches = line.match(/[\w\-./]+\.(ts|js|tsx|jsx|py|rs|go|json|md|toml|yaml|yml)/g);
+      const fileMatches = line.match(/[\w\-./]+\.(tsx|jsx|json|ts|js|yaml|yml|toml|py|rs|go|md)/g);
       if (fileMatches) fileMatches.forEach(f => files.add(f));
 
       // Extract commands

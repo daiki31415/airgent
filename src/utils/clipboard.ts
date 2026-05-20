@@ -1,5 +1,5 @@
-import { spawnSync } from "node:child_process";
-import { writeFileSync } from "node:fs";
+import { spawnSync as _spawnSync } from "node:child_process";
+import { writeFileSync as _writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -12,10 +12,19 @@ export interface CopyResult {
   filePath?: string;
 }
 
+/** @internal Dependency overrides for testing */
+export interface CopyOverrides {
+  spawnSync?: typeof _spawnSync;
+  writeFileSync?: typeof _writeFileSync;
+}
+
 export function copyToClipboard(
   text: string,
   osc52Copy?: (text: string) => boolean,
+  overrides?: CopyOverrides,
 ): CopyResult {
+  const spawnSync = overrides?.spawnSync ?? _spawnSync;
+  const writeFileSync = overrides?.writeFileSync ?? _writeFileSync;
   // 1. OSC52 (TUI内選択コピー)
   if (osc52Copy) {
     try {

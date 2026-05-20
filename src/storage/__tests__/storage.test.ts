@@ -263,4 +263,199 @@ describe("Storage metadata", () => {
     expect(recent).toHaveLength(2);
     expect(recent[0]!.summary).toContain("active");
   });
+
+  test("getRecentSessions defaults to 50 limit", () => {
+    const s = createStorage();
+    for (let i = 0; i < 10; i++) {
+      s.createSession(`s${i}`, `model-${i}`);
+    }
+    const recent = s.getRecentSessions();
+    expect(recent.length).toBeLessThanOrEqual(50);
+  });
+
+  test("endSession with failed status", () => {
+    const s = createStorage();
+    s.createSession("s1", "m1");
+    s.endSession("s1", "failed");
+    const sess = s.getSession("s1");
+    expect(sess!.status).toBe("failed");
+  });
+
+  test("endSession with crashed status", () => {
+    const s = createStorage();
+    s.createSession("s1", "m1");
+    s.endSession("s1", "crashed");
+    const sess = s.getSession("s1");
+    expect(sess!.status).toBe("crashed");
+  });
+
+  test("getSession returns null for non-existent session", () => {
+    const s = createStorage();
+    expect(s.getSession("nonexistent")).toBeNull();
+  });
+
+  test("getActiveSessions returns empty when none active", () => {
+    const s = createStorage();
+    expect(s.getActiveSessions()).toHaveLength(0);
+  });
+});
+
+describe("Storage memory_links advanced", () => {
+  test("inserts link with all valid types", () => {
+    const s = createStorage();
+    s.insertMemory({ id: "m1", sessionId: "s1", bug: "b1", investigation: "", rootCause: "", fix: "", reason: "", confidence: 0.5, tags: [], files: [], commands: [] });
+    s.insertMemory({ id: "m2", sessionId: "s1", bug: "b2", investigation: "", rootCause: "", fix: "", reason: "", confidence: 0.5, tags: [], files: [], commands: [] });
+    s.insertLink("l1", "m1", "m2", "same_cause", 0.9);
+    s.insertLink("l2", "m1", "m2", "derived", 0.8);
+    s.insertLink("l3", "m1", "m2", "similar_pattern", 0.7);
+    s.insertLink("l4", "m1", "m2", "related_component", 0.6);
+    const linked = s.getLinkedMemories("m1");
+    expect(linked.length).toBeGreaterThanOrEqual(2);
+  });
+});
+
+describe("Storage evidence advanced", () => {
+  test("inserts evidence with all types", () => {
+    const s = createStorage();
+    s.insertMemory({ id: "mem1", sessionId: "s1", bug: "b", investigation: "", rootCause: "", fix: "", reason: "", confidence: 0.5, tags: [], files: [], commands: [] });
+    s.insertEvidence("ev1", "mem1", "observed", "log", "source");
+    s.insertEvidence("ev2", "mem1", "inferred", "analysis", "llm");
+    s.insertEvidence("ev3", "mem1", "generated", "output", "model");
+    s.insertEvidence("ev4", "mem1", "verified", "test result", "test");
+    const evidence = s.getEvidence("mem1");
+    expect(evidence).toHaveLength(4);
+  });
+
+  test("getEvidence orders by timestamp", async () => {
+    const s = createStorage();
+    s.insertMemory({ id: "mem1", sessionId: "s1", bug: "b", investigation: "", rootCause: "", fix: "", reason: "", confidence: 0.5, tags: [], files: [], commands: [] });
+    s.insertEvidence("ev1", "mem1", "observed", "first", "src1");
+    await new Promise(r => setTimeout(r, 5));
+    s.insertEvidence("ev2", "mem1", "observed", "second", "src2");
+    const evidence = s.getEvidence("mem1");
+    expect(evidence[0]!.id).toBe("ev1");
+    expect(evidence[1]!.id).toBe("ev2");
+  });
+});
+
+describe("Storage getAllCompressed", () => {
+  test("returns empty array when no entries", () => {
+    const s = createStorage();
+    expect(s.getAllCompressed()).toHaveLength(0);
+  });
+
+  test("returns all entries ordered by timestamp DESC", () => {
+    const s = createStorage();
+    const entry1 = { id: "c1", originalId: "o1", title: "first", topics: [], entities: [], files: [], commands: [], errorKeywords: [], importanceScore: 0.5, tokenCount: 10, timestamp: Date.now(), compressedContent: "a" };
+    const entry2 = { id: "c2", originalId: "o2", title: "second", topics: [], entities: [], files: [], commands: [], errorKeywords: [], importanceScore: 0.8, tokenCount: 20, timestamp: Date.now() + 100, compressedContent: "b" };
+    s.saveCompressedEntry(entry1);
+    s.saveCompressedEntry(entry2);
+    const all = s.getAllCompressed();
+    expect(all).toHaveLength(2);
+  });
+});
+
+describe("Storage getAllMetadata", () => {
+  test("returns all key-value pairs", () => {
+    const s = createStorage();
+    s.setMetadata("k1", "v1");
+    s.setMetadata("k2", "v2");
+    const all = s.getAllMetadata();
+    expect(all).toEqual({ k1: "v1", k2: "v2" });
+  });
+
+  test("returns empty object when no metadata", () => {
+    const s = createStorage();
+    expect(s.getAllMetadata()).toEqual({});
+  });
+});
+
+describe("Storage compressed entry edge cases", () => {
+  test("getCompressedByOriginalId returns null for missing", () => {
+    const s = createStorage();
+    expect(s.getCompressedByOriginalId("nonexistent")).toBeNull();
+  });
+
+  test("getCompressedByTopics returns empty for no match", () => {
+    const s = createStorage();
+    s.insertCompressedEntry({
+      id: "c1", originalId: "o1", title: "t", topics: ["auth"],
+      entities: [], files: [], commands: [], errorKeywords: [],
+      importanceScore: 0.5, tokenCount: 10, compressedContent: "x",
+    });
+    expect(s.getCompressedByTopics(["nonexistent"])).toHaveLength(0);
+  });
+
+  test("insertCompressedEntry stores all fields", () => {
+    const s = createStorage();
+    s.insertCompressedEntry({
+      id: "c1", originalId: "o1", title: "full test", topics: ["topic1", "topic2"],
+      entities: ["EntityA", "EntityB"], files: ["src/a.ts", "src/b.ts"],
+      commands: ["npm run build", "bun test"],
+      errorKeywords: ["TypeError", "SyntaxError"],
+      importanceScore: 0.95, tokenCount: 1000,
+      compressedContent: "compressed content here",
+    });
+    const rows = s.getAllCompressed();
+    expect(rows[0]!.title).toBe("full test");
+    expect(rows[0]!.topics).toEqual(["topic1", "topic2"]);
+    expect(rows[0]!.entities).toEqual(["EntityA", "EntityB"]);
+    expect(rows[0]!.files).toEqual(["src/a.ts", "src/b.ts"]);
+    expect(rows[0]!.commands).toEqual(["npm run build", "bun test"]);
+    expect(rows[0]!.errorKeywords).toEqual(["TypeError", "SyntaxError"]);
+    expect(rows[0]!.importanceScore).toBe(0.95);
+    expect(rows[0]!.tokenCount).toBe(1000);
+  });
+});
+
+describe("Storage raw_logs edge cases", () => {
+  test("insertRawLog with empty content", () => {
+    const s = createStorage();
+    s.insertRawLog("l1", "s1", "worker", "", 0);
+    const logs = s.getRawLogs("s1");
+    expect(logs).toHaveLength(1);
+    expect(logs[0]!.content).toBe("");
+  });
+
+  test("insertRawLog with very large content", () => {
+    const s = createStorage();
+    const large = "x".repeat(50000);
+    s.insertRawLog("l1", "s1", "worker", large, 12500);
+    const logs = s.getRawLogs("s1");
+    expect(logs[0]!.content).toBe(large);
+  });
+
+  test("deleteRawLogsOlderThan with no matching logs", () => {
+    const s = createStorage();
+    s.insertRawLog("l1", "s1", "worker", "new", 0);
+    s.deleteRawLogsOlderThan(Date.now() - 100000);
+    const logs = s.getRawLogs("s1");
+    expect(logs).toHaveLength(1);
+  });
+
+  test("deleteRawLogsOlderThan with all logs old", () => {
+    const s = createStorage();
+    s.insertRawLog("l1", "s1", "worker", "old", 0);
+    s.deleteRawLogsOlderThan(Date.now() + 100000);
+    const logs = s.getRawLogs("s1");
+    expect(logs).toHaveLength(0);
+  });
+});
+
+describe("Storage memory edge cases", () => {
+  test("insertMemory with empty arrays serializes correctly", () => {
+    const s = createStorage();
+    s.insertMemory({ id: "m1", sessionId: "s1", bug: "b", investigation: "", rootCause: "", fix: "", reason: "", confidence: 0.5, tags: [], files: [], commands: [] });
+    const mem = s.getMemory("m1");
+    expect(JSON.parse(mem!.tags)).toEqual([]);
+    expect(JSON.parse(mem!.files)).toEqual([]);
+    expect(JSON.parse(mem!.commands)).toEqual([]);
+  });
+
+  test("insertMemory with special characters in tags", () => {
+    const s = createStorage();
+    s.insertMemory({ id: "m1", sessionId: "s1", bug: "b", investigation: "", rootCause: "", fix: "", reason: "", confidence: 0.5, tags: ["tag-with-dashes", "tag_with_underscores"], files: [], commands: [] });
+    const mem = s.getMemory("m1");
+    expect(JSON.parse(mem!.tags)).toContain("tag-with-dashes");
+  });
 });

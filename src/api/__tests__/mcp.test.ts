@@ -116,4 +116,128 @@ describe("OpenCodeAPI MCP", () => {
     await api.connectMCP("my server");
     expect(calledUrl).toContain("/mcp/my%20server/connect");
   });
+
+  test("connectMCP sends POST verb", async () => {
+    let method = "";
+    globalThis.fetch = (async (_url: string, init?: RequestInit) => {
+      method = init?.method || "GET";
+      return { ok: true, status: 200, json: async () => ({}) } as unknown as Response;
+    }) as typeof fetch;
+
+    await api.connectMCP("srv");
+    expect(method).toBe("POST");
+  });
+
+  test("disconnectMCP sends POST verb", async () => {
+    let method = "";
+    globalThis.fetch = (async (_url: string, init?: RequestInit) => {
+      method = init?.method || "GET";
+      return { ok: true, status: 200, json: async () => ({}) } as unknown as Response;
+    }) as typeof fetch;
+
+    await api.disconnectMCP("srv");
+    expect(method).toBe("POST");
+  });
+
+  test("listMCP returns empty for no servers", async () => {
+    mockFetch(200, {});
+    const result = await api.listMCP();
+    expect(Object.keys(result)).toHaveLength(0);
+  });
+
+  test("addMCP with remote type sends url in config", async () => {
+    let sentBody: unknown;
+    globalThis.fetch = (async (_url: string, init?: RequestInit) => {
+      sentBody = init?.body ? JSON.parse(init.body as string) : null;
+      return { ok: true, status: 200, json: async () => ({}) } as unknown as Response;
+    }) as typeof fetch;
+
+    await api.addMCP("remote-srv", { type: "remote", url: "https://mcp.example.com", enabled: true, headers: { Authorization: "Bearer token" } });
+    expect((sentBody as any).config.url).toBe("https://mcp.example.com");
+    expect((sentBody as any).config.headers.Authorization).toBe("Bearer token");
+  });
+
+  test("addMCP with empty command array", async () => {
+    let sentBody: unknown;
+    globalThis.fetch = (async (_url: string, init?: RequestInit) => {
+      sentBody = init?.body ? JSON.parse(init.body as string) : null;
+      return { ok: true, status: 200, json: async () => ({}) } as unknown as Response;
+    }) as typeof fetch;
+
+    await api.addMCP("empty-cmd", { type: "local", command: [], enabled: true });
+    expect((sentBody as any).config.command).toEqual([]);
+  });
+
+  test("listMCP returns error status for failed servers", async () => {
+    mockFetch(200, { "broken": { status: "error", error: "Connection refused" } });
+    const result = await api.listMCP();
+    expect(result["broken"]!.status).toBe("error");
+    expect(result["broken"]!.error).toBe("Connection refused");
+  });
+
+  test("addMCP throws on 403 forbidden", async () => {
+    mockFetch(403, { error: "forbidden" });
+    expect(api.addMCP("bad", { type: "local", command: ["bad"], enabled: true })).rejects.toThrow("Failed to add MCP server");
+  });
+
+  test("connectMCP with special characters in name", async () => {
+    let calledUrl = "";
+    globalThis.fetch = (async (url: string) => {
+      calledUrl = url;
+      return { ok: true, status: 200, json: async () => ({}) } as unknown as Response;
+    }) as typeof fetch;
+
+    await api.connectMCP("special/name?query");
+    expect(calledUrl).toContain("/mcp/special%2Fname%3Fquery/connect");
+  });
+
+  test("disconnectMCP with special characters in name", async () => {
+    let calledUrl = "";
+    globalThis.fetch = (async (url: string) => {
+      calledUrl = url;
+      return { ok: true, status: 200, json: async () => ({}) } as unknown as Response;
+    }) as typeof fetch;
+
+    await api.disconnectMCP("my mcp server");
+    expect(calledUrl).toContain("/mcp/my%20mcp%20server/disconnect");
+  });
+
+  test("healthCheck returns healthy response", async () => {
+    mockFetch(200, { healthy: true, version: "1.5.0" });
+    const result = await api.healthCheck();
+    expect(result.healthy).toBe(true);
+    expect(result.version).toBe("1.5.0");
+  });
+
+  test("healthCheck returns unhealthy on fetch error", async () => {
+    globalThis.fetch = (async () => { throw new Error("ECONNREFUSED"); }) as typeof fetch;
+    const result = await api.healthCheck();
+    expect(result.healthy).toBe(false);
+  });
+
+  test("listProviders returns provider info", async () => {
+    mockFetch(200, { all: [{ id: "openai", name: "OpenAI" }], connected: ["openai"], defaults: { openai: "gpt-4" } });
+    const result = await api.listProviders();
+    expect(result.all).toHaveLength(1);
+    expect(result.connected).toContain("openai");
+  });
+
+  test("getProviders returns provider IDs from listProviders", async () => {
+    mockFetch(200, { all: [{ id: "openai" }, { id: "anthropic" }], connected: [], defaults: {} });
+    const result = await api.getProviders();
+    expect(result).toEqual(["openai", "anthropic"]);
+  });
+
+  test("createSession creates a new session", async () => {
+    mockFetch(200, { id: "session-1", title: "test", createdAt: "2024-01-01", updatedAt: "2024-01-01" });
+    const session = await api.createSession("test");
+    expect(session.id).toBe("session-1");
+    expect(session.title).toBe("test");
+  });
+
+  test("deleteSession deletes a session", async () => {
+    mockFetch(200, true);
+    const result = await api.deleteSession("session-1");
+    expect(result).toBe(true);
+  });
 });

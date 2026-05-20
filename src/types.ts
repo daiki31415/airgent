@@ -283,14 +283,23 @@ export interface InspectionResult {
 // API Types
 // ============================================================
 
+export interface QuestionOption {
+  label: string;
+  value: string;
+}
+
+export interface Question {
+  query: string;
+  options: QuestionOption[];
+  allowCustom?: boolean;
+}
+
+export const QUESTION_TAG = "QUESTION";
+
 export interface OpenCodeResponse {
   id: string;
   content: string;
   model: string;
-  usage: {
-    promptTokens: number;
-    completionTokens: number;
-    totalTokens: number;
-  };
+  usage: { promptTokens: number; completionTokens: number; totalTokens: number };
 }
 

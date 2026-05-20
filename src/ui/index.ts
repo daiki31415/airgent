@@ -2,6 +2,7 @@ import * as readline from "readline";
 import { rootLogger } from "../utils/logger";
 import { copyToClipboard } from "../utils/clipboard";
 import type { CopyResult } from "../utils/clipboard";
+import type { Question } from "../types";
 import {
   createCliRenderer,
   InputRenderableEvents,
@@ -49,6 +50,7 @@ export interface UIOptions {
   refreshIntervalMs: number;
   onInput?: (line: string) => void;
   onShutdown?: () => void;
+  renderer?: any;
 }
 
 const GOLDEN = 1.618;
@@ -88,7 +90,7 @@ export class UIManager {
 
     if (this.isTTY) {
       try {
-        const renderer = await createCliRenderer({
+        const renderer = this.options.renderer || await createCliRenderer({
           exitOnCtrlC: false,
           backgroundColor: "#1a1b26",
         });
@@ -288,8 +290,8 @@ export class UIManager {
 
   stop(): void {
     this.running = false;
-    if (this._sigintTimer) clearTimeout(this._sigintTimer);
-    if (this._copyToastTimer) clearTimeout(this._copyToastTimer);
+    if (this._sigintTimer) { clearTimeout(this._sigintTimer); this._sigintTimer = null; }
+    if (this._copyToastTimer) { clearTimeout(this._copyToastTimer); this._copyToastTimer = null; }
     if (this.renderer) {
       this.renderer.destroy();
     }
@@ -361,6 +363,18 @@ export class UIManager {
     return new Promise((resolve) => {
       rl.question(question, (answer) => { rl.close(); resolve(answer); });
     });
+  }
+
+  async askQuestion(q: Question): Promise<string> {
+    const items = q.options.map(o => ({ name: o.label, description: "", value: o.value }));
+    if (q.allowCustom !== false) {
+      items.push({ name: "Custom...", description: "Type your own answer", value: "__custom__" });
+    }
+    const selected = await this.showSelectMenu(q.query, items);
+    if (selected === "__custom__") {
+      return this.prompt("  Your answer: ");
+    }
+    return selected;
   }
 
   async selectModel(
