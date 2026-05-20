@@ -33,11 +33,7 @@ export class ContextInspectorAgent extends BaseAgent {
     messages: Array<{ role: string; content: string }>;
     assumptions?: string[];
   }): InspectionResult {
-    const result: InspectionResult = {
-      sameErrorRepeated: false, purposeForgotten: false, todoStuck: false,
-      assumptionFixed: false, errorChangeUnrecognized: false,
-      details: [], score: 0,
-    };
+    const details: string[] = [];
 
     const current: StateSnapshot = {
       timestamp: Date.now(),
@@ -47,12 +43,21 @@ export class ContextInspectorAgent extends BaseAgent {
       assumptions: context.assumptions || [],
     };
 
-    result.sameErrorRepeated = this.checkSameErrorRepeated(current.errors, result);
-    result.purposeForgotten = this.checkPurposeForgotten(current.focus, context.messages, result);
-    result.todoStuck = this.checkTodoStuck(current.todos, result);
-    result.assumptionFixed = this.checkAssumptionFixation(current.assumptions, result);
-    result.errorChangeUnrecognized = this.checkErrorChangeUnrecognized(current.errors, result);
+    const sameErrorRepeated = this.checkSameErrorRepeated(current.errors, details);
+    const purposeForgotten = this.checkPurposeForgotten(current.focus, context.messages, details);
+    const todoStuck = this.checkTodoStuck(current.todos, details);
+    const assumptionFixed = this.checkAssumptionFixation(current.assumptions, details);
+    const errorChangeUnrecognized = this.checkErrorChangeUnrecognized(current.errors, details);
 
+    const result: InspectionResult = {
+      sameErrorRepeated,
+      purposeForgotten,
+      todoStuck,
+      assumptionFixed,
+      errorChangeUnrecognized,
+      details,
+      score: 0,
+    };
     result.score = this.calculateScore(result);
 
     this.previousStates.push(current);
@@ -62,7 +67,7 @@ export class ContextInspectorAgent extends BaseAgent {
     return result;
   }
 
-  private checkSameErrorRepeated(errors: string[], result: InspectionResult): boolean {
+  private checkSameErrorRepeated(errors: string[], details: string[]): boolean {
     if (this.previousStates.length < 2) return false;
     const counts = new Map<string, number>();
     for (const state of this.previousStates) {
@@ -73,14 +78,14 @@ export class ContextInspectorAgent extends BaseAgent {
     }
     for (const [error, count] of counts) {
       if (count >= 3) {
-        result.details.push(`Same error ${count}x: "${error}"`);
+        details.push(`Same error ${count}x: "${error}"`);
         return true;
       }
     }
     return false;
   }
 
-  private checkPurposeForgotten(focus: string, messages: Array<{ role: string; content: string }>, result: InspectionResult): boolean {
+  private checkPurposeForgotten(focus: string, messages: Array<{ role: string; content: string }>, details: string[]): boolean {
     if (messages.length < 5) return false;
     const first = messages.find(m => m.role === "user");
     if (!first) return false;
@@ -89,38 +94,38 @@ export class ContextInspectorAgent extends BaseAgent {
     const keywords = original.split(/\s+/).filter(w => w.length > 4);
     const matched = keywords.filter(kw => currentFocus.includes(kw));
     if (matched.length < Math.max(keywords.length * 0.3, 2)) {
-      result.details.push(`Purpose drift: original="${original.slice(0, 80)}", focus="${focus.slice(0, 80)}"`);
+      details.push(`Purpose drift: original="${original.slice(0, 80)}", focus="${focus.slice(0, 80)}"`);
       return true;
     }
     return false;
   }
 
-  private checkTodoStuck(todos: string[], result: InspectionResult): boolean {
+  private checkTodoStuck(todos: string[], details: string[]): boolean {
     if (this.previousStates.length < 3 || todos.length === 0) return false;
     const sigs = this.previousStates.map(s => s.todos.map(t => t.slice(0, 40)).join("|"));
     const currentSig = todos.map(t => t.slice(0, 40)).join("|");
     if (sigs.filter(s => s === currentSig).length >= 2) {
-      result.details.push(`TODOs stuck: "${todos[0]?.slice(0, 80)}"`);
+      details.push(`TODOs stuck: "${todos[0]?.slice(0, 80)}"`);
       return true;
     }
     return false;
   }
 
-  private checkAssumptionFixation(assumptions: string[], result: InspectionResult): boolean {
+  private checkAssumptionFixation(assumptions: string[], details: string[]): boolean {
     if (this.previousStates.length < 3 || assumptions.length === 0) return false;
     for (const assumption of assumptions) {
       const count = this.previousStates.filter(s =>
         s.assumptions.some(a => a.includes(assumption.slice(0, 30)))
       ).length;
       if (count >= 2) {
-        result.details.push(`Assumption persisting: "${assumption}"`);
+        details.push(`Assumption persisting: "${assumption}"`);
         return true;
       }
     }
     return false;
   }
 
-  private checkErrorChangeUnrecognized(errors: string[], result: InspectionResult): boolean {
+  private checkErrorChangeUnrecognized(errors: string[], details: string[]): boolean {
     if (this.previousStates.length < 2) return false;
     const prev = this.previousStates[this.previousStates.length - 1];
     const prevErrors = prev?.errors || [];
@@ -129,7 +134,7 @@ export class ContextInspectorAgent extends BaseAgent {
     const added = [...newSet].filter(e => !oldSet.has(e));
     const removed = [...oldSet].filter(e => !newSet.has(e));
     if (added.length > 1 || removed.length > 1) {
-      result.details.push(`Errors shifted: +${added.length} new, -${removed.length} resolved`);
+      details.push(`Errors shifted: +${added.length} new, -${removed.length} resolved`);
       return true;
     }
     return false;

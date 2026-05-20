@@ -9,6 +9,7 @@
  */
 
 import { rootLogger } from "../utils/logger";
+import { safeSplit } from "../utils/safe-split";
 import type { ModelEntry, OpenCodeResponse } from "../types";
 
 const logger = rootLogger.child("api");
@@ -226,10 +227,10 @@ export class OpenCodeAPI {
 
     let providerID: string;
     let modelID: string;
-    if (model.model.includes("/")) {
-      const sep = model.model.indexOf("/");
-      providerID = model.model.slice(0, sep);
-      modelID = model.model.slice(sep + 1);
+    const [providerPart, modelPart] = safeSplit(model.model, "/");
+    if (modelPart) {
+      providerID = providerPart;
+      modelID = modelPart;
     } else {
       providerID = model.provider || "opencode";
       modelID = model.model;

@@ -74,9 +74,11 @@ export class WatchdogAgent extends BaseAgent {
   }
 
   private checkTokenSurge(): WatchdogAction | null {
-    if (this.tokenUsage.length < 3) return null;
+    if (this.tokenUsage.length < 4) return null;
     const recent = this.tokenUsage.slice(-3);
-    const avg = this.tokenUsage.slice(0, -3).reduce((a, b) => a + b, 0) / Math.max(this.tokenUsage.length - 3, 1);
+    const priorCount = this.tokenUsage.length - 3;
+    const prior = this.tokenUsage.slice(0, -3);
+    const avg = prior.reduce((a, b) => a + b, 0) / priorCount;
     const recentAvg = recent.reduce((a, b) => a + b, 0) / 3;
     if (recentAvg > avg * 1.5 && avg > 0) {
       return { type: "warning", message: `Token surge: ${Math.round(recentAvg)} vs avg ${Math.round(avg)}` };

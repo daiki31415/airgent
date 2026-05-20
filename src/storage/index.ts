@@ -334,21 +334,36 @@ export class Storage {
     return row?.value || null;
   }
 
+  private stringVal(v: unknown, fallback = ""): string {
+    return typeof v === "string" ? v : String(v ?? fallback);
+  }
+
+  private numberVal(v: unknown, fallback = 0): number {
+    return typeof v === "number" ? v : Number(v ?? fallback);
+  }
+
+  private jsonArray(v: unknown): string[] {
+    if (typeof v === "string") {
+      try { return JSON.parse(v); } catch { return []; }
+    }
+    return [];
+  }
+
   getAllCompressed(): Array<{ id: string; originalId: string; title: string; topics: string[]; timestamp: number; entities: string[]; files: string[]; commands: string[]; errorKeywords: string[]; importanceScore: number; tokenCount: number; compressedContent: string }> {
     const rows = this.db.prepare("SELECT * FROM compressed_entries ORDER BY timestamp DESC").all() as Array<Record<string, unknown>>;
     return rows.map(r => ({
-      id: r.id as string,
-      originalId: r.original_id as string,
-      title: (r.title as string) || "",
-      topics: JSON.parse((r.topics as string) || "[]"),
-      timestamp: (r.timestamp as number) || 0,
-      entities: JSON.parse((r.entities as string) || "[]"),
-      files: JSON.parse((r.files as string) || "[]"),
-      commands: JSON.parse((r.commands as string) || "[]"),
-      errorKeywords: JSON.parse((r.error_keywords as string) || "[]"),
-      importanceScore: (r.importance_score as number) || 0,
-      tokenCount: (r.token_count as number) || 0,
-      compressedContent: (r.compressed_content as string) || "",
+      id: this.stringVal(r.id),
+      originalId: this.stringVal(r.original_id),
+      title: this.stringVal(r.title),
+      topics: this.jsonArray(r.topics),
+      timestamp: this.numberVal(r.timestamp),
+      entities: this.jsonArray(r.entities),
+      files: this.jsonArray(r.files),
+      commands: this.jsonArray(r.commands),
+      errorKeywords: this.jsonArray(r.error_keywords),
+      importanceScore: this.numberVal(r.importance_score),
+      tokenCount: this.numberVal(r.token_count),
+      compressedContent: this.stringVal(r.compressed_content),
     }));
   }
 

@@ -152,7 +152,7 @@ export class ConfigManager {
     const updated = { ...this.cache!.models, ...models };
 
     // Strip apiKey before persisting to disk
-    const serialized = JSON.parse(JSON.stringify(updated)) as Record<string, unknown>;
+    const serialized = structuredClone(updated) as Record<string, unknown>;
     for (const [key, val] of Object.entries(serialized)) {
       if (typeof val === "object" && val !== null && "apiKey" in val) {
         const entry = val as Record<string, unknown>;

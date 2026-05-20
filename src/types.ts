@@ -115,8 +115,6 @@ export type RetryStrategy =
   | "model_switch"
   | "alternate_strategy";
 
-
-
 export interface RetryContext {
   attempt: number;
   strategy: RetryStrategy;
