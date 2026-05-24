@@ -129,8 +129,8 @@ export type PipelineNode =
   | "report";
 
 export interface DAGNode {
-  id: PipelineNode;
-  dependsOn: PipelineNode[];
+  id: string;
+  dependsOn: string[];
   handler: string;
   maxRetries: number;
   timeout: number;
@@ -142,9 +142,9 @@ export interface DAGDefinition {
 
 export interface PipelineState {
   sessionId: string;
-  currentNode: PipelineNode | null;
+  currentNode: string | null;
   completedNodes: string[];
-  failedNodes: Array<{ node: PipelineNode; error: string }>;
+  failedNodes: Array<{ node: string; error: string }>;
   retryCounts: Record<string, number>;
   startTime: number;
   dagNodes: DAGNode[];

@@ -165,6 +165,9 @@ function makeMockInstances() {
     },
     pipeline: {
       registerHandler: mock(),
+      registerNode: mock(),
+      unregisterNode: mock(),
+      buildDAG: mock(() => ({ nodes: [] })),
       execute: mock(() => new Map()),
       getState: mock(() => undefined),
       reset: mock(),

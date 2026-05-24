@@ -73,10 +73,11 @@ export abstract class BaseAgent {
   }
 
   /**
-   * Rough token count estimate (~4 chars/token).
+   * Rough token count estimate based on average characters per token.
+   * This is a heuristic and may not match exact model tokenization.
    */
   protected estimateTokens(text: string): number {
-    return Math.ceil(text.length / 4);
+    return Math.ceil(text.length / 3.5);
   }
 
   /**

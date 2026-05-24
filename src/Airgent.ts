@@ -16,7 +16,7 @@ import { CompressionAgent } from "./agents/compression";
 import { ValidationAgent } from "./agents/validation";
 import { WatchdogAgent } from "./agents/watchdog";
 import { ContextInspectorAgent } from "./agents/context-inspector";
-import { PipelineEngine, buildDAG } from "./pipeline/index";
+import { PipelineEngine } from "./pipeline/index";
 import { MemorySystem } from "./memory/index";
 import { CompressionManager } from "./compression/index";
 import { SkillsManager } from "./skills/index";
@@ -134,7 +134,7 @@ export class Airgent {
       const selectedNodes = await this.planner.analyzeTask(task);
       this.ui.log("info", "planner", `Nodes: ${selectedNodes.join(", ")}`);
 
-      const dag = buildDAG(selectedNodes);
+      const dag = this.pipeline.buildDAG(selectedNodes);
 
       this.updateStatus({ pipelineNode: "execute" });
       await this.pipeline.execute(this.sessionId, dag);
