@@ -382,9 +382,9 @@ describe("BaseAgent.switchModel", () => {
 });
 
 describe("BaseAgent.estimateTokens", () => {
-  test("estimates ~1 token per 4 characters", () => {
+  test("estimates ~1 token per 3.5 characters", () => {
     const agent = new TestAgent("worker", mockModel(), mockApi());
-    expect(agent.callEstimateTokens("a".repeat(100))).toBe(25);
+    expect(agent.callEstimateTokens("a".repeat(100))).toBe(29);
   });
 
   test("rounds up fractional tokens", () => {
@@ -397,7 +397,7 @@ describe("BaseAgent.estimateTokens", () => {
   test("handles very long text", () => {
     const agent = new TestAgent("worker", mockModel(), mockApi());
     const long = "x".repeat(10000);
-    expect(agent.callEstimateTokens(long)).toBe(2500);
+    expect(agent.callEstimateTokens(long)).toBe(2858);
   });
 
   test("handles unicode characters", () => {

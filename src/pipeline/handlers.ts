@@ -10,6 +10,7 @@ import type { WorkerAgent } from "../agents/worker";
 import type { ValidationAgent } from "../agents/validation";
 import type { MemoryOrganizerAgent } from "../agents/memory-organizer";
 import type { ModelConfig, Settings } from "../types";
+import { safeParseJSON } from "../utils/json";
 
 export interface PipelineHandle {
   sessionId: string | null;
@@ -42,6 +43,12 @@ export function registerPipelineHandlers(agent: PipelineHandle): void {
         ? (chunk: string) => agent.ui.stream(`    ${chunk}`)
         : undefined,
     });
+
+    const parsed = safeParseJSON(content);
+    if (!parsed || !parsed.goal) {
+      agent.ui.log("warn", "clarify", "LLM returned invalid JSON for clarification");
+    }
+
     agent.pipelineData.clarifiedTask = content;
     if (!agent.config.settings.showPipelineProgress) {
       agent.ui.log("info", "clarify", "Analyzed task");
@@ -63,6 +70,12 @@ export function registerPipelineHandlers(agent: PipelineHandle): void {
         ? (chunk: string) => agent.ui.stream(`    ${chunk}`)
         : undefined,
     });
+
+    const parsed = safeParseJSON(content);
+    if (!parsed || !parsed.steps) {
+      agent.ui.log("warn", "plan", "LLM returned invalid JSON for planning");
+    }
+
     agent.pipelineData.plan = content;
     if (!agent.config.settings.showPipelineProgress) {
       agent.ui.log("info", "plan", "Created plan");
@@ -114,11 +127,19 @@ export function registerPipelineHandlers(agent: PipelineHandle): void {
         : undefined,
     });
     agent.pipelineData.testResult = content;
-    const hasIssues = /(?:bug|error|issue|incorrect|wrong|missing)/i.test(content);
-    if (!agent.config.settings.showPipelineProgress) {
-      agent.ui.log("info", "test", hasIssues ? "Issues found" : "No issues detected");
+
+    const parsed = safeParseJSON(content);
+    let passed = parsed?.passed;
+
+    if (passed === undefined) {
+      agent.ui.log("warn", "test", "Could not parse JSON test result, falling back to keyword heuristic");
+      passed = !/(?:bug|error|issue|incorrect|wrong|missing)/i.test(content);
     }
-    return { content, passed: !hasIssues };
+
+    if (!agent.config.settings.showPipelineProgress) {
+      agent.ui.log("info", "test", passed ? "No issues detected" : "Issues found");
+    }
+    return { content, passed };
   });
 
   agent.pipeline.registerHandler("validate", async () => {
