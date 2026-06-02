@@ -1,3 +1,15 @@
+/**
+ * Token-bucket rate limiter.
+ *
+ * Atomicity contract:
+ *   `tryConsume` is fully synchronous — it performs the read/refill/decrement
+ *   critical section in a single execution slice. In single-threaded JavaScript
+ *   this guarantees that two concurrent callers cannot both pass the
+ *   `tokens > 0` check and exceed the limit, provided no `await` is added
+ *   inside this method. Do NOT introduce `await` between the `tokens` check
+ *   and the `tokens--` decrement; doing so would break the atomicity guarantee
+ *   and allow callers to over-consume the bucket.
+ */
 export class RateLimiter {
   private tokens: number;
   private lastRefill: number;
