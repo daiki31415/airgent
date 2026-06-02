@@ -217,4 +217,17 @@ describe("RateLimiter", () => {
     rl.tryConsume();
     expect(rl.currentTokens).toBe(2);
   });
+
+  test("atomicity: interleaved calls never exceed maxTokens", async () => {
+    const rl = new RateLimiter(10, 1_000_000, 0);
+    let consumed = 0;
+    const tasks = Array.from({ length: 100 }, () =>
+      Promise.resolve().then(() => {
+        if (rl.tryConsume()) consumed++;
+      })
+    );
+    await Promise.all(tasks);
+    expect(consumed).toBe(10);
+    expect(rl.currentTokens).toBe(0);
+  });
 });
