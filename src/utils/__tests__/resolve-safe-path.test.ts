@@ -1,7 +1,7 @@
 import { beforeAll, afterAll, describe, expect, test } from "bun:test";
-import { resolveSafePath } from "../smart-cat";
+import { resolveSafePath, getAllowedDirs } from "../smart-cat";
 import { writeFileSync, mkdirSync, rmSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 
 describe("resolveSafePath", () => {
   const tmpDir = join(import.meta.dir, "..", "__test_tmp__");
@@ -129,5 +129,21 @@ describe("resolveSafePath", () => {
   test("rejects existing file outside allowed dirs", () => {
     // /etc/hostname should exist and be outside allowed dirs
     expect(() => resolveSafePath("/etc/hostname")).toThrow("Access denied");
+  });
+
+  test("getAllowedDirs reflects current process.cwd() (not stale)", () => {
+    expect(getAllowedDirs()).toContain(resolve(process.cwd()));
+  });
+
+  test("getAllowedDirs updates after process.chdir", () => {
+    const originalCwd = process.cwd();
+    const targetDir = join(tmpDir, "subdir");
+    try {
+      process.chdir(targetDir);
+      expect(getAllowedDirs()).toContain(resolve(targetDir));
+      expect(getAllowedDirs()).not.toContain(resolve(originalCwd));
+    } finally {
+      process.chdir(originalCwd);
+    }
   });
 });
