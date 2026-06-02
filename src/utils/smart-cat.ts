@@ -2,10 +2,19 @@ import { spawnSync } from "node:child_process";
 import { resolve, normalize } from "node:path";
 import { existsSync } from "node:fs";
 
-export const ALLOWED_DIRS = [
-  resolve(process.cwd()),
-  ...(process.env.HOME ? [process.env.HOME] : []),
-].map(d => normalize(resolve(d)));
+/**
+ * Returns the directories from which file access is permitted.
+ *
+ * Resolved lazily on every call so that runtime changes to `process.cwd()`
+ * (e.g. via `process.chdir`) or to `HOME` are reflected immediately, rather
+ * than captured at module load time.
+ */
+export function getAllowedDirs(): string[] {
+  return [
+    resolve(process.cwd()),
+    ...(process.env.HOME ? [process.env.HOME] : []),
+  ].map(d => normalize(resolve(d)));
+}
 
 const CAT_MAP: Record<string, string> = {
   ".gz": "zcat",
@@ -28,7 +37,7 @@ export function resolveSafePath(file: string): string {
     throw new Error(`File not found: ${file}`);
   }
 
-  const allowed = ALLOWED_DIRS.some(dir => resolved.startsWith(dir + "/") || resolved === dir);
+  const allowed = getAllowedDirs().some(dir => resolved.startsWith(dir + "/") || resolved === dir);
   if (!allowed) {
     throw new Error(`Access denied: ${file} is outside allowed directories`);
   }
