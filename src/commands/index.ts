@@ -333,7 +333,12 @@ export async function handleInput(agent: AgentHandle, line: string): Promise<voi
         agent.ui.log("info", "airgent", `Uptime: ${Date.now() - agent._startTime}ms | Session: ${agent.sessionId || "none"}`);
         return;
       case "/session":
-        agent.ui.log("info", "airgent", JSON.stringify(agent.api));
+        if (agent.sessionId) {
+          const session = agent.storage.getSession(agent.sessionId);
+          agent.ui.log("info", "airgent", JSON.stringify(session, null, 2));
+        } else {
+          agent.ui.log("info", "airgent", "No active session");
+        }
         return;
       case "/model":
         await handleModelCommand(agent, args);

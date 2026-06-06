@@ -54,8 +54,6 @@ export interface UIOptions {
 }
 
 const GOLDEN = 1.618;
-const SILVER = 1.414;
-const BRONZE = 3.303;
 
 export class UIManager {
   private options: UIOptions;
