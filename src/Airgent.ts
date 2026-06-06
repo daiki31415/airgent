@@ -29,6 +29,7 @@ import { registerPipelineHandlers } from "./pipeline/handlers";
 import { handleInput as delegateInput } from "./commands/index";
 import { ensureOpenCodeServer } from "./server/index";
 import { configureModels as delegateConfigureModels, configureModelForRole as delegateConfigureModelForRole, configureModelForAll as delegateConfigureModelForAll } from "./commands/index";
+import { extractQuestion } from "./utils/question";
 import type { AgentContext, ModelEntry, Question } from "./types";
 import type { StatusInfo } from "./ui/index";
 
@@ -184,13 +185,7 @@ export class Airgent {
   }
 
   private extractQuestion(text: string): Question | null {
-    const m = text.match(/\[QUESTION\]([\s\S]*?)\[\/QUESTION\]/);
-    if (!m) return null;
-    try {
-      return JSON.parse(m[1].trim());
-    } catch {
-      return null;
-    }
+    return extractQuestion(text);
   }
 
   async chatWithQuestion(

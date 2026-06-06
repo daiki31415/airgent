@@ -56,6 +56,10 @@ export class Storage {
     this.logger.info(`Storage initialized at ${finalPath}`);
   }
 
+  transaction<T>(fn: () => T): T {
+    return this.db.transaction(fn)();
+  }
+
   private init(): void {
     // Raw logs
     this.db.exec(`
@@ -118,6 +122,17 @@ export class Storage {
       )
     `);
     this.db.exec("CREATE INDEX IF NOT EXISTS idx_link_source ON memory_links(source_id)");
+
+    // Memory tags (for efficient tag-based search)
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS memory_tags (
+        memory_id TEXT NOT NULL,
+        tag TEXT NOT NULL,
+        PRIMARY KEY (memory_id, tag),
+        FOREIGN KEY (memory_id) REFERENCES memories(id) ON DELETE CASCADE
+      )
+    `);
+    this.db.exec("CREATE INDEX IF NOT EXISTS idx_mem_tags_tag ON memory_tags(tag)");
 
     // Sessions
     this.db.exec(`
@@ -207,6 +222,14 @@ export class Storage {
       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
     `).run(m.id, m.sessionId, m.bug, m.investigation, m.rootCause, m.fix, m.reason, m.confidence,
       JSON.stringify(m.tags), JSON.stringify(m.files), JSON.stringify(m.commands), now, now);
+
+    // Insert tags into memory_tags junction table for efficient search
+    if (m.tags.length > 0) {
+      const stmt = this.db.prepare("INSERT INTO memory_tags (memory_id, tag) VALUES (?, ?)");
+      for (const tag of m.tags) {
+        stmt.run(m.id, tag);
+      }
+    }
   }
 
   getMemory(id: string): MemoryRow | null {
@@ -214,10 +237,18 @@ export class Storage {
   }
 
   searchMemories(tags: string[], minConfidence = 0.3): MemoryRow[] {
-    const conditions = tags.map(() => "tags LIKE ?").join(" OR ");
-    return this.db.prepare(
-      `SELECT * FROM memories WHERE confidence >= ? AND (${conditions}) ORDER BY confidence DESC LIMIT 20`
-    ).all(minConfidence, ...tags.map(t => `%${t}%`)) as MemoryRow[];
+    if (tags.length === 0) return [];
+
+    // Use memory_tags junction table for efficient indexed lookups
+    const placeholders = tags.map(() => "?").join(",");
+    return this.db.prepare(`
+      SELECT m.* FROM memories m
+      JOIN memory_tags mt ON m.id = mt.memory_id
+      WHERE mt.tag IN (${placeholders}) AND m.confidence >= ?
+      GROUP BY m.id
+      ORDER BY m.confidence DESC
+      LIMIT 20
+    `).all(...tags, minConfidence) as MemoryRow[];
   }
 
   getLinkedMemories(memoryId: string): (MemoryRow & { link_type: string; link_confidence: number })[] {
@@ -226,6 +257,18 @@ export class Storage {
       FROM memories m JOIN memory_links l ON (l.target_id = m.id OR l.source_id = m.id)
       WHERE (l.source_id = ? OR l.target_id = ?) AND l.confidence >= 0.5
     `).all(memoryId, memoryId) as (MemoryRow & { link_type: string; link_confidence: number })[];
+  }
+
+  getMemoryLinks(memoryId: string): Array<{ type: string; target: string; confidence: number }> {
+    return this.db.prepare(`
+      SELECT type, target_id as target, confidence
+      FROM memory_links
+      WHERE source_id = ?
+      UNION
+      SELECT type, source_id as target, confidence
+      FROM memory_links
+      WHERE target_id = ?
+    `).all(memoryId, memoryId) as Array<{ type: string; target: string; confidence: number }>;
   }
 
   insertLink(id: string, sourceId: string, targetId: string, type: string, confidence: number): void {

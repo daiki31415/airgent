@@ -1,6 +1,7 @@
 import type { ModelEntry, Question } from "./types";
 import type { OpenCodeAPI } from "./api/opencode";
 import { rootLogger } from "./utils/logger";
+import { extractQuestion } from "./utils/question";
 
 const logger = rootLogger.child("llm");
 
@@ -11,16 +12,6 @@ export interface LLMCallOptions {
   onChunk?: (chunk: string) => void;
   onQuestion?: (question: Question) => Promise<string>;
   maxQuestionRounds?: number;
-}
-
-function extractQuestion(text: string): Question | null {
-  const m = text.match(/\[QUESTION\]([\s\S]*?)\[\/QUESTION\]/);
-  if (!m) return null;
-  try {
-    return JSON.parse(m[1].trim());
-  } catch {
-    return null;
-  }
 }
 
 export async function callLLM(options: LLMCallOptions): Promise<string> {
