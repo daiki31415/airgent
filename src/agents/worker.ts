@@ -66,17 +66,42 @@ export class WorkerAgent extends BaseAgent {
 
   private extractTopics(text: string): string[] {
     const topics = new Set<string>();
+
     const patterns = [
-      /(?:error|bug|fix|issue):\s*(\w+)/gi,
-      /(?:in|of|for)\s+(the\s+)?(\w+\.\w+)/g,
-      /\b(?:TypeError|ReferenceError|SyntaxError)\w*/g,
+      // error: TypeError, bug: null-pointer, fix: memory-leak, issue: race-condition
+      /(?:error|bug|fix|issue):\s*([a-zA-Z_][a-zA-Z0-9_-]*)/gi,
+
+      // in/of/for the file.ts, in src/utils/helper.ts, for myFunction
+      /(?:in|of|for)\s+(?:the\s+)?([a-zA-Z_][a-zA-Z0-9_-]*(?:[\/\.][a-zA-Z_][a-zA-Z0-9_-]*)*)/g,
+
+      // Common error types
+      /\b(?:TypeError|ReferenceError|SyntaxError|RangeError|Error|Exception)\w*/g,
+
+      // camelCase identifiers (function names, variables)
+      /\b[a-z]+(?:[A-Z][a-z0-9]+)+\b/g,
+
+      // kebab-case identifiers (file names, CSS classes, CLI flags)
+      /\b[a-z]+(?:-[a-z0-9]+)+\b/g,
+
+      // snake_case identifiers (Python, configs, env vars)
+      /\b[a-z_][a-z0-9_]*\b/g,
+
+      // File paths with extensions
+      /\b[a-zA-Z_][a-zA-Z0-9_\-\/]*\.(?:ts|js|tsx|jsx|json|md|py|rs|go|java|cpp|h)\b/g,
+
+      // Function calls: foo(), bar.baz(), obj.method()
+      /\b[a-zA-Z_][a-zA-Z0-9_\.]*\(\)/g,
     ];
 
     for (const pattern of patterns) {
       for (const match of text.matchAll(pattern)) {
         if (match) {
-          const captured = match[match.length - 1];
-          if (captured && captured.length > 2) topics.add(captured.toLowerCase());
+          const captured = match[match.length - 1] || match[0];
+          if (captured && captured.length > 2) {
+            // Normalize: lowercase, strip trailing ()
+            const normalized = captured.replace(/\(\)$/, "").toLowerCase();
+            topics.add(normalized);
+          }
         }
       }
     }

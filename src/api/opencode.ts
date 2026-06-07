@@ -194,6 +194,14 @@ export class OpenCodeAPI {
   // Wraps the server API to match the old ModelEntry-based interface used by agents.
   // Each call creates a temporary session on the opencode server and deletes it
   // afterwards so airgent sessions don't pollute the opencode session list.
+  //
+  // PERFORMANCE NOTE: This creates/destroys a session for EVERY chat() and
+  // streamChat() call. Under high load this will hammer the OpenCode server
+  // with session churn (2 HTTP requests per call: create + delete).
+  //
+  // Consider implementing connection pooling or reusing a persistent session
+  // per airgent session for production workloads. The current approach
+  // prioritizes isolation and simplicity over throughput.
 
   private async withTempSession<T>(
     fn: (sessionId: string) => Promise<T>

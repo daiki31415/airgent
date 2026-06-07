@@ -34,6 +34,7 @@ export class MemorySystem {
 
   /**
    * Create a structured memory with auto-linking.
+   * All operations (memory, evidence, links) run in a single transaction.
    */
   createMemory(params: {
     sessionId: string;
@@ -50,27 +51,29 @@ export class MemorySystem {
   }): string {
     const id = randomUUID();
 
-    this.storage.insertMemory({
-      id,
-      sessionId: params.sessionId,
-      bug: params.bug,
-      investigation: params.investigation,
-      rootCause: params.rootCause,
-      fix: params.fix,
-      reason: params.reason,
-      confidence: params.confidence,
-      tags: params.tags,
-      files: params.files,
-      commands: params.commands,
+    this.storage.transaction(() => {
+      this.storage.insertMemory({
+        id,
+        sessionId: params.sessionId,
+        bug: params.bug,
+        investigation: params.investigation,
+        rootCause: params.rootCause,
+        fix: params.fix,
+        reason: params.reason,
+        confidence: params.confidence,
+        tags: params.tags,
+        files: params.files,
+        commands: params.commands,
+      });
+
+      // Insert evidence entries
+      for (const ev of params.evidence) {
+        this.storage.insertEvidence(randomUUID(), id, ev.type, ev.content, ev.source);
+      }
+
+      // Auto-link to similar memories
+      this.autoLink(id, params.tags, params.confidence);
     });
-
-    // Insert evidence entries
-    for (const ev of params.evidence) {
-      this.storage.insertEvidence(randomUUID(), id, ev.type, ev.content, ev.source);
-    }
-
-    // Auto-link to similar memories
-    this.autoLink(id, params.tags, params.confidence);
 
     this.logger.info(`Created memory: ${id} (${params.bug.slice(0, 60)})`);
     return id;
@@ -100,6 +103,13 @@ export class MemorySystem {
    */
   getEvidence(memoryId: string): Array<{ id: string; type: string; content: string; source: string; timestamp: number }> {
     return this.storage.getEvidence(memoryId);
+  }
+
+  /**
+   * Get raw links for a memory (type, target, confidence).
+   */
+  getLinks(memoryId: string): Array<{ type: string; target: string; confidence: number }> {
+    return this.storage.getMemoryLinks(memoryId);
   }
 
   /**

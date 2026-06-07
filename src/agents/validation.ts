@@ -70,7 +70,8 @@ export class ValidationAgent extends BaseAgent {
     const memories = this.memorySystem.findRelevant([], 0);
 
     for (const mem of memories) {
-      for (const link of mem.links) {
+      const links = this.memorySystem.getLinks(mem.id);
+      for (const link of links) {
         if (link.confidence < 0.3) {
           flagged.push(`Low confidence: ${mem.id} -> ${link.target} (${link.confidence})`);
         }
