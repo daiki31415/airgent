@@ -14,29 +14,18 @@ Airgent is a local-first AI agent framework that connects to an [OpenCode](https
 ## Installation
 
 ```bash
-# Clone and install
-git clone https://github.com/daiki31415/airgent
+git clone https://github.com/daiki31415/airgent.git
 cd airgent
 bun install
-
-# Start OpenCode server (required - separate terminal)
-opencode serve
-
-# Run Airgent
-bun run index.ts
+bun run build
 ```
 
-## Quick Start
+## Run
 
 ```bash
-# Terminal 1: Start OpenCode server
-opencode serve
-
-# Terminal 2: Run Airgent
-bun run index.ts
-
-# In Airgent TUI, type a task:
-> Create a REST API with authentication
+bun run airgent
+# または
+bun run src/index.ts
 ```
 
 ## Configuration
