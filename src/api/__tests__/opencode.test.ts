@@ -1,102 +1,167 @@
 /**
  * Tests for OpenCodeAPI (opencode.ts)
  *
- * Mocks globalThis.fetch to avoid real network calls.
- * Covers health, session, message, provider, auth, MCP, chat, and streamChat.
+ * Mocks globalThis.fetch at the HTTP boundary only.
+ * Tests public behavior — no private field access.
+ * MCP methods are covered in mcp.test.ts; not duplicated here.
  */
 
-import { describe, expect, test, beforeAll, afterAll, mock } from "bun:test";
+import { describe, expect, test, beforeEach, afterAll } from "bun:test";
+import { OpenCodeAPI } from "../opencode";
+
+// ---- Mock infrastructure ----
 
 const originalFetch = globalThis.fetch;
 
-// ---- Helpers ----
+/**
+ * Capture object for inspecting what was actually sent to fetch.
+ * Reset before each test via resetCapture().
+ */
+interface FetchCapture {
+  url: string;
+  method: string;
+  headers: Record<string, string>;
+  body: unknown;
+}
 
-function mockFetch(
-  status: number,
-  body: unknown,
-  headers?: Record<string, string>,
-): void {
-  globalThis.fetch = (async (_url: string, _init?: RequestInit) => {
+let capture: FetchCapture = { url: "", method: "GET", headers: {}, body: null };
+
+function resetCapture(): void {
+  capture = { url: "", method: "GET", headers: {}, body: null };
+}
+
+/**
+ * Install a simple static mock for all fetch calls.
+ * Captures the first call's url/method/headers/body.
+ */
+function mockFetch(status: number, body: unknown, responseHeaders?: Record<string, string>): void {
+  globalThis.fetch = (async (url: string, init?: RequestInit) => {
+    if (!capture.url) {
+      capture.url = url;
+      capture.method = init?.method || "GET";
+      capture.headers = Object.fromEntries(
+        Object.entries(init?.headers as Record<string, string> || {})
+      );
+      capture.body = init?.body ? JSON.parse(init.body as string) : null;
+    }
     return {
       ok: status >= 200 && status < 300,
       status,
       json: async () => body,
       text: async () => JSON.stringify(body),
-      headers: new Map(Object.entries(headers || { "content-type": "application/json" })),
+      headers: new Map(Object.entries(responseHeaders || { "content-type": "application/json" })),
     } as unknown as Response;
   }) as typeof fetch;
 }
 
-function mockFetchWithUrl(
-  handler: (url: string, init?: RequestInit) => { status: number; body: unknown; headers?: Record<string, string> },
+/**
+ * Install a stateful multi-call mock.
+ * handlers[0] handles the 1st call, handlers[1] the 2nd, etc.
+ * Extra calls return { ok: true, status: 200, json: () => true }.
+ */
+function mockFetchSequence(
+  handlers: Array<{ status: number; body: unknown; responseHeaders?: Record<string, string> }>
 ): void {
+  let callIndex = 0;
   globalThis.fetch = (async (url: string, init?: RequestInit) => {
-    const result = handler(url, init);
+    const h = handlers[callIndex] ?? { status: 200, body: true };
+    if (callIndex === 0) {
+      capture.url = url;
+      capture.method = init?.method || "GET";
+      capture.headers = Object.fromEntries(
+        Object.entries(init?.headers as Record<string, string> || {})
+      );
+      capture.body = init?.body ? JSON.parse(init.body as string) : null;
+    }
+    callIndex++;
     return {
-      ok: result.status >= 200 && result.status < 300,
-      status: result.status,
-      json: async () => result.body,
-      text: async () => JSON.stringify(result.body),
-      headers: new Map(Object.entries(result.headers || { "content-type": "application/json" })),
+      ok: h.status >= 200 && h.status < 300,
+      status: h.status,
+      json: async () => h.body,
+      text: async () => JSON.stringify(h.body),
+      headers: new Map(Object.entries(h.responseHeaders || { "content-type": "application/json" })),
     } as unknown as Response;
   }) as typeof fetch;
 }
 
-// ---- Tests ----
+/**
+ * Helpers for the chat/streamChat sequence pattern:
+ * 1. createSession  → sessionResponse
+ * 2. sendMessage    → messageResponse
+ * 3. deleteSession  → true (cleanup, fire-and-forget)
+ */
+function mockChatSequence(messageBody: unknown): void {
+  mockFetchSequence([
+    { status: 200, body: { id: "tmp-sess", createdAt: "", updatedAt: "" } },
+    { status: 200, body: messageBody },
+    { status: 200, body: true },
+  ]);
+}
 
-describe("OpenCodeAPI", () => {
-  let OpenCodeAPI: typeof import("../opencode").OpenCodeAPI;
+afterAll(() => {
+  globalThis.fetch = originalFetch;
+});
 
-  beforeAll(async () => {
-    process.env.OPENCODE_BASE_URL = "http://test:4096";
-    process.env.OPENCODE_SERVER_USERNAME = "opencode";
-    process.env.OPENCODE_SERVER_PASSWORD = "test-password";
-    const mod = await import("../opencode");
-    OpenCodeAPI = mod.OpenCodeAPI;
-  });
+beforeEach(() => {
+  resetCapture();
+  process.env.OPENCODE_BASE_URL = "http://test:4096";
+  delete process.env.OPENCODE_SERVER_PASSWORD;
+  delete process.env.OPENCODE_SERVER_USERNAME;
+});
 
-  afterAll(() => {
-    globalThis.fetch = originalFetch;
+// ---- Constructor: tested via observable HTTP behavior ----
+
+describe("OpenCodeAPI constructor", () => {
+  test("uses default baseUrl when nothing configured", async () => {
     delete process.env.OPENCODE_BASE_URL;
-    delete process.env.OPENCODE_SERVER_USERNAME;
-    delete process.env.OPENCODE_SERVER_PASSWORD;
-  });
-
-  // ---- Constructor ----
-
-  test("constructor uses default baseUrl when no options given", () => {
-    delete process.env.OPENCODE_BASE_URL;
+    mockFetch(200, { healthy: true });
     const api = new OpenCodeAPI();
-    expect((api as any).baseUrl).toBe("http://127.0.0.1:4096");
-    process.env.OPENCODE_BASE_URL = "http://test:4096";
+    await api.healthCheck();
+    expect(capture.url).toContain("127.0.0.1:4096");
   });
 
-  test("constructor uses provided baseUrl", () => {
+  test("uses provided baseUrl option", async () => {
+    mockFetch(200, { healthy: true });
     const api = new OpenCodeAPI({ baseUrl: "http://custom:5000" });
-    expect((api as any).baseUrl).toBe("http://custom:5000");
+    await api.healthCheck();
+    expect(capture.url).toContain("custom:5000");
   });
 
-  test("constructor strips trailing slash from baseUrl", () => {
+  test("strips trailing slash from baseUrl", async () => {
+    mockFetch(200, { healthy: true });
     const api = new OpenCodeAPI({ baseUrl: "http://test:4096/" });
-    expect((api as any).baseUrl).toBe("http://test:4096");
+    await api.healthCheck();
+    expect(capture.url).not.toMatch(/\/\/$/);
+    expect(capture.url).toContain("test:4096");
   });
 
-  test("constructor sets auth header when password provided", () => {
+  test("sends Authorization header when password is configured", async () => {
+    mockFetch(200, { healthy: true });
     const api = new OpenCodeAPI({ password: "mypass" });
-    const header = (api as any).authHeader;
-    expect(header).toContain("Basic ");
+    await api.healthCheck();
+    expect(capture.headers["Authorization"]).toMatch(/^Basic /);
   });
 
-  test("constructor no auth header when no password", () => {
-    delete process.env.OPENCODE_SERVER_PASSWORD;
+  test("omits Authorization header when no password", async () => {
+    mockFetch(200, { healthy: true });
     const api = new OpenCodeAPI();
-    expect((api as any).authHeader).toBeNull();
-    process.env.OPENCODE_SERVER_PASSWORD = "test-password";
+    await api.healthCheck();
+    expect(capture.headers["Authorization"]).toBeUndefined();
   });
 
-  // ---- Health ----
+  test("env OPENCODE_SERVER_PASSWORD is used as password", async () => {
+    process.env.OPENCODE_SERVER_PASSWORD = "envpass";
+    mockFetch(200, { healthy: true });
+    const api = new OpenCodeAPI();
+    await api.healthCheck();
+    expect(capture.headers["Authorization"]).toMatch(/^Basic /);
+  });
+});
 
-  test("healthCheck returns healthy when server responds", async () => {
+// ---- Health ----
+
+describe("OpenCodeAPI.healthCheck", () => {
+  test("returns healthy:true when server responds ok", async () => {
     mockFetch(200, { healthy: true, version: "1.0.0" });
     const api = new OpenCodeAPI();
     const result = await api.healthCheck();
@@ -104,27 +169,30 @@ describe("OpenCodeAPI", () => {
     expect(result.version).toBe("1.0.0");
   });
 
-  test("healthCheck returns unhealthy on non-ok response", async () => {
+  test("returns healthy:false on non-ok status", async () => {
     mockFetch(500, {});
     const api = new OpenCodeAPI();
     const result = await api.healthCheck();
     expect(result.healthy).toBe(false);
   });
 
-  test("healthCheck returns unhealthy on fetch error", async () => {
-    globalThis.fetch = (async () => { throw new Error("network error"); }) as typeof fetch;
+  test("returns healthy:false when fetch throws", async () => {
+    globalThis.fetch = (async () => { throw new Error("ECONNREFUSED"); }) as typeof fetch;
     const api = new OpenCodeAPI();
     const result = await api.healthCheck();
     expect(result.healthy).toBe(false);
   });
+});
 
-  // ---- Sessions ----
+// ---- Sessions ----
 
+describe("OpenCodeAPI sessions", () => {
   test("createSession sends POST and returns session", async () => {
     mockFetch(200, { id: "sess-1", createdAt: "2024-01-01", updatedAt: "2024-01-01" });
     const api = new OpenCodeAPI();
     const session = await api.createSession("test session");
     expect(session.id).toBe("sess-1");
+    expect(capture.method).toBe("POST");
   });
 
   test("createSession throws on non-ok", async () => {
@@ -140,11 +208,17 @@ describe("OpenCodeAPI", () => {
     expect(sessions).toHaveLength(2);
   });
 
-  test("getSession returns single session", async () => {
-    mockFetch(200, { id: "sess-42" });
+  test("getSession returns matching session", async () => {
+    mockFetch(200, { id: "sess-42", createdAt: "", updatedAt: "" });
     const api = new OpenCodeAPI();
     const session = await api.getSession("sess-42");
     expect(session.id).toBe("sess-42");
+  });
+
+  test("getSession throws on non-ok", async () => {
+    mockFetch(404, {});
+    const api = new OpenCodeAPI();
+    expect(api.getSession("ghost")).rejects.toThrow("Failed to get session");
   });
 
   test("deleteSession returns boolean", async () => {
@@ -154,19 +228,24 @@ describe("OpenCodeAPI", () => {
     expect(result).toBe(true);
   });
 
-  test("abortSession sends POST", async () => {
-    let methodCalled = "";
-    mockFetchWithUrl((url, init) => {
-      methodCalled = init?.method || "GET";
-      return { status: 200, body: true };
-    });
+  test("deleteSession throws on non-ok", async () => {
+    mockFetch(500, {});
     const api = new OpenCodeAPI();
-    await api.abortSession("sess-1");
-    expect(methodCalled).toBe("POST");
+    expect(api.deleteSession("bad-sess")).rejects.toThrow("Failed to delete session");
   });
 
-  // ---- Messages ----
+  test("abortSession sends POST", async () => {
+    mockFetch(200, true);
+    const api = new OpenCodeAPI();
+    await api.abortSession("sess-1");
+    expect(capture.method).toBe("POST");
+    expect(capture.url).toContain("/abort");
+  });
+});
 
+// ---- Messages ----
+
+describe("OpenCodeAPI messages", () => {
   test("sendMessage returns prompt result", async () => {
     mockFetch(200, {
       info: { id: "msg-1", sessionID: "sess-1", role: "assistant", parts: [] },
@@ -178,6 +257,27 @@ describe("OpenCodeAPI", () => {
     expect(result.parts[0]!.text).toBe("Hello!");
   });
 
+  test("sendMessage sends POST with text part", async () => {
+    mockFetch(200, {
+      info: { id: "m1", sessionID: "s1", role: "assistant", parts: [] },
+      parts: [],
+    });
+    const api = new OpenCodeAPI();
+    await api.sendMessage("sess-1", { providerID: "openai", modelID: "gpt-4" }, "test prompt");
+    expect(capture.method).toBe("POST");
+    expect(capture.body).toMatchObject({ parts: [{ type: "text", text: "test prompt" }] });
+  });
+
+  test("sendMessage passes system option into body", async () => {
+    mockFetch(200, {
+      info: { id: "m1", sessionID: "s1", role: "assistant", parts: [] },
+      parts: [],
+    });
+    const api = new OpenCodeAPI();
+    await api.sendMessage("s1", { providerID: "openai", modelID: "gpt-4" }, "Hi", { system: "Be helpful" });
+    expect((capture.body as any).system).toBe("Be helpful");
+  });
+
   test("sendMessage throws on non-ok", async () => {
     mockFetch(500, { error: "server error" });
     const api = new OpenCodeAPI();
@@ -186,156 +286,101 @@ describe("OpenCodeAPI", () => {
     ).rejects.toThrow("Failed to send message");
   });
 
-  test("sendMessage passes system prompt option", async () => {
-    let sentBody: unknown;
-    globalThis.fetch = (async (_url: string, init?: RequestInit) => {
-      sentBody = init?.body ? JSON.parse(init.body as string) : null;
-      return { ok: true, status: 200, json: async () => ({ info: { id: "m1", sessionID: "s1", role: "assistant", parts: [] }, parts: [] }) } as unknown as Response;
-    }) as typeof fetch;
-
-    const api = new OpenCodeAPI();
-    await api.sendMessage("sess-1", { providerID: "openai", modelID: "gpt-4" }, "Hi", { system: "Be helpful" });
-    expect((sentBody as any).system).toBe("Be helpful");
-  });
-
-  test("listMessages returns array of messages", async () => {
+  test("listMessages returns array", async () => {
     mockFetch(200, [{ info: { id: "m1", sessionID: "s1", role: "assistant", parts: [] }, parts: [] }]);
     const api = new OpenCodeAPI();
     const msgs = await api.listMessages("sess-1");
     expect(msgs).toHaveLength(1);
   });
 
-  test("listMessages with limit appends query param", async () => {
-    let calledUrl = "";
-    globalThis.fetch = (async (url: string) => {
-      calledUrl = url;
-      return { ok: true, status: 200, json: async () => [] } as unknown as Response;
-    }) as typeof fetch;
-
+  test("listMessages appends limit query param when specified", async () => {
+    mockFetch(200, []);
     const api = new OpenCodeAPI();
     await api.listMessages("sess-1", 10);
-    expect(calledUrl).toContain("limit=10");
+    expect(capture.url).toContain("limit=10");
   });
+});
 
-  // ---- Providers ----
+// ---- Providers ----
 
-  test("listProviders returns provider data", async () => {
-    mockFetch(200, { all: [{ id: "openai", name: "OpenAI" }], connected: ["openai"], defaults: { openai: "gpt-4" } });
+describe("OpenCodeAPI providers", () => {
+  test("listProviders returns all/connected/defaults", async () => {
+    mockFetch(200, {
+      all: [{ id: "openai", name: "OpenAI" }],
+      connected: ["openai"],
+      defaults: { openai: "gpt-4" },
+    });
     const api = new OpenCodeAPI();
     const result = await api.listProviders();
     expect(result.connected).toContain("openai");
+    expect(result.all).toHaveLength(1);
   });
 
-  test("getAuthMethods returns auth methods", async () => {
+  test("getAuthMethods returns method map", async () => {
     mockFetch(200, { openai: [{ type: "api", label: "API Key" }] });
     const api = new OpenCodeAPI();
     const result = await api.getAuthMethods();
     expect(result.openai).toHaveLength(1);
   });
 
-  test("setAuth sends PUT with API key", async () => {
-    let sentMethod = "";
-    let sentBody: unknown;
-    globalThis.fetch = (async (_url: string, init?: RequestInit) => {
-      sentMethod = init?.method || "GET";
-      sentBody = init?.body ? JSON.parse(init.body as string) : null;
-      return { ok: true, status: 200, json: async () => true } as unknown as Response;
-    }) as typeof fetch;
-
+  test("setAuth sends PUT with API key in body", async () => {
+    mockFetch(200, true);
     const api = new OpenCodeAPI();
     await api.setAuth("openai", "sk-xxx");
-    expect(sentMethod).toBe("PUT");
-    expect((sentBody as any).key).toBe("sk-xxx");
+    expect(capture.method).toBe("PUT");
+    expect((capture.body as any).key).toBe("sk-xxx");
   });
 
-  // ---- getProviders ----
-
-  test("getProviders returns provider IDs", async () => {
+  test("getProviders returns flat array of provider IDs", async () => {
     mockFetch(200, { all: [{ id: "openai" }, { id: "anthropic" }], connected: [], defaults: {} });
     const api = new OpenCodeAPI();
     const ids = await api.getProviders();
     expect(ids).toEqual(["openai", "anthropic"]);
   });
+});
 
-  // ---- MCP methods (already tested in mcp.test.ts, adding a couple more) ----
+// ---- chat() ----
 
-  test("listMCP returns server status map", async () => {
-    mockFetch(200, { "server-a": { status: "connected" } });
-    const api = new OpenCodeAPI();
-    const result = await api.listMCP();
-    expect(result["server-a"]!.status).toBe("connected");
-    expect(Object.keys(result)).toHaveLength(1);
-  });
-
-  test("addMCP sends POST with config", async () => {
-    let sentMethod = "";
-    let sentBody: unknown;
-    globalThis.fetch = (async (_url: string, init?: RequestInit) => {
-      sentMethod = init?.method || "GET";
-      sentBody = init?.body ? JSON.parse(init.body as string) : null;
-      return { ok: true, status: 200, json: async () => ({ "new-server": { status: "added" } }) } as unknown as Response;
-    }) as typeof fetch;
-
-    const api = new OpenCodeAPI();
-    await api.addMCP("new-server", { type: "local", command: ["node", "server.js"], enabled: true });
-    expect(sentMethod).toBe("POST");
-    expect((sentBody as any).name).toBe("new-server");
-  });
-
-  // ---- Chat ----
-
-  test("chat with single user message returns content", async () => {
-    // chat() creates temp session, sends message, returns content
-    let callCount = 0;
-    globalThis.fetch = (async (_url: string, init?: RequestInit) => {
-      callCount++;
-      if (callCount === 1) {
-        // createSession
-        return { ok: true, status: 200, json: async () => ({ id: "tmp-sess", createdAt: "", updatedAt: "" }) } as unknown as Response;
-      }
-      if (callCount === 2) {
-        // sendMessage
-        return {
-          ok: true, status: 200,
-          json: async () => ({
-            info: { id: "msg-1", sessionID: "tmp-sess", role: "assistant", parts: [{ type: "text", text: "Hello back!" }] },
-            parts: [{ type: "text", text: "Hello back!" }],
-          }),
-        } as unknown as Response;
-      }
-      // deleteSession (cleanup)
-      return { ok: true, status: 200, json: async () => true } as unknown as Response;
-    }) as typeof fetch;
-
+describe("OpenCodeAPI.chat", () => {
+  test("returns assistant content from response parts", async () => {
+    mockChatSequence({
+      info: { id: "msg-1", sessionID: "tmp-sess", role: "assistant", parts: [] },
+      parts: [{ type: "text", text: "Hello back!" }],
+    });
     const api = new OpenCodeAPI();
     const response = await api.chat(
       { provider: "openai", model: "gpt-4" },
       [{ role: "user", content: "Hello" }],
     );
     expect(response.content).toBe("Hello back!");
-    expect(response.model).toBe("openai/gpt-4");
-    expect(response.id).toBeDefined();
   });
 
-  test("chat with system messages includes system prompt", async () => {
+  test("model field in response reflects provider/model", async () => {
+    mockChatSequence({
+      info: { id: "m1", sessionID: "tmp-sess", role: "assistant", parts: [] },
+      parts: [{ type: "text", text: "ok" }],
+    });
+    const api = new OpenCodeAPI();
+    const response = await api.chat(
+      { provider: "openai", model: "gpt-4" },
+      [{ role: "user", content: "Hi" }],
+    );
+    expect(response.model).toBe("openai/gpt-4");
+  });
+
+  test("includes system message as system prompt", async () => {
+    mockFetchSequence([
+      { status: 200, body: { id: "sess", createdAt: "", updatedAt: "" } },
+      { status: 200, body: { info: { id: "m1", sessionID: "sess", role: "assistant", parts: [] }, parts: [{ type: "text", text: "ok" }] } },
+      { status: 200, body: true },
+    ]);
     let sentBody: unknown;
-    let callCount = 0;
-    globalThis.fetch = (async (_url: string, init?: RequestInit) => {
-      callCount++;
-      if (callCount === 1) {
-        return { ok: true, status: 200, json: async () => ({ id: "tmp-sess", createdAt: "", updatedAt: "" }) } as unknown as Response;
-      }
-      if (callCount === 2) {
-        sentBody = init?.body ? JSON.parse(init.body as string) : null;
-        return {
-          ok: true, status: 200,
-          json: async () => ({
-            info: { id: "m1", sessionID: "tmp-sess", role: "assistant", parts: [{ type: "text", text: "ok" }] },
-            parts: [{ type: "text", text: "ok" }],
-          }),
-        } as unknown as Response;
-      }
-      return { ok: true, status: 200, json: async () => true } as unknown as Response;
+    const origFetch = globalThis.fetch;
+    let call = 0;
+    globalThis.fetch = (async (url: string, init?: RequestInit) => {
+      call++;
+      if (call === 2) sentBody = init?.body ? JSON.parse(init.body as string) : null;
+      return origFetch(url, init);
     }) as typeof fetch;
 
     const api = new OpenCodeAPI();
@@ -346,27 +391,18 @@ describe("OpenCodeAPI", () => {
         { role: "user", content: "Hi" },
       ],
     );
-    // The system prompt should be in the sent body
     expect((sentBody as any)?.system).toContain("You are helpful");
   });
 
-  test("chat with multiple user messages includes context", async () => {
-    let sentBody: unknown;
-    let callCount = 0;
+  test("multiple user messages: prompt contains all content", async () => {
+    let sendMessageBody: unknown;
+    let call = 0;
     globalThis.fetch = (async (_url: string, init?: RequestInit) => {
-      callCount++;
-      if (callCount === 1) {
-        return { ok: true, status: 200, json: async () => ({ id: "tmp-sess", createdAt: "", updatedAt: "" }) } as unknown as Response;
-      }
-      if (callCount === 2) {
-        sentBody = init?.body ? JSON.parse(init.body as string) : null;
-        return {
-          ok: true, status: 200,
-          json: async () => ({
-            info: { id: "m1", sessionID: "tmp-sess", role: "assistant", parts: [{ type: "text", text: "ok" }] },
-            parts: [{ type: "text", text: "ok" }],
-          }),
-        } as unknown as Response;
+      call++;
+      if (call === 1) return { ok: true, status: 200, json: async () => ({ id: "s", createdAt: "", updatedAt: "" }) } as unknown as Response;
+      if (call === 2) {
+        sendMessageBody = init?.body ? JSON.parse(init.body as string) : null;
+        return { ok: true, status: 200, json: async () => ({ info: { id: "m", sessionID: "s", role: "assistant", parts: [] }, parts: [{ type: "text", text: "ok" }] }) } as unknown as Response;
       }
       return { ok: true, status: 200, json: async () => true } as unknown as Response;
     }) as typeof fetch;
@@ -379,38 +415,20 @@ describe("OpenCodeAPI", () => {
         { role: "user", content: "Second" },
       ],
     );
-    const parts = (sentBody as any)?.parts;
-    expect(parts).toBeDefined();
-    // The full prompt should contain previous context
-    const text = parts[0]?.text || "";
+    const text = (sendMessageBody as any)?.parts?.[0]?.text ?? "";
     expect(text).toContain("Second");
+    expect(text).toContain("First");
   });
 
-  test("chat throws when no user message", async () => {
-    const api = new OpenCodeAPI();
-    expect(
-      api.chat({ provider: "openai", model: "gpt-4" }, [{ role: "system", content: "be nice" }]),
-    ).rejects.toThrow("No user message");
-  });
-
-  // ---- Legacy model format with slash ----
-
-  test("chat handles model with provider/model format", async () => {
-    let callCount = 0;
+  test("model string with provider/model format is parsed correctly", async () => {
+    let sendBody: unknown;
+    let call = 0;
     globalThis.fetch = (async (_url: string, init?: RequestInit) => {
-      callCount++;
-      if (callCount === 1) {
-        return { ok: true, status: 200, json: async () => ({ id: "tmp-sess", createdAt: "", updatedAt: "" }) } as unknown as Response;
-      }
-      if (callCount === 2) {
-        const body = init?.body ? JSON.parse(init.body as string) : null;
-        return {
-          ok: true, status: 200,
-          json: async () => ({
-            info: { id: "m1", sessionID: "tmp-sess", role: "assistant", parts: [{ type: "text", text: `from ${body?.model?.providerID}/${body?.model?.modelID}` }] },
-            parts: [{ type: "text", text: `from ${body?.model?.providerID}/${body?.model?.modelID}` }],
-          }),
-        } as unknown as Response;
+      call++;
+      if (call === 1) return { ok: true, status: 200, json: async () => ({ id: "s", createdAt: "", updatedAt: "" }) } as unknown as Response;
+      if (call === 2) {
+        sendBody = init?.body ? JSON.parse(init.body as string) : null;
+        return { ok: true, status: 200, json: async () => ({ info: { id: "m", sessionID: "s", role: "assistant", parts: [] }, parts: [{ type: "text", text: "ok" }] }) } as unknown as Response;
       }
       return { ok: true, status: 200, json: async () => true } as unknown as Response;
     }) as typeof fetch;
@@ -420,307 +438,192 @@ describe("OpenCodeAPI", () => {
       { provider: "", model: "anthropic/claude-3" },
       [{ role: "user", content: "Hi" }],
     );
+    expect((sendBody as any)?.model).toEqual({ providerID: "anthropic", modelID: "claude-3" });
     expect(resp.model).toBe("anthropic/claude-3");
   });
 
-  // ---- streamChat ----
-
-  test("streamChat yields content via read() stream", async () => {
-    // Mock a readable stream for SSE
-    const encoder = new TextEncoder();
-    const streamData = [
-      "data: " + JSON.stringify({ type: "delta", content: "Hello " }) + "\n\n",
-      "data: " + JSON.stringify({ type: "delta", content: "World" }) + "\n\n",
-      "data: [DONE]\n\n",
-    ].join("");
-
-    let callCount = 0;
-    globalThis.fetch = (async (_url: string, init?: RequestInit) => {
-      callCount++;
-      if (callCount === 1) {
-        // createSession
-        return { ok: true, status: 200, json: async () => ({ id: "stream-sess", createdAt: "", updatedAt: "" }) } as unknown as Response;
-      }
-      if (callCount === 2) {
-        // POST with stream
-        let readPointer = 0;
-        const stream = new ReadableStream({
-          pull(controller) {
-            if (readPointer < streamData.length) {
-              const chunk = streamData.slice(readPointer, readPointer + 20);
-              readPointer += 20;
-              controller.enqueue(encoder.encode(chunk));
-            } else {
-              controller.close();
-            }
-          },
-        });
-        return {
-          ok: true, status: 200,
-          headers: new Map(Object.entries({ "content-type": "text/event-stream" })),
-          body: stream,
-        } as unknown as Response;
-      }
-      // deleteSession (cleanup) - final call
-      return { ok: true, status: 200, json: async () => true } as unknown as Response;
-    }) as typeof fetch;
-
-    const api = new OpenCodeAPI();
-    const chunks: string[] = [];
-    for await (const chunk of api.streamChat(
-      { provider: "openai", model: "gpt-4" },
-      [{ role: "user", content: "Hi" }],
-    )) {
-      chunks.push(chunk);
-    }
-    expect(chunks.length).toBe(2);
-    expect(chunks.join("")).toBe("Hello World");
-  });
-
-  test("streamChat falls back to chat when SSE fails", async () => {
-    let callCount = 0;
-    globalThis.fetch = (async (_url: string, init?: RequestInit) => {
-      callCount++;
-      if (callCount === 1) {
-        // createSession in streamChat
-        return { ok: true, status: 200, json: async () => ({ id: "fs-sess", createdAt: "", updatedAt: "" }) } as unknown as Response;
-      }
-      if (callCount === 2) {
-        // POST message in streamChat - returns non-ok
-        return { ok: false, status: 500, json: async () => ({}), text: async () => "{}", headers: new Map() } as unknown as Response;
-      }
-      if (callCount === 3) {
-        // createSession in chat()->withTempSession fallback
-        return { ok: true, status: 200, json: async () => ({ id: "fb-sess", createdAt: "", updatedAt: "" }) } as unknown as Response;
-      }
-      if (callCount === 4) {
-        // sendMessage in chat()->withTempSession fallback
-        return {
-          ok: true, status: 200,
-          json: async () => ({
-            info: { id: "m-fb", sessionID: "fb-sess", role: "assistant", parts: [] },
-            parts: [{ type: "text", text: "Fallback response" }],
-          }),
-        } as unknown as Response;
-      }
-      // deleteSession cleanup calls
-      return { ok: true, status: 200, json: async () => true } as unknown as Response;
-    }) as typeof fetch;
-
-    const api = new OpenCodeAPI();
-    const chunks: string[] = [];
-    for await (const chunk of api.streamChat(
-      { provider: "openai", model: "gpt-4" },
-      [{ role: "user", content: "Hi" }],
-    )) {
-      chunks.push(chunk);
-    }
-    expect(chunks).toContain("Fallback response");
-  });
-
-  test("streamChat falls back to chat when body has no reader", async () => {
-    let callCount = 0;
-    globalThis.fetch = (async (_url: string, init?: RequestInit) => {
-      callCount++;
-      if (callCount === 1) {
-        return { ok: true, status: 200, json: async () => ({ id: "nr-sess", createdAt: "", updatedAt: "" }) } as unknown as Response;
-      }
-      if (callCount === 2) {
-        // body is null - will fall back to chat
-        return {
-          ok: true, status: 200,
-          headers: new Map(Object.entries({ "content-type": "text/event-stream" })),
-          body: null,
-        } as unknown as Response;
-      }
-      if (callCount === 3) {
-        return { ok: true, status: 200, json: async () => ({ id: "fb-sess", createdAt: "", updatedAt: "" }) } as unknown as Response;
-      }
-      if (callCount === 4) {
-        return {
-          ok: true, status: 200,
-          json: async () => ({
-            info: { id: "m-fb", sessionID: "fb-sess", role: "assistant", parts: [] },
-            parts: [{ type: "text", text: "No reader fallback" }],
-          }),
-        } as unknown as Response;
-      }
-      return { ok: true, status: 200, json: async () => true } as unknown as Response;
-    }) as typeof fetch;
-
-    const api = new OpenCodeAPI();
-    const chunks: string[] = [];
-    for await (const chunk of api.streamChat(
-      { provider: "openai", model: "gpt-4" },
-      [{ role: "user", content: "Hi" }],
-    )) {
-      chunks.push(chunk);
-    }
-    expect(chunks).toContain("No reader fallback");
-  });
-
-  test("streamChat error triggers fallback", async () => {
-    let callCount = 0;
-    globalThis.fetch = (async (_url: string, init?: RequestInit) => {
-      callCount++;
-      if (callCount === 1) {
-        return { ok: true, status: 200, json: async () => ({ id: "err-sess", createdAt: "", updatedAt: "" }) } as unknown as Response;
-      }
-      if (callCount === 2) {
-        throw new Error("network failure");
-      }
-      if (callCount === 3) {
-        return { ok: true, status: 200, json: async () => ({ id: "fb-sess", createdAt: "", updatedAt: "" }) } as unknown as Response;
-      }
-      if (callCount === 4) {
-        return {
-          ok: true, status: 200,
-          json: async () => ({
-            info: { id: "m-fb", sessionID: "fb-sess", role: "assistant", parts: [] },
-            parts: [{ type: "text", text: "Error fallback" }],
-          }),
-        } as unknown as Response;
-      }
-      return { ok: true, status: 200, json: async () => true } as unknown as Response;
-    }) as typeof fetch;
-
-    const api = new OpenCodeAPI();
-    const chunks: string[] = [];
-    for await (const chunk of api.streamChat(
-      { provider: "openai", model: "gpt-4" },
-      [{ role: "user", content: "Hi" }],
-    )) {
-      chunks.push(chunk);
-    }
-    expect(chunks).toContain("Error fallback");
-  });
-
-  test("streamChat with non-SSE content-type returns json body", async () => {
-    let callCount = 0;
-    globalThis.fetch = (async (_url: string, init?: RequestInit) => {
-      callCount++;
-      if (callCount === 1) {
-        return { ok: true, status: 200, json: async () => ({ id: "json-sess", createdAt: "", updatedAt: "" }) } as unknown as Response;
-      }
-      if (callCount === 2) {
-        // JSON response (non-SSE content type)
-        return {
-          ok: true, status: 200,
-          headers: new Map(Object.entries({ "content-type": "application/json" })),
-          json: async () => ({
-            info: { id: "m-json", sessionID: "json-sess", role: "assistant", parts: [] },
-            parts: [{ type: "text", text: "JSON response from stream" }],
-          }),
-        } as unknown as Response;
-      }
-      return { ok: true, status: 200, json: async () => true } as unknown as Response;
-    }) as typeof fetch;
-
-    const api = new OpenCodeAPI();
-    const chunks: string[] = [];
-    for await (const chunk of api.streamChat(
-      { provider: "openai", model: "gpt-4" },
-      [{ role: "user", content: "Hi" }],
-    )) {
-      chunks.push(chunk);
-    }
-    expect(chunks).toContain("JSON response from stream");
-  });
-
-  test("streamChat with SSE json text field", async () => {
-    const encoder = new TextEncoder();
-    const streamData = [
-      "data: " + JSON.stringify({ content: "From content field" }) + "\n\n",
-      "data: " + JSON.stringify({ text: "From text field" }) + "\n\n",
-      "data: [DONE]\n\n",
-    ].join("");
-
-    let callCount = 0;
-    globalThis.fetch = (async (_url: string, init?: RequestInit) => {
-      callCount++;
-      if (callCount === 1) {
-        return { ok: true, status: 200, json: async () => ({ id: "st-sess", createdAt: "", updatedAt: "" }) } as unknown as Response;
-      }
-      if (callCount === 2) {
-        let readPtr = 0;
-        const stream = new ReadableStream({
-          pull(controller) {
-            if (readPtr < streamData.length) {
-              const chunk = streamData.slice(readPtr, readPtr + 30);
-              readPtr += 30;
-              controller.enqueue(encoder.encode(chunk));
-            } else {
-              controller.close();
-            }
-          },
-        });
-        return {
-          ok: true, status: 200,
-          headers: new Map(Object.entries({ "content-type": "text/event-stream" })),
-          body: stream,
-        } as unknown as Response;
-      }
-      return { ok: true, status: 200, json: async () => true } as unknown as Response;
-    }) as typeof fetch;
-
-    const api = new OpenCodeAPI();
-    const chunks: string[] = [];
-    for await (const chunk of api.streamChat(
-      { provider: "openai", model: "gpt-4" },
-      [{ role: "user", content: "Hi" }],
-    )) {
-      chunks.push(chunk);
-    }
-    expect(chunks).toContain("From content field");
-    expect(chunks).toContain("From text field");
-  });
-
-  // ---- Edge cases ----
-
-  test("empty messages array throws", async () => {
+  test("throws when no user message in input", async () => {
     const api = new OpenCodeAPI();
     expect(
       api.chat({ provider: "openai", model: "gpt-4" }, []),
     ).rejects.toThrow("No user message");
   });
 
-  test("very long message content in chat", async () => {
-    const longMsg = "Hello " + "x".repeat(10_000);
+  test("throws when only system message provided", async () => {
+    const api = new OpenCodeAPI();
+    expect(
+      api.chat(
+        { provider: "openai", model: "gpt-4" },
+        [{ role: "system", content: "be nice" }],
+      ),
+    ).rejects.toThrow("No user message");
+  });
+
+  test("handles very long message content", async () => {
+    const longContent = "x".repeat(10_000);
     let sentText = "";
-    let callCount = 0;
+    let call = 0;
     globalThis.fetch = (async (_url: string, init?: RequestInit) => {
-      callCount++;
-      if (callCount === 1) {
-        return { ok: true, status: 200, json: async () => ({ id: "long-sess", createdAt: "", updatedAt: "" }) } as unknown as Response;
-      }
-      if (callCount === 2) {
-        const body = init?.body ? JSON.parse(init.body as string) : null;
-        sentText = body?.parts?.[0]?.text || "";
-        return {
-          ok: true, status: 200,
-          json: async () => ({
-            info: { id: "m1", sessionID: "long-sess", role: "assistant", parts: [{ type: "text", text: "Long response" }] },
-            parts: [{ type: "text", text: "Long response" }],
-          }),
-        } as unknown as Response;
+      call++;
+      if (call === 1) return { ok: true, status: 200, json: async () => ({ id: "s", createdAt: "", updatedAt: "" }) } as unknown as Response;
+      if (call === 2) {
+        const b = init?.body ? JSON.parse(init.body as string) : null;
+        sentText = b?.parts?.[0]?.text ?? "";
+        return { ok: true, status: 200, json: async () => ({ info: { id: "m", sessionID: "s", role: "assistant", parts: [] }, parts: [{ type: "text", text: "ok" }] }) } as unknown as Response;
       }
       return { ok: true, status: 200, json: async () => true } as unknown as Response;
     }) as typeof fetch;
 
     const api = new OpenCodeAPI();
-    await api.chat({ provider: "openai", model: "gpt-4" }, [{ role: "user", content: longMsg }]);
-    expect(sentText).toContain(longMsg);
+    await api.chat({ provider: "openai", model: "gpt-4" }, [{ role: "user", content: longContent }]);
+    expect(sentText).toContain(longContent);
+  });
+});
+
+// ---- streamChat() ----
+
+describe("OpenCodeAPI.streamChat", () => {
+  function makeSSEStream(events: string[]): ReadableStream {
+    const encoder = new TextEncoder();
+    const data = events.join("");
+    let ptr = 0;
+    return new ReadableStream({
+      pull(controller) {
+        if (ptr < data.length) {
+          controller.enqueue(encoder.encode(data.slice(ptr, ptr + 20)));
+          ptr += 20;
+        } else {
+          controller.close();
+        }
+      },
+    });
+  }
+
+  test("yields SSE delta chunks in order", async () => {
+    const stream = makeSSEStream([
+      "data: " + JSON.stringify({ type: "delta", content: "Hello " }) + "\n\n",
+      "data: " + JSON.stringify({ type: "delta", content: "World" }) + "\n\n",
+      "data: [DONE]\n\n",
+    ]);
+
+    let call = 0;
+    globalThis.fetch = (async (_url: string) => {
+      call++;
+      if (call === 1) return { ok: true, status: 200, json: async () => ({ id: "s", createdAt: "", updatedAt: "" }) } as unknown as Response;
+      if (call === 2) return { ok: true, status: 200, headers: new Map([["content-type", "text/event-stream"]]), body: stream } as unknown as Response;
+      return { ok: true, status: 200, json: async () => true } as unknown as Response;
+    }) as typeof fetch;
+
+    const api = new OpenCodeAPI();
+    const chunks: string[] = [];
+    for await (const c of api.streamChat({ provider: "openai", model: "gpt-4" }, [{ role: "user", content: "Hi" }])) {
+      chunks.push(c);
+    }
+    expect(chunks.join("")).toBe("Hello World");
   });
 
-  test("getSession throws on non-ok", async () => {
-    mockFetch(404, {});
+  test("yields content and text SSE fields", async () => {
+    const stream = makeSSEStream([
+      "data: " + JSON.stringify({ content: "from content" }) + "\n\n",
+      "data: " + JSON.stringify({ text: "from text" }) + "\n\n",
+    ]);
+
+    let call = 0;
+    globalThis.fetch = (async () => {
+      call++;
+      if (call === 1) return { ok: true, status: 200, json: async () => ({ id: "s", createdAt: "", updatedAt: "" }) } as unknown as Response;
+      if (call === 2) return { ok: true, status: 200, headers: new Map([["content-type", "text/event-stream"]]), body: stream } as unknown as Response;
+      return { ok: true, status: 200, json: async () => true } as unknown as Response;
+    }) as typeof fetch;
+
     const api = new OpenCodeAPI();
-    expect(api.getSession("ghost")).rejects.toThrow("Failed to get session");
+    const chunks: string[] = [];
+    for await (const c of api.streamChat({ provider: "openai", model: "gpt-4" }, [{ role: "user", content: "Hi" }])) {
+      chunks.push(c);
+    }
+    expect(chunks).toContain("from content");
+    expect(chunks).toContain("from text");
   });
 
-  test("deleteSession throws on non-ok", async () => {
-    mockFetch(500, {});
+  test("falls back to chat() when SSE POST returns non-ok", async () => {
+    let call = 0;
+    globalThis.fetch = (async (_url: string, init?: RequestInit) => {
+      call++;
+      // streamChat: createSession
+      if (call === 1) return { ok: true, status: 200, json: async () => ({ id: "ss", createdAt: "", updatedAt: "" }) } as unknown as Response;
+      // streamChat: POST message → fails
+      if (call === 2) return { ok: false, status: 500, json: async () => ({}), text: async () => "{}", headers: new Map() } as unknown as Response;
+      // chat() fallback: createSession
+      if (call === 3) return { ok: true, status: 200, json: async () => ({ id: "fb", createdAt: "", updatedAt: "" }) } as unknown as Response;
+      // chat() fallback: sendMessage
+      if (call === 4) return { ok: true, status: 200, json: async () => ({ info: { id: "m", sessionID: "fb", role: "assistant", parts: [] }, parts: [{ type: "text", text: "Fallback response" }] }) } as unknown as Response;
+      return { ok: true, status: 200, json: async () => true } as unknown as Response;
+    }) as typeof fetch;
+
     const api = new OpenCodeAPI();
-    expect(api.deleteSession("bad-sess")).rejects.toThrow("Failed to delete session");
+    const chunks: string[] = [];
+    for await (const c of api.streamChat({ provider: "openai", model: "gpt-4" }, [{ role: "user", content: "Hi" }])) {
+      chunks.push(c);
+    }
+    expect(chunks).toContain("Fallback response");
+  });
+
+  test("falls back to chat() when response body has no readable stream", async () => {
+    let call = 0;
+    globalThis.fetch = (async (_url: string) => {
+      call++;
+      if (call === 1) return { ok: true, status: 200, json: async () => ({ id: "nr", createdAt: "", updatedAt: "" }) } as unknown as Response;
+      if (call === 2) return { ok: true, status: 200, headers: new Map([["content-type", "text/event-stream"]]), body: null } as unknown as Response;
+      if (call === 3) return { ok: true, status: 200, json: async () => ({ id: "fb", createdAt: "", updatedAt: "" }) } as unknown as Response;
+      if (call === 4) return { ok: true, status: 200, json: async () => ({ info: { id: "m", sessionID: "fb", role: "assistant", parts: [] }, parts: [{ type: "text", text: "No reader fallback" }] }) } as unknown as Response;
+      return { ok: true, status: 200, json: async () => true } as unknown as Response;
+    }) as typeof fetch;
+
+    const api = new OpenCodeAPI();
+    const chunks: string[] = [];
+    for await (const c of api.streamChat({ provider: "openai", model: "gpt-4" }, [{ role: "user", content: "Hi" }])) {
+      chunks.push(c);
+    }
+    expect(chunks).toContain("No reader fallback");
+  });
+
+  test("falls back to chat() on fetch error during streaming", async () => {
+    let call = 0;
+    globalThis.fetch = (async (_url: string) => {
+      call++;
+      if (call === 1) return { ok: true, status: 200, json: async () => ({ id: "e", createdAt: "", updatedAt: "" }) } as unknown as Response;
+      if (call === 2) throw new Error("network failure");
+      if (call === 3) return { ok: true, status: 200, json: async () => ({ id: "fb", createdAt: "", updatedAt: "" }) } as unknown as Response;
+      if (call === 4) return { ok: true, status: 200, json: async () => ({ info: { id: "m", sessionID: "fb", role: "assistant", parts: [] }, parts: [{ type: "text", text: "Error fallback" }] }) } as unknown as Response;
+      return { ok: true, status: 200, json: async () => true } as unknown as Response;
+    }) as typeof fetch;
+
+    const api = new OpenCodeAPI();
+    const chunks: string[] = [];
+    for await (const c of api.streamChat({ provider: "openai", model: "gpt-4" }, [{ role: "user", content: "Hi" }])) {
+      chunks.push(c);
+    }
+    expect(chunks).toContain("Error fallback");
+  });
+
+  test("returns JSON body when response is not SSE content-type", async () => {
+    let call = 0;
+    globalThis.fetch = (async () => {
+      call++;
+      if (call === 1) return { ok: true, status: 200, json: async () => ({ id: "j", createdAt: "", updatedAt: "" }) } as unknown as Response;
+      if (call === 2) return {
+        ok: true, status: 200,
+        headers: new Map([["content-type", "application/json"]]),
+        json: async () => ({ info: { id: "m", sessionID: "j", role: "assistant", parts: [] }, parts: [{ type: "text", text: "JSON response from stream" }] }),
+      } as unknown as Response;
+      return { ok: true, status: 200, json: async () => true } as unknown as Response;
+    }) as typeof fetch;
+
+    const api = new OpenCodeAPI();
+    const chunks: string[] = [];
+    for await (const c of api.streamChat({ provider: "openai", model: "gpt-4" }, [{ role: "user", content: "Hi" }])) {
+      chunks.push(c);
+    }
+    expect(chunks).toContain("JSON response from stream");
   });
 });

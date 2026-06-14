@@ -27,8 +27,9 @@ export async function callLLM(options: LLMCallOptions): Promise<string> {
   if (onChunk) {
     let content = "";
     let buffer = "";
+    let msgs = messages.map(m => ({ ...m }));
     try {
-      for await (const chunk of api.streamChat(model, messages)) {
+      for await (const chunk of api.streamChat(model, msgs)) {
         content += chunk;
         buffer += chunk;
         if (buffer.includes("\n")) {
@@ -41,8 +42,18 @@ export async function callLLM(options: LLMCallOptions): Promise<string> {
         }
       }
       if (buffer.trim()) onChunk(buffer.trim());
-    } catch {
-      const res = await api.chat(model, messages);
+    } catch (err) {
+      logger.warn(
+        {
+          accumulatedChars: content.length,
+          error: err instanceof Error ? err.message : String(err),
+        },
+        "streaming failed; falling back to non-streaming with partial context. UI may show stream content that diverges from final content — callers should reconcile.",
+      );
+      if (content) {
+        msgs = [...msgs, { role: "assistant", content }];
+      }
+      const res = await api.chat(model, msgs);
       content = res.content;
     }
     return content;
