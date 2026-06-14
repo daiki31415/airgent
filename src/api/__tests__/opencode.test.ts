@@ -50,7 +50,7 @@ describe("OpenCodeAPI", () => {
   beforeAll(async () => {
     process.env.OPENCODE_BASE_URL = "http://test:4096";
     process.env.OPENCODE_SERVER_USERNAME = "opencode";
-    process.env.OPENCODE_SERVER_PASSWORD = "secret123";
+    process.env.OPENCODE_SERVER_PASSWORD = "test-password";
     const mod = await import("../opencode");
     OpenCodeAPI = mod.OpenCodeAPI;
   });
@@ -91,7 +91,7 @@ describe("OpenCodeAPI", () => {
     delete process.env.OPENCODE_SERVER_PASSWORD;
     const api = new OpenCodeAPI();
     expect((api as any).authHeader).toBeNull();
-    process.env.OPENCODE_SERVER_PASSWORD = "secret123";
+    process.env.OPENCODE_SERVER_PASSWORD = "test-password";
   });
 
   // ---- Health ----

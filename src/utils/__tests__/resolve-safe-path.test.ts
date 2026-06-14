@@ -45,7 +45,7 @@ describe("resolveSafePath", () => {
   });
 
   test("resolves file within HOME directory", () => {
-    const homePath = join(process.env.HOME || "/home/daiki", "test-allowed.txt");
+    const homePath = join(process.env.HOME || "/home/user", "test-allowed.txt");
     try { writeFileSync(homePath, "home test"); } catch {}
     try {
       const result = resolveSafePath(homePath);

@@ -42,13 +42,15 @@ describe("sanitizeError", () => {
   });
 
   test("redacts home directory paths", () => {
-    const result = sanitizeError(new Error("Error at /home/daiki/project/src/file.ts:10"));
+    const home = process.env.HOME || "/home/user";
+    const result = sanitizeError(new Error(`Error at ${home}/project/src/file.ts:10`));
     expect(result).toContain("~/project/src/file.ts:10");
-    expect(result).not.toContain("/home/daiki");
+    expect(result).not.toContain(home);
   });
 
   test("redacts multiple home directory occurrences", () => {
-    const result = sanitizeError(new Error("paths: /home/daiki/a, /home/daiki/b"));
+    const home = process.env.HOME || "/home/user";
+    const result = sanitizeError(new Error(`paths: ${home}/a, ${home}/b`));
     expect(result).toContain("~/a, ~/b");
     expect((result.match(/~/g) || []).length).toBe(2);
   });
