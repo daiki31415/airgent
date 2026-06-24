@@ -16,17 +16,21 @@ export function getAllowedDirs(): string[] {
   ].map(d => normalize(resolve(d)));
 }
 
-const CAT_MAP: Record<string, string> = {
-  ".xz": "xzcat",
-  ".bz2": "bzcat",
-  ".lzma": "lzcat",
-};
-
 const ARCHIVE_EXTS = [".zip", ".7z", ".rar", ".tar", ".tgz"];
+
+const UNSUPPORTED_COMPRESSION_EXTS = [".xz", ".bz2", ".lzma"];
 
 function archiveExtension(file: string): boolean {
   const lower = file.toLowerCase();
   return ARCHIVE_EXTS.some(ext => lower.endsWith(ext)) || /\.(tar\.gz|tar\.xz|tar\.bz2)$/.test(lower);
+}
+
+function unsupportedCompressionExtension(file: string): string | null {
+  const lower = file.toLowerCase();
+  for (const ext of UNSUPPORTED_COMPRESSION_EXTS) {
+    if (lower.endsWith(ext)) return ext;
+  }
+  return null;
 }
 
 export function resolveSafePath(file: string): string {
@@ -52,6 +56,15 @@ export function smartCat(
     throw new Error(`Refusing to read archive: ${file}`);
   }
 
+  const unsupportedExt = unsupportedCompressionExtension(file);
+  if (unsupportedExt) {
+    throw new Error(
+      `Unsupported compression format: ${unsupportedExt}. ` +
+      `This format requires external tools (e.g., xzcat, bzcat, lzcat) which are not available cross-platform. ` +
+      `Please decompress the file first or use a supported format (.gz).`
+    );
+  }
+
   const safePath = resolveSafePath(file);
 
   const ext = "." + safePath.split(".").pop()?.toLowerCase();
@@ -61,14 +74,6 @@ export function smartCat(
   let output: string;
   if (ext === ".gz") {
     output = gunzipSync(raw).toString("utf-8");
-  } else if (CAT_MAP[ext]) {
-    const proc = Bun.spawnSync([CAT_MAP[ext], safePath]);
-    if (!proc.success) {
-      throw new Error(
-        `smartCat failed for ${file}: ${proc.stderr.toString().trim() || `exit code ${proc.exitCode}`}`
-      );
-    }
-    output = proc.stdout.toString("utf-8");
   } else {
     output = raw.toString("utf-8");
   }

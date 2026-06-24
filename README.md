@@ -8,8 +8,21 @@ Airgent is a local-first AI agent framework that connects to an [OpenCode](https
 
 ## Requirements
 
-- **Bun** v1.x (runtime)
+- **Bun** v1.1+ (runtime)
 - **OpenCode Server** running locally (`opencode serve`)
+
+## Platform Support
+
+| Platform | Status | Notes |
+|----------|--------|-------|
+| Linux (x86_64, ARM64) | ✅ Supported | Primary development platform |
+| macOS (Apple Silicon / Intel) | ✅ Supported | Tested in CI; native clipboard (pbcopy), SQLite, TUI via opentui |
+| Windows | ❓ Untested | May work via WSL2; native Windows not validated |
+
+**Terminal requirements:**
+- Unicode support for box-drawing characters
+- True color (24-bit) recommended
+- TUI uses [opentui](https://github.com/anomalyco/opentui) — terminal compatibility depends on opentui
 
 ## Installation
 
