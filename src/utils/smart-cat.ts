@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { resolve, normalize } from "node:path";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
 /**
  * Returns the directories from which file access is permitted.
@@ -58,16 +58,21 @@ export function smartCat(
   const ext = "." + safePath.split(".").pop()?.toLowerCase();
   const cmd = CAT_MAP[ext] || "cat";
 
-  const result = spawnSync(cmd, [safePath], { encoding: "utf-8" });
+  let output = "";
+  if (cmd === "cat") {
+    output = readFileSync(safePath, { encoding: "utf-8" });
+  } else {
+    const result = spawnSync(cmd, [safePath], { encoding: "utf-8" });
 
-  if (result.error) {
-    throw new Error(`smartCat failed for ${file}: ${result.error.message}`);
-  }
-  if (result.status !== 0) {
-    throw new Error(`smartCat failed for ${file}: ${result.stderr?.trim() || result.stdout?.trim() || `exit code ${result.status}`}`);
-  }
+    if (result.error) {
+      throw new Error(`smartCat failed for ${file}: ${result.error.message}`);
+    }
+    if (result.status !== 0) {
+      throw new Error(`smartCat failed for ${file}: ${result.stderr?.trim() || result.stdout?.trim() || `exit code ${result.status}`}`);
+    }
 
-  let output = result.stdout || "";
+    output = result.stdout || "";
+  }
 
   if (options?.maxLines && options.maxLines > 0) {
     const lines = output.split("\n");
