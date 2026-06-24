@@ -49,21 +49,21 @@ export class Airgent {
     onShutdown: () => this.stop(),
   });
 
-  private planner = new PlannerAgent(this.config.models.planner, this.api);
-  private worker = new WorkerAgent(this.config.models.generate, this.api, this.compressionManager, this.skills, this.memory);
-  private memoryOrganizer = new MemoryOrganizerAgent(this.config.models.validation, this.api, this.memory);
-  private compression = new CompressionAgent(this.config.models.compression, this.api, this.compressionManager, this.memory);
-  private validation = new ValidationAgent(this.config.models.validation, this.api, this.memory);
-  private watchdog = new WatchdogAgent(this.config.models.watchdog, this.api);
-  private contextInspector = new ContextInspectorAgent(this.config.models.validation, this.api);
+  planner = new PlannerAgent(this.config.models.planner, this.api);
+  worker = new WorkerAgent(this.config.models.generate, this.api, this.compressionManager, this.skills, this.memory);
+  memoryOrganizer = new MemoryOrganizerAgent(this.config.models.validation, this.api, this.memory);
+  compression = new CompressionAgent(this.config.models.compression, this.api, this.compressionManager, this.memory);
+  validation = new ValidationAgent(this.config.models.validation, this.api, this.memory);
+  watchdog = new WatchdogAgent(this.config.models.watchdog, this.api);
+  contextInspector = new ContextInspectorAgent(this.config.models.validation, this.api);
 
-  private sessionId: string | null = null;
-  private running = false;
+  sessionId: string | null = null;
+  running = false;
   _startTime = Date.now();
   currentTask = "";
-  private deviceSync = new DeviceSync(this.storage);
-  private opencodeProcess: import("bun").Subprocess | null = null;
-  private rateLimiter = new RateLimiter(100, 1000, 100);
+  deviceSync = new DeviceSync(this.storage);
+  opencodeProcess: import("bun").Subprocess | null = null;
+  rateLimiter = new RateLimiter(100, 1000, 100);
   private logger = rootLogger.child("airgent");
   pipelineData: {
     clarifiedTask?: string;

@@ -4,7 +4,7 @@ export const QUESTION_TAG = "QUESTION";
 
 export function extractQuestion(text: string): Question | null {
   const m = text.match(/\[QUESTION\]([\s\S]*?)\[\/QUESTION\]/);
-  if (!m) return null;
+  if (!m || !m[1]) return null;
   try {
     return JSON.parse(m[1].trim());
   } catch {

@@ -37,6 +37,7 @@ export interface AgentHandle {
   pipelineData: Record<string, string | undefined>;
   sessionId: string | null;
   _startTime: number;
+  storage: any;
 
   planner: PlannerAgent;
   worker: WorkerAgent;

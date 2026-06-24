@@ -44,11 +44,11 @@ export async function callLLM(options: LLMCallOptions): Promise<string> {
       if (buffer.trim()) onChunk(buffer.trim());
     } catch (err) {
       logger.warn(
+        "streaming failed; falling back to non-streaming with partial context. UI may show stream content that diverges from final content — callers should reconcile.",
         {
           accumulatedChars: content.length,
           error: err instanceof Error ? err.message : String(err),
         },
-        "streaming failed; falling back to non-streaming with partial context. UI may show stream content that diverges from final content — callers should reconcile.",
       );
       if (content) {
         msgs = [...msgs, { role: "assistant", content }];

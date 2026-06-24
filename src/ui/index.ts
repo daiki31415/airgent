@@ -139,10 +139,6 @@ export class UIManager {
         const inputVNode = Input({
           id: "input-line",
           width: "100%",
-          height: 3,
-          borderStyle: "rounded",
-          borderColor: "#3b4261",
-          focusedBorderColor: "#7aa2f7",
           backgroundColor: "#24283b",
           focusedBackgroundColor: "#2f3449",
           textColor: "#c0caf5",

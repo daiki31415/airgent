@@ -9,7 +9,7 @@ export function safeParseJSON<T>(text: string): T | null {
 
   // Remove markdown code fences if present
   const fenceMatch = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
-  const jsonText = fenceMatch ? fenceMatch[1] : trimmed;
+  const jsonText = fenceMatch?.[1] ?? trimmed;
 
   try {
     return JSON.parse(jsonText);

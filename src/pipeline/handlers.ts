@@ -44,7 +44,7 @@ export function registerPipelineHandlers(agent: PipelineHandle): void {
         : undefined,
     });
 
-    const parsed = safeParseJSON(content);
+    const parsed = safeParseJSON<{ goal?: string }>(content);
     if (!parsed || !parsed.goal) {
       agent.ui.log("warn", "clarify", "LLM returned invalid JSON for clarification");
     }
@@ -71,7 +71,7 @@ export function registerPipelineHandlers(agent: PipelineHandle): void {
         : undefined,
     });
 
-    const parsed = safeParseJSON(content);
+    const parsed = safeParseJSON<{ steps?: string }>(content);
     if (!parsed || !parsed.steps) {
       agent.ui.log("warn", "plan", "LLM returned invalid JSON for planning");
     }
@@ -128,7 +128,7 @@ export function registerPipelineHandlers(agent: PipelineHandle): void {
     });
     agent.pipelineData.testResult = content;
 
-    const parsed = safeParseJSON(content);
+    const parsed = safeParseJSON<{ passed?: boolean }>(content);
     let passed = parsed?.passed;
 
     if (passed === undefined) {
