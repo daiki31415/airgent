@@ -1,6 +1,6 @@
-import { spawnSync } from "node:child_process";
 import { resolve, normalize } from "node:path";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
+import { gunzipSync } from "node:zlib";
 
 /**
  * Returns the directories from which file access is permitted.
@@ -17,7 +17,6 @@ export function getAllowedDirs(): string[] {
 }
 
 const CAT_MAP: Record<string, string> = {
-  ".gz": "zcat",
   ".xz": "xzcat",
   ".bz2": "bzcat",
   ".lzma": "lzcat",
@@ -56,18 +55,23 @@ export function smartCat(
   const safePath = resolveSafePath(file);
 
   const ext = "." + safePath.split(".").pop()?.toLowerCase();
-  const cmd = CAT_MAP[ext] || "cat";
 
-  const result = spawnSync(cmd, [safePath], { encoding: "utf-8" });
+  const raw = readFileSync(safePath);
 
-  if (result.error) {
-    throw new Error(`smartCat failed for ${file}: ${result.error.message}`);
+  let output: string;
+  if (ext === ".gz") {
+    output = gunzipSync(raw).toString("utf-8");
+  } else if (CAT_MAP[ext]) {
+    const proc = Bun.spawnSync([CAT_MAP[ext], safePath]);
+    if (!proc.success) {
+      throw new Error(
+        `smartCat failed for ${file}: ${proc.stderr.toString().trim() || `exit code ${proc.exitCode}`}`
+      );
+    }
+    output = proc.stdout.toString("utf-8");
+  } else {
+    output = raw.toString("utf-8");
   }
-  if (result.status !== 0) {
-    throw new Error(`smartCat failed for ${file}: ${result.stderr?.trim() || result.stdout?.trim() || `exit code ${result.status}`}`);
-  }
-
-  let output = result.stdout || "";
 
   if (options?.maxLines && options.maxLines > 0) {
     const lines = output.split("\n");

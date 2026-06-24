@@ -11,6 +11,7 @@ import {
 } from "bun:test";
 import { writeFileSync, mkdirSync, rmSync, existsSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { gzipSync } from "node:zlib";
 
 // Use a test dir within CWD so it's in the allowed dirs
 const TEST_TMP = join(import.meta.dir, "..", "__smartcat_tmp__");
@@ -26,7 +27,7 @@ describe("smartCat", () => {
   beforeAll(() => {
     mkdirSync(TEST_SUBDIR, { recursive: true });
     writeFileSync(TEST_FILE_TXT, "hello world\nline 2\nline 3\n");
-    writeFileSync(TEST_FILE_GZ, "fake gz\n");
+    writeFileSync(TEST_FILE_GZ, gzipSync("fake gz\n"));
     writeFileSync(TEST_FILE_MD, "# Markdown\n\nContent\n");
     writeFileSync(TEST_NESTED, "nested content\n");
     writeFileSync(EMPTY_FILE, "");
