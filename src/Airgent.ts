@@ -92,6 +92,13 @@ export class Airgent {
     this.storage.createSession(this.sessionId, this.config.models.generate.model);
     this.ui.ready = true;
     this.ui.log("info", "airgent", "Airgent started");
+
+    if (this.configManager.firstRun) {
+      this.ui.log("info", "airgent", "Alpha Release");
+      this.ui.log("info", "airgent", "APIs and behavior may change.");
+      this.ui.log("info", "airgent", "Feedback and bug reports are welcome.");
+    }
+
     this.updateStatus({ sessionId: this.sessionId, status: "idle" });
     this.logger.info(`Session: ${this.sessionId}`);
   }

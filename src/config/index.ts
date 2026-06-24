@@ -63,6 +63,7 @@ export class ConfigManager {
   private logger = rootLogger.child("config");
   private cache: AirgentConfig | null = null;
   private configDir: string;
+  firstRun = false;
 
   constructor(options?: { configDir?: string }) {
     this.configDir = options?.configDir ?? DEFAULT_CONFIG_DIR;
@@ -195,6 +196,7 @@ export class ConfigManager {
         return fs.readFileSync(filePath, "utf-8");
       }
       fs.writeFileSync(filePath, defaultContent, { mode: 0o600, encoding: "utf-8" });
+      this.firstRun = true;
       this.logger.info(`Created default config: ${filePath}`);
       return defaultContent;
     } catch (err) {
