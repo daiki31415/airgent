@@ -19,11 +19,15 @@ interface StateSnapshot {
 export class ContextInspectorAgent extends BaseAgent {
 	private previousStates: StateSnapshot[] = [];
 
-	constructor(
-		model: import("../types").ModelEntry,
-		api: import("../api/opencode").OpenCodeAPI,
-	) {
+	constructor(model: import("../types").ModelEntry, api: import("../api/opencode").OpenCodeAPI) {
 		super("context_inspector", model, api);
+	}
+
+	/**
+	 * Get the previous states history.
+	 */
+	getPreviousStates(): StateSnapshot[] {
+		return this.previousStates;
 	}
 
 	inspect(context: {
@@ -43,24 +47,11 @@ export class ContextInspectorAgent extends BaseAgent {
 			assumptions: context.assumptions || [],
 		};
 
-		const sameErrorRepeated = this.checkSameErrorRepeated(
-			current.errors,
-			details,
-		);
-		const purposeForgotten = this.checkPurposeForgotten(
-			current.focus,
-			context.messages,
-			details,
-		);
+		const sameErrorRepeated = this.checkSameErrorRepeated(current.errors, details);
+		const purposeForgotten = this.checkPurposeForgotten(current.focus, context.messages, details);
 		const todoStuck = this.checkTodoStuck(current.todos, details);
-		const assumptionFixed = this.checkAssumptionFixation(
-			current.assumptions,
-			details,
-		);
-		const errorChangeUnrecognized = this.checkErrorChangeUnrecognized(
-			current.errors,
-			details,
-		);
+		const assumptionFixed = this.checkAssumptionFixation(current.assumptions, details);
+		const errorChangeUnrecognized = this.checkErrorChangeUnrecognized(current.errors, details);
 
 		const result: InspectionResult = {
 			sameErrorRepeated,
@@ -82,10 +73,7 @@ export class ContextInspectorAgent extends BaseAgent {
 		return result;
 	}
 
-	private checkSameErrorRepeated(
-		_errors: string[],
-		details: string[],
-	): boolean {
+	private checkSameErrorRepeated(_errors: string[], details: string[]): boolean {
 		if (this.previousStates.length < 2) return false;
 		const counts = new Map<string, number>();
 		for (const state of this.previousStates) {
@@ -126,9 +114,7 @@ export class ContextInspectorAgent extends BaseAgent {
 
 	private checkTodoStuck(todos: string[], details: string[]): boolean {
 		if (this.previousStates.length < 3 || todos.length === 0) return false;
-		const sigs = this.previousStates.map((s) =>
-			s.todos.map((t) => t.slice(0, 40)).join("|"),
-		);
+		const sigs = this.previousStates.map((s) => s.todos.map((t) => t.slice(0, 40)).join("|"));
 		const currentSig = todos.map((t) => t.slice(0, 40)).join("|");
 		if (sigs.filter((s) => s === currentSig).length >= 2) {
 			details.push(`TODOs stuck: "${todos[0]?.slice(0, 80)}"`);
@@ -137,12 +123,8 @@ export class ContextInspectorAgent extends BaseAgent {
 		return false;
 	}
 
-	private checkAssumptionFixation(
-		assumptions: string[],
-		details: string[],
-	): boolean {
-		if (this.previousStates.length < 3 || assumptions.length === 0)
-			return false;
+	private checkAssumptionFixation(assumptions: string[], details: string[]): boolean {
+		if (this.previousStates.length < 3 || assumptions.length === 0) return false;
 		for (const assumption of assumptions) {
 			const count = this.previousStates.filter((s) =>
 				s.assumptions.some((a) => a.includes(assumption.slice(0, 30))),
@@ -155,10 +137,7 @@ export class ContextInspectorAgent extends BaseAgent {
 		return false;
 	}
 
-	private checkErrorChangeUnrecognized(
-		errors: string[],
-		details: string[],
-	): boolean {
+	private checkErrorChangeUnrecognized(errors: string[], details: string[]): boolean {
 		if (this.previousStates.length < 2) return false;
 		const prev = this.previousStates[this.previousStates.length - 1];
 		const prevErrors = prev?.errors || [];
@@ -167,9 +146,7 @@ export class ContextInspectorAgent extends BaseAgent {
 		const added = [...newSet].filter((e) => !oldSet.has(e));
 		const removed = [...oldSet].filter((e) => !newSet.has(e));
 		if (added.length > 1 || removed.length > 1) {
-			details.push(
-				`Errors shifted: +${added.length} new, -${removed.length} resolved`,
-			);
+			details.push(`Errors shifted: +${added.length} new, -${removed.length} resolved`);
 			return true;
 		}
 		return false;
@@ -193,9 +170,7 @@ export class ContextInspectorAgent extends BaseAgent {
 		if (result.todoStuck) issues.push("- TODOs stuck");
 		if (result.assumptionFixed) issues.push("- Assumptions fixed");
 		if (result.errorChangeUnrecognized) issues.push("- Error context shifted");
-		const prompt = ["Analyze and suggest remediation:", "", ...issues].join(
-			"\n",
-		);
+		const prompt = ["Analyze and suggest remediation:", "", ...issues].join("\n");
 		return this.think(prompt);
 	}
 }

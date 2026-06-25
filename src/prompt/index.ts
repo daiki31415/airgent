@@ -34,10 +34,7 @@ export class PromptManager {
 	private getNodeTemplate(node: string): string {
 		if (!this._nodeTemplates.has(node)) {
 			const dir = fileURLToPath(new URL(".", import.meta.url));
-			this._nodeTemplates.set(
-				node,
-				readFileSync(join(dir, "nodes", `${node}.md`), "utf-8"),
-			);
+			this._nodeTemplates.set(node, readFileSync(join(dir, "nodes", `${node}.md`), "utf-8"));
 		}
 		return this._nodeTemplates.get(node)!;
 	}
@@ -65,10 +62,7 @@ export class PromptManager {
 			.replace("{{version}}", c.version)
 			.replace("{{principles}}", c.principles.map((p) => `- ${p}`).join("\n"))
 			.replace("{{constraints}}", c.constraints.map((c) => `- ${c}`).join("\n"))
-			.replace(
-				"{{ethical_guidelines}}",
-				c.ethical_guidelines.map((g) => `- ${g}`).join("\n"),
-			);
+			.replace("{{ethical_guidelines}}", c.ethical_guidelines.map((g) => `- ${g}`).join("\n"));
 
 		const p = this.config.persona;
 		prompt = prompt
@@ -104,9 +98,6 @@ export class PromptManager {
 	 */
 	wouldExceedLimit(additionalTokens: number): boolean {
 		const { tokenCount } = this.buildSystemPrompt();
-		return (
-			tokenCount + additionalTokens >
-			(this.config.settings.maxSystemPromptTokens || 3000)
-		);
+		return tokenCount + additionalTokens > (this.config.settings.maxSystemPromptTokens || 3000);
 	}
 }

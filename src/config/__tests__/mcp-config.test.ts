@@ -1,11 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import {
-	existsSync,
-	mkdirSync,
-	readFileSync,
-	rmSync,
-	writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { ConfigManager } from "../index";
@@ -74,12 +68,8 @@ describe("ConfigManager MCP", () => {
 
 	test("saveMCPServers overwrites existing file", () => {
 		const cm = new ConfigManager();
-		cm.saveMCPServers([
-			{ name: "a", type: "local" as const, command: ["a"], enabled: true },
-		]);
-		cm.saveMCPServers([
-			{ name: "b", type: "local" as const, command: ["b"], enabled: true },
-		]);
+		cm.saveMCPServers([{ name: "a", type: "local" as const, command: ["a"], enabled: true }]);
+		cm.saveMCPServers([{ name: "b", type: "local" as const, command: ["b"], enabled: true }]);
 		const loaded = cm.loadMCPServers();
 		expect(loaded).toHaveLength(1);
 		expect(loaded[0]?.name).toBe("b");

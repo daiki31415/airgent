@@ -38,9 +38,7 @@ describe("PipelineEngine execute", () => {
 		const engine = new PipelineEngine();
 		const dag = engine.buildDAG(["clarify"]);
 
-		expect(engine.execute("session-3", dag)).rejects.toThrow(
-			"No handler for: clarify",
-		);
+		expect(engine.execute("session-3", dag)).rejects.toThrow("No handler for: clarify");
 	});
 
 	test("retries on handler failure and succeeds", async () => {
@@ -66,9 +64,7 @@ describe("PipelineEngine execute", () => {
 		});
 
 		const dag = engine.buildDAG(["clarify"]);
-		expect(engine.execute("session-5", dag)).rejects.toThrow(
-			"persistent failure",
-		);
+		expect(engine.execute("session-5", dag)).rejects.toThrow("persistent failure");
 	});
 
 	test("skips already completed nodes", async () => {
@@ -195,9 +191,7 @@ describe("PipelineEngine execute", () => {
 		expect(order[0]).toBe("clarify");
 		expect(order[1]).toBe("plan");
 		expect(order[2]).toBe("generate");
-		expect(order.indexOf("validate")).toBeGreaterThan(
-			order.indexOf("generate")!,
-		);
+		expect(order.indexOf("validate")).toBeGreaterThan(order.indexOf("generate")!);
 		expect(order.indexOf("test")).toBeGreaterThan(order.indexOf("generate")!);
 		expect(order.indexOf("report")).toBeGreaterThan(order.indexOf("test")!);
 		expect(order.indexOf("report")).toBeGreaterThan(order.indexOf("validate")!);
@@ -380,9 +374,7 @@ describe("PipelineEngine execute", () => {
 			engine.registerHandler("test", async () => ({ passed: true }));
 
 			const dag = engine.buildDAG(["clarify", "plan", "generate", "test"]);
-			await expect(engine.execute("dyn-deadlock", dag)).rejects.toThrow(
-				"DAG deadlock",
-			);
+			await expect(engine.execute("dyn-deadlock", dag)).rejects.toThrow("DAG deadlock");
 		});
 	});
 
@@ -397,9 +389,7 @@ describe("PipelineEngine execute", () => {
 		const dag = engine.buildDAG(["clarify"]);
 		dag.nodes[0]!.maxRetries = 1;
 
-		await expect(engine.execute("session-rc2", dag)).rejects.toThrow(
-			"always fail",
-		);
+		await expect(engine.execute("session-rc2", dag)).rejects.toThrow("always fail");
 		expect(strats[strats.length - 1]).toBe("rollback");
 	});
 
@@ -414,9 +404,7 @@ describe("PipelineEngine execute", () => {
 		const dag = engine.buildDAG(["clarify"]);
 		dag.nodes[0]!.maxRetries = 2;
 
-		await expect(engine.execute("session-rc3", dag)).rejects.toThrow(
-			"always fail",
-		);
+		await expect(engine.execute("session-rc3", dag)).rejects.toThrow("always fail");
 
 		const timeoutTest = new PipelineEngine();
 		timeoutTest.registerHandler("clarify", async () => {
@@ -433,8 +421,7 @@ describe("PipelineEngine execute", () => {
 			await timeoutTest.execute("session-t3", dag2);
 		} catch {
 			const state = timeoutTest.getState("session-t3");
-			if (state?.failedNodes[0]?.error?.includes("timeout"))
-				decidedRollback = true;
+			if (state?.failedNodes[0]?.error?.includes("timeout")) decidedRollback = true;
 		}
 		expect(decidedRollback).toBe(true);
 	});

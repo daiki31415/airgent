@@ -8,20 +8,10 @@
 import type { PipelineNode } from "../types";
 import { BaseAgent } from "./base";
 
-const ALL_NODES: PipelineNode[] = [
-	"clarify",
-	"plan",
-	"generate",
-	"test",
-	"validate",
-	"report",
-];
+const ALL_NODES: PipelineNode[] = ["clarify", "plan", "generate", "test", "validate", "report"];
 
 export class PlannerAgent extends BaseAgent {
-	constructor(
-		model: import("../types").ModelEntry,
-		api: import("../api/opencode").OpenCodeAPI,
-	) {
+	constructor(model: import("../types").ModelEntry, api: import("../api/opencode").OpenCodeAPI) {
 		super("planner", model, api);
 	}
 

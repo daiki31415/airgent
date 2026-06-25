@@ -71,8 +71,7 @@ export class Logger {
 
 export const rootLogger = new Logger("airgent", "info", false);
 
-const HOME_DIR =
-	typeof process !== "undefined" && process.env?.HOME ? process.env.HOME : "";
+const HOME_DIR = typeof process !== "undefined" && process.env?.HOME ? process.env.HOME : "";
 
 export function sanitizeError(err: unknown): string {
 	let msg: string;

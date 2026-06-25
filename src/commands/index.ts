@@ -10,22 +10,12 @@ import type { CompressionManager } from "../compression/index";
 import type { ConfigManager } from "../config/index";
 import type { PipelineEngine } from "../pipeline/index";
 import type { DeviceSync } from "../sync/index";
-import type {
-	MCPServerConfig,
-	ModelConfig,
-	ModelEntry,
-	Settings,
-} from "../types";
+import type { MCPServerConfig, ModelConfig, ModelEntry, Settings } from "../types";
 import type { StatusInfo, UIManager } from "../ui/index";
 import { sanitizeError } from "../utils/logger";
 import { smartCat } from "../utils/smart-cat";
 
-type ModelRole =
-	| "planner"
-	| "generate"
-	| "compression"
-	| "validation"
-	| "watchdog";
+type ModelRole = "planner" | "generate" | "compression" | "validation" | "watchdog";
 
 const ROLE_CONFIGS: Array<{ key: ModelRole; label: string }> = [
 	{ key: "planner", label: "Planner (task decomposition)" },
@@ -225,15 +215,10 @@ async function handleSettingGeneral(agent: AgentHandle): Promise<void> {
 		if (choice === null) return;
 		newValue = choice;
 	} else {
-		const input = await agent.ui.prompt(
-			`${sel.label} [${settings[sel.key]}]: `,
-		);
+		const input = await agent.ui.prompt(`${sel.label} [${settings[sel.key]}]: `);
 		if (!input) return;
 		if (sel.type === "number") {
-			newValue =
-				sel.key === "autoCompressThreshold"
-					? parseFloat(input)
-					: parseInt(input, 10);
+			newValue = sel.key === "autoCompressThreshold" ? parseFloat(input) : parseInt(input, 10);
 			if (Number.isNaN(newValue)) {
 				agent.ui.log("warn", "settings", "Invalid number");
 				return;
@@ -250,11 +235,7 @@ async function handleSettingGeneral(agent: AgentHandle): Promise<void> {
 function handleSettingViewConfig(agent: AgentHandle): void {
 	const m = agent.config.models;
 	for (const { key, label } of ROLE_CONFIGS) {
-		agent.ui.log(
-			"info",
-			"config",
-			`${label}: ${m[key].provider}/${m[key].model}`,
-		);
+		agent.ui.log("info", "config", `${label}: ${m[key].provider}/${m[key].model}`);
 	}
 	const s = agent.config.settings;
 	agent.ui.log(
@@ -274,10 +255,7 @@ function handleSettingViewConfig(agent: AgentHandle): void {
 	);
 }
 
-export async function handleModelCommand(
-	agent: AgentHandle,
-	args: string[],
-): Promise<void> {
+export async function handleModelCommand(agent: AgentHandle, args: string[]): Promise<void> {
 	if (args[0] === "all") {
 		await agent.configureModelForAll();
 	} else if (args[0] && ROLE_CONFIGS.some((r) => r.key === args[0])) {
@@ -285,17 +263,12 @@ export async function handleModelCommand(
 	} else {
 		const m = agent.config.models;
 		for (const { key } of ROLE_CONFIGS) {
-			agent.ui.log(
-				"info",
-				"model",
-				`${key}: ${m[key].provider}/${m[key].model}`,
-			);
+			agent.ui.log("info", "model", `${key}: ${m[key].provider}/${m[key].model}`);
 		}
 		agent.ui.log(
 			"info",
 			"airgent",
-			"Usage: /model <role> | all — roles: " +
-				ROLE_CONFIGS.map((r) => r.key).join(", "),
+			"Usage: /model <role> | all — roles: " + ROLE_CONFIGS.map((r) => r.key).join(", "),
 		);
 	}
 }
@@ -316,11 +289,7 @@ export async function handleMCPCommand(
 			} else {
 				for (const s of servers) {
 					const st = status[s.name]?.status || "unknown";
-					agent.ui.log(
-						"info",
-						"mcp",
-						`${s.name} [${s.type}] ${st === "connected" ? "✓" : st}`,
-					);
+					agent.ui.log("info", "mcp", `${s.name} [${s.type}] ${st === "connected" ? "✓" : st}`);
 				}
 			}
 			agent.ui.log(
@@ -339,11 +308,7 @@ export async function handleMCPCommand(
 		const type = args[2];
 		const restArgs = args.slice(3).filter((a): a is string => a !== undefined);
 		if (!name || !type || restArgs.length === 0) {
-			agent.ui.log(
-				"warn",
-				"mcp",
-				"Usage: /mcp add <name> local <cmd> [arg...]",
-			);
+			agent.ui.log("warn", "mcp", "Usage: /mcp add <name> local <cmd> [arg...]");
 			return;
 		}
 		const servers = agent.configManager.loadMCPServers();
@@ -441,9 +406,7 @@ export async function handleMCPCommand(
 			agent.ui.log("warn", "mcp", "Usage: /mcp remove <name>");
 			return;
 		}
-		const servers = agent.configManager
-			.loadMCPServers()
-			.filter((s) => s.name !== name);
+		const servers = agent.configManager.loadMCPServers().filter((s) => s.name !== name);
 		agent.configManager.saveMCPServers(servers);
 		agent.ui.log("info", "mcp", `Removed: ${name}`);
 		return;
@@ -452,10 +415,7 @@ export async function handleMCPCommand(
 	agent.ui.log("warn", "mcp", `Unknown subcommand: ${sub}. See /mcp list`);
 }
 
-export async function handleInput(
-	agent: AgentHandle,
-	line: string,
-): Promise<void> {
+export async function handleInput(agent: AgentHandle, line: string): Promise<void> {
 	agent.ui.log("info", "user", line);
 	const lower = line.toLowerCase();
 
@@ -509,18 +469,13 @@ export async function handleInput(
 				await handleSettingCommand(agent);
 				return;
 			case "/compress":
-				if (agent.sessionId)
-					await agent.compressionManager.compressSession(agent.sessionId);
+				if (agent.sessionId) await agent.compressionManager.compressSession(agent.sessionId);
 				agent.ui.log("info", "airgent", "Compression done");
 				return;
 			case "/providers":
 				try {
 					const providers = await agent.api.listProviders();
-					agent.ui.log(
-						"info",
-						"providers",
-						`Connected: ${providers.connected.join(", ")}`,
-					);
+					agent.ui.log("info", "providers", `Connected: ${providers.connected.join(", ")}`);
 					agent.ui.log(
 						"info",
 						"providers",
@@ -548,11 +503,7 @@ export async function handleInput(
 						agent.ui.log("error", "sync", sanitizeError(err));
 					}
 				} else {
-					agent.ui.log(
-						"info",
-						"sync",
-						"Usage: /sync push <remote-url>  |  /sync pull",
-					);
+					agent.ui.log("info", "sync", "Usage: /sync push <remote-url>  |  /sync pull");
 				}
 				return;
 			case "/cat":
@@ -569,16 +520,9 @@ export async function handleInput(
 				return;
 			case "/copy": {
 				const copyText =
-					args.join(" ") ||
-					agent.pipelineData.generatedOutput ||
-					agent.pipelineData.plan ||
-					"";
+					args.join(" ") || agent.pipelineData.generatedOutput || agent.pipelineData.plan || "";
 				if (!copyText) {
-					agent.ui.log(
-						"warn",
-						"airgent",
-						"Nothing to copy. Usage: /copy [text]",
-					);
+					agent.ui.log("warn", "airgent", "Nothing to copy. Usage: /copy [text]");
 					return;
 				}
 				const result = agent.ui.copy(copyText);
@@ -603,15 +547,12 @@ async function fetchModelEntries(agent: AgentHandle): Promise<Array<{
 	description: string;
 	value: ModelEntry;
 }> | null> {
-	let providers;
+	// biome-ignore lint/suspicious/noExplicitAny: provider type from external API
+	let providers: any;
 	try {
 		providers = await agent.api.listProviders();
 	} catch (err) {
-		agent.ui.log(
-			"error",
-			"airgent",
-			`Cannot list providers: ${sanitizeError(err)}`,
-		);
+		agent.ui.log("error", "airgent", `Cannot list providers: ${sanitizeError(err)}`);
 		return null;
 	}
 
@@ -625,9 +566,11 @@ async function fetchModelEntries(agent: AgentHandle): Promise<Array<{
 		if (!connectedSet.has(p.id)) continue;
 		if (p.models) {
 			for (const [id, info] of Object.entries(p.models)) {
+				// biome-ignore lint/suspicious/noExplicitAny: external API response type
+				const modelInfo = info as { name?: string } | undefined;
 				entries.push({
 					name: `${p.id}/${id}`,
-					description: info?.name ?? "",
+					description: modelInfo?.name ?? "",
 					value: { provider: p.id, model: id },
 				});
 			}
@@ -651,11 +594,7 @@ export async function configureModels(agent: AgentHandle): Promise<void> {
 	const entries = await fetchModelEntries(agent);
 	if (!entries) return;
 
-	agent.ui.log(
-		"info",
-		"airgent",
-		"Model selection — choose a model for each role:",
-	);
+	agent.ui.log("info", "airgent", "Model selection — choose a model for each role:");
 	const updates: Partial<ModelConfig> = {};
 	for (const { key, label } of ROLE_CONFIGS) {
 		const selected = await agent.ui.selectModel(label, entries);
@@ -670,18 +609,11 @@ export async function configureModels(agent: AgentHandle): Promise<void> {
 		agent.configManager.saveModels({ ...updates, fallback: [] });
 		agent.applyModelConfig();
 		agent.ui.notice("Model configuration saved!");
-		agent.ui.log(
-			"info",
-			"airgent",
-			`Changed: ${Object.keys(updates).join(", ")}`,
-		);
+		agent.ui.log("info", "airgent", `Changed: ${Object.keys(updates).join(", ")}`);
 	}
 }
 
-export async function configureModelForRole(
-	agent: AgentHandle,
-	role: ModelRole,
-): Promise<void> {
+export async function configureModelForRole(agent: AgentHandle, role: ModelRole): Promise<void> {
 	const entries = await fetchModelEntries(agent);
 	if (!entries) return;
 
@@ -695,9 +627,7 @@ export async function configureModelForRole(
 	const update = { [role]: { ...selected } };
 	agent.configManager.saveModels(update);
 	agent.applyModelConfig();
-	agent.ui.notice(
-		`Model for ${role} saved: ${selected.provider}/${selected.model}`,
-	);
+	agent.ui.notice(`Model for ${role} saved: ${selected.provider}/${selected.model}`);
 }
 
 export async function configureModelForAll(agent: AgentHandle): Promise<void> {

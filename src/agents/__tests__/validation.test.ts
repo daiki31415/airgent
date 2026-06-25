@@ -70,7 +70,7 @@ describe("ValidationAgent.constructor", () => {
 
 	test("stores model parameter", () => {
 		const { agent } = createSystem();
-		expect((agent as any).model).toEqual(mockModel());
+		expect(agent.getModel()).toEqual(mockModel());
 	});
 });
 
@@ -246,15 +246,7 @@ describe("ValidationAgent.validate", () => {
 		const evidence = storage.getEvidence("m1");
 		const hasUncertainty = evidence.some((ev) => {
 			if (ev.type !== "observed" && ev.type !== "verified") return false;
-			const markers = [
-				"probably",
-				"likely",
-				"might",
-				"could",
-				"i think",
-				"possibly",
-				"seems like",
-			];
+			const markers = ["probably", "likely", "might", "could", "i think", "possibly", "seems like"];
 			return markers.some((m) => ev.content.toLowerCase().includes(m));
 		});
 		expect(hasUncertainty).toBe(true);
@@ -463,7 +455,7 @@ describe("ValidationAgent.init", () => {
 	test("stores context", () => {
 		const { agent } = createSystem();
 		agent.init(sampleContext());
-		expect((agent as any).context).not.toBeNull();
+		expect(agent.getContext()).not.toBeNull();
 	});
 });
 
@@ -543,9 +535,7 @@ describe("ValidationAgent additional edge cases", () => {
 		storage.insertLink("l1", "m1", "m2", "same_cause", 0.8);
 
 		const report = await agent.validate();
-		const contradictionIssues = report.issues.filter((i) =>
-			i.startsWith("Contradiction"),
-		);
+		const contradictionIssues = report.issues.filter((i) => i.startsWith("Contradiction"));
 		expect(contradictionIssues.length).toBeGreaterThanOrEqual(1);
 		expect(contradictionIssues[0]).toContain("vs");
 	});
@@ -554,7 +544,7 @@ describe("ValidationAgent additional edge cases", () => {
 		const { agent } = createSystem();
 		agent.init(sampleContext());
 		let threw = false;
-		let report: any = null;
+		let report: ValidationReport | null = null;
 		try {
 			report = await agent.validate();
 		} catch {
@@ -562,7 +552,7 @@ describe("ValidationAgent additional edge cases", () => {
 		}
 		expect(threw).toBe(false);
 		expect(report).not.toBeNull();
-		expect(report.overallHealth).toBe("healthy");
+		expect(report?.overallHealth).toBe("healthy");
 	});
 
 	test("validate returns consistent structure on repeated calls", async () => {

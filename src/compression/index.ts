@@ -25,9 +25,7 @@ export class CompressionManager {
 	 * Compress a batch of messages into a compressed entry.
 	 */
 	async compress(messages: AgentMessage[]): Promise<CompressedEntry> {
-		const combined = messages
-			.map((m) => `[${m.role}]\n${m.content}`)
-			.join("\n\n");
+		const combined = messages.map((m) => `[${m.role}]\n${m.content}`).join("\n\n");
 		const metadata = this.extractMetadata(combined);
 
 		const entry: CompressedEntry = {
@@ -43,9 +41,7 @@ export class CompressionManager {
 			importanceScore: this.calculateImportance(metadata),
 			tokenCount: Math.ceil(combined.length / 4),
 			compressedContent:
-				combined.length > 1000
-					? `${combined.slice(0, 1000)}\n...[truncated]`
-					: combined,
+				combined.length > 1000 ? `${combined.slice(0, 1000)}\n...[truncated]` : combined,
 		};
 
 		return entry;
@@ -88,9 +84,7 @@ export class CompressionManager {
 			tokenCount: entry.tokenCount,
 			compressedContent: entry.compressedContent,
 		});
-		this.logger.info(
-			`Compressed session ${sessionId}: ${messages.length} logs -> 1 entry`,
-		);
+		this.logger.info(`Compressed session ${sessionId}: ${messages.length} logs -> 1 entry`);
 	}
 
 	/**
@@ -166,24 +160,30 @@ export class CompressionManager {
 			}
 
 			// Extract file paths
-			const fileMatches = line.match(
-				/[\w\-./]+\.(tsx|jsx|json|ts|js|yaml|yml|toml|py|rs|go|md)/g,
-			);
-			if (fileMatches) fileMatches.forEach((f) => files.add(f));
+			const fileMatches = line.match(/[\w\-./]+\.(tsx|jsx|json|ts|js|yaml|yml|toml|py|rs|go|md)/g);
+			if (fileMatches) {
+				for (const f of fileMatches) files.add(f);
+			}
 
 			// Extract commands
 			const cmdMatches = line.match(/\$ (\S+(?:\s+\S+)*)/g);
-			if (cmdMatches) cmdMatches.forEach((c) => commands.add(c.slice(2)));
+			if (cmdMatches) {
+				for (const c of cmdMatches) commands.add(c.slice(2));
+			}
 
 			// Extract error keywords
 			const errorMatches = line.match(
 				/\b(Error|TypeError|ReferenceError|SyntaxError|RangeError|E\d{4})\b/g,
 			);
-			if (errorMatches) errorMatches.forEach((e) => errors.add(e));
+			if (errorMatches) {
+				for (const e of errorMatches) errors.add(e);
+			}
 
 			// Extract entities (camelCase or PascalCase words)
 			const entityMatches = line.match(/\b[A-Z][a-z]+(?:[A-Z][a-z]+)+\b/g);
-			if (entityMatches) entityMatches.forEach((e) => entities.add(e));
+			if (entityMatches) {
+				for (const e of entityMatches) entities.add(e);
+			}
 		}
 
 		return {

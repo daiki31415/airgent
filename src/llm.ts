@@ -15,14 +15,7 @@ export interface LLMCallOptions {
 }
 
 export async function callLLM(options: LLMCallOptions): Promise<string> {
-	const {
-		model,
-		messages,
-		api,
-		onChunk,
-		onQuestion,
-		maxQuestionRounds = 5,
-	} = options;
+	const { model, messages, api, onChunk, onQuestion, maxQuestionRounds = 5 } = options;
 
 	if (onChunk) {
 		let content = "";
@@ -65,9 +58,7 @@ export async function callLLM(options: LLMCallOptions): Promise<string> {
 		const q = extractQuestion(response.content);
 		if (!q) return response.content;
 
-		const clean = response.content
-			.replace(/\[QUESTION\][\s\S]*?\[\/QUESTION\]/, "")
-			.trim();
+		const clean = response.content.replace(/\[QUESTION\][\s\S]*?\[\/QUESTION\]/, "").trim();
 		if (clean) {
 			msgs.push({ role: "assistant", content: clean });
 		}

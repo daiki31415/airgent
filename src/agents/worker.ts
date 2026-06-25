@@ -14,6 +14,7 @@ import { BaseAgent } from "./base";
 export class WorkerAgent extends BaseAgent {
 	private compression: CompressionManager;
 	private memorySystem: MemorySystem;
+	private skills: SkillsManager;
 
 	constructor(
 		model: import("../types").ModelEntry,
@@ -28,10 +29,28 @@ export class WorkerAgent extends BaseAgent {
 		this.memorySystem = memorySystem;
 	}
 
-	async execute(
-		prompt: string,
-		onChunk?: (chunk: string) => void,
-	): Promise<{ content: string }> {
+	/**
+	 * Get the compression manager.
+	 */
+	getCompressionManager(): CompressionManager {
+		return this.compression;
+	}
+
+	/**
+	 * Get the memory system.
+	 */
+	getMemorySystem(): MemorySystem {
+		return this.memorySystem;
+	}
+
+	/**
+	 * Get the skills manager.
+	 */
+	getSkillsManager(): SkillsManager {
+		return this.skills;
+	}
+
+	async execute(prompt: string, onChunk?: (chunk: string) => void): Promise<{ content: string }> {
 		this.logger.info(`Executing: ${prompt.slice(0, 100)}`);
 
 		const decompressed = this.findRelevantContext(prompt);
@@ -45,9 +64,7 @@ export class WorkerAgent extends BaseAgent {
 					.join("\n");
 		}
 
-		const fullPrompt = [contextEnhancement, prompt]
-			.filter(Boolean)
-			.join("\n\n");
+		const fullPrompt = [contextEnhancement, prompt].filter(Boolean).join("\n\n");
 
 		this.memorySystem.recordRaw(
 			this.context?.sessionId || "",
@@ -83,9 +100,7 @@ export class WorkerAgent extends BaseAgent {
 
 	private findRelevantContext(prompt: string): CompressedEntry[] {
 		const topics = this.extractTopics(prompt);
-		return topics.length > 0
-			? this.compression.findForDecompression({ topics })
-			: [];
+		return topics.length > 0 ? this.compression.findForDecompression({ topics }) : [];
 	}
 
 	private extractTopics(text: string): string[] {

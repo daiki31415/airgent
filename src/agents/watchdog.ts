@@ -14,11 +14,36 @@ export class WatchdogAgent extends BaseAgent {
 	private retryCounts = new Map<string, number>();
 	private contextDriftScore = 0;
 
-	constructor(
-		model: import("../types").ModelEntry,
-		api: import("../api/opencode").OpenCodeAPI,
-	) {
+	constructor(model: import("../types").ModelEntry, api: import("../api/opencode").OpenCodeAPI) {
 		super("watchdog", model, api);
+	}
+
+	/**
+	 * Get consecutive failures map.
+	 */
+	getConsecutiveFailures(): Map<string, number> {
+		return this.consecutiveFailures;
+	}
+
+	/**
+	 * Get token usage history.
+	 */
+	getTokenUsage(): number[] {
+		return this.tokenUsage;
+	}
+
+	/**
+	 * Get retry counts map.
+	 */
+	getRetryCounts(): Map<string, number> {
+		return this.retryCounts;
+	}
+
+	/**
+	 * Get context drift score.
+	 */
+	getContextDriftScore(): number {
+		return this.contextDriftScore;
 	}
 
 	check(context: {
@@ -54,10 +79,7 @@ export class WatchdogAgent extends BaseAgent {
 		if (retryAction) actions.push(retryAction);
 
 		if (context?.currentContext && context?.previousContext) {
-			this.contextDriftScore = this.calculateDrift(
-				context.currentContext,
-				context.previousContext,
-			);
+			this.contextDriftScore = this.calculateDrift(context.currentContext, context.previousContext);
 		}
 		const driftAction = this.checkContextDrift();
 		if (driftAction) actions.push(driftAction);
@@ -71,8 +93,7 @@ export class WatchdogAgent extends BaseAgent {
 
 	private checkFailureThreshold(): WatchdogAction | null {
 		for (const [key, count] of this.consecutiveFailures) {
-			if (count >= 3)
-				return { type: "force_stop", reason: `${key} failed ${count}x` };
+			if (count >= 3) return { type: "force_stop", reason: `${key} failed ${count}x` };
 		}
 		return null;
 	}
@@ -121,8 +142,7 @@ export class WatchdogAgent extends BaseAgent {
 		const prev = new Set(previous.toLowerCase().split(/\s+/));
 		if (prev.size === 0) return 0;
 		const intersection = new Set([...curr].filter((w) => prev.has(w)));
-		const jaccard =
-			intersection.size / (curr.size + prev.size - intersection.size);
+		const jaccard = intersection.size / (curr.size + prev.size - intersection.size);
 		return 1 - jaccard;
 	}
 

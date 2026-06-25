@@ -6,13 +6,7 @@
  * All nodes are registered at the instance level for dynamic registration/unregistration.
  */
 
-import type {
-	DAGDefinition,
-	DAGNode,
-	PipelineState,
-	RetryContext,
-	RetryDecision,
-} from "../types";
+import type { DAGDefinition, DAGNode, PipelineState, RetryContext, RetryDecision } from "../types";
 import { rootLogger } from "../utils/logger";
 
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
@@ -117,10 +111,7 @@ export class PipelineEngine {
 		return { nodes };
 	}
 
-	async execute(
-		sessionId: string,
-		dag: DAGDefinition,
-	): Promise<Map<string, unknown>> {
+	async execute(sessionId: string, dag: DAGDefinition): Promise<Map<string, unknown>> {
 		let state = this.states.get(sessionId);
 		if (!state) {
 			state = {
@@ -137,9 +128,7 @@ export class PipelineEngine {
 
 		state.dagNodes = [...dag.nodes];
 
-		this.logger.info(
-			`Executing DAG: ${dag.nodes.map((n) => n.id).join(" -> ")}`,
-		);
+		this.logger.info(`Executing DAG: ${dag.nodes.map((n) => n.id).join(" -> ")}`);
 
 		const results = new Map<string, unknown>();
 
@@ -150,15 +139,11 @@ export class PipelineEngine {
 			if (remaining.length === 0) break;
 
 			const ready = remaining.filter((n) =>
-				n.dependsOn.every(
-					(dep) => results.has(dep) || state.completedNodes.includes(dep),
-				),
+				n.dependsOn.every((dep) => results.has(dep) || state.completedNodes.includes(dep)),
 			);
 
 			if (ready.length === 0) {
-				throw new Error(
-					`DAG deadlock: cannot resolve ${remaining.map((n) => n.id).join(", ")}`,
-				);
+				throw new Error(`DAG deadlock: cannot resolve ${remaining.map((n) => n.id).join(", ")}`);
 			}
 
 			const batch = await Promise.all(
@@ -199,16 +184,12 @@ export class PipelineEngine {
 				attempt > 0
 					? {
 							attempt,
-							strategy: this.decideRetryStrategy(node, attempt, lastError!)
-								.strategy,
+							strategy: this.decideRetryStrategy(node, attempt, lastError!).strategy,
 						}
 					: undefined;
 
 			try {
-				const result = await withTimeout(
-					handler(results, retryCtx),
-					node.timeout,
-				);
+				const result = await withTimeout(handler(results, retryCtx), node.timeout);
 				state.completedNodes.push(node.id);
 				this.logger.info(`Completed: ${node.id}`);
 				return result;
@@ -227,21 +208,12 @@ export class PipelineEngine {
 		throw lastError || new Error(`Node ${node.id} failed`);
 	}
 
-	private decideRetryStrategy(
-		node: DAGNode,
-		attempt: number,
-		error: Error | null,
-	): RetryDecision {
-		if (attempt >= node.maxRetries)
-			return { strategy: "rollback", reason: "Max retries" };
-		if (
-			error?.message?.includes("timeout") ||
-			error?.message?.includes("rate limit")
-		) {
+	private decideRetryStrategy(node: DAGNode, attempt: number, error: Error | null): RetryDecision {
+		if (attempt >= node.maxRetries) return { strategy: "rollback", reason: "Max retries" };
+		if (error?.message?.includes("timeout") || error?.message?.includes("rate limit")) {
 			return { strategy: "model_switch", reason: "Rate limit/timeout" };
 		}
-		if (attempt > 1)
-			return { strategy: "alternate_strategy", reason: "Repeated failure" };
+		if (attempt > 1) return { strategy: "alternate_strategy", reason: "Repeated failure" };
 		return { strategy: "retry", reason: "Transient" };
 	}
 
@@ -274,11 +246,7 @@ export class PipelineEngine {
 	}
 
 	private addNodeWithDeps(state: PipelineState, id: string): void {
-		if (
-			state.dagNodes.find((n) => n.id === id) ||
-			state.completedNodes.includes(id)
-		)
-			return;
+		if (state.dagNodes.find((n) => n.id === id) || state.completedNodes.includes(id)) return;
 
 		const node = this.nodes.get(id);
 		if (!node) throw new Error(`Unknown node: ${id}`);

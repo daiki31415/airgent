@@ -30,7 +30,7 @@ import { ensureOpenCodeServer } from "./server/index";
 import { SkillsManager } from "./skills/index";
 import { Storage } from "./storage/index";
 import { DeviceSync } from "./sync/index";
-import type { AgentContext, ModelEntry } from "./types";
+import type { AgentContext, ModelEntry, ModelRole } from "./types";
 import type { StatusInfo } from "./ui/index";
 import { UIManager } from "./ui/index";
 import { rootLogger, sanitizeError } from "./utils/logger";
@@ -60,27 +60,16 @@ export class Airgent {
 		this.skills,
 		this.memory,
 	);
-	memoryOrganizer = new MemoryOrganizerAgent(
-		this.config.models.validation,
-		this.api,
-		this.memory,
-	);
+	memoryOrganizer = new MemoryOrganizerAgent(this.config.models.validation, this.api, this.memory);
 	compression = new CompressionAgent(
 		this.config.models.compression,
 		this.api,
 		this.compressionManager,
 		this.memory,
 	);
-	validation = new ValidationAgent(
-		this.config.models.validation,
-		this.api,
-		this.memory,
-	);
+	validation = new ValidationAgent(this.config.models.validation, this.api, this.memory);
 	watchdog = new WatchdogAgent(this.config.models.watchdog, this.api);
-	contextInspector = new ContextInspectorAgent(
-		this.config.models.validation,
-		this.api,
-	);
+	contextInspector = new ContextInspectorAgent(this.config.models.validation, this.api);
 
 	sessionId: string | null = null;
 	running = false;
@@ -116,10 +105,7 @@ export class Airgent {
 
 		await ensureOpenCodeServer(this);
 
-		this.storage.createSession(
-			this.sessionId,
-			this.config.models.generate.model,
-		);
+		this.storage.createSession(this.sessionId, this.config.models.generate.model);
 		this.ui.ready = true;
 		this.ui.log("info", "airgent", "Airgent started");
 
@@ -188,20 +174,12 @@ export class Airgent {
 				messages: [],
 			});
 			if (inspResult.score > 0.5) {
-				this.ui.log(
-					"warn",
-					"inspector",
-					`Corruption score: ${inspResult.score.toFixed(2)}`,
-				);
+				this.ui.log("warn", "inspector", `Corruption score: ${inspResult.score.toFixed(2)}`);
 			}
 
 			const wdResult = this.watchdog.check({ failures: {}, retries: {} });
 			if (!wdResult.healthy) {
-				this.ui.log(
-					"warn",
-					"watchdog",
-					wdResult.actions.map((a) => a.type).join(", "),
-				);
+				this.ui.log("warn", "watchdog", wdResult.actions.map((a) => a.type).join(", "));
 			}
 
 			this.updateStatus({ status: "completed", pipelineNode: "" });
@@ -264,7 +242,7 @@ export class Airgent {
 			api: this.api,
 			onChunk: (chunk: string) => this.ui.stream(`    ${chunk}`),
 		});
-		(this.pipelineData as any)[dstField] = content;
+		this.pipelineData[dstField] = content;
 		return content;
 	}
 
@@ -276,7 +254,7 @@ export class Airgent {
 		await delegateConfigureModels(this);
 	}
 
-	async configureModelForRole(role: any): Promise<void> {
+	async configureModelForRole(role: ModelRole): Promise<void> {
 		await delegateConfigureModelForRole(this, role);
 	}
 

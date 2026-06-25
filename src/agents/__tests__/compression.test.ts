@@ -42,12 +42,7 @@ function createManager(): {
 	const storage = new Storage(":memory:");
 	const memorySystem = new MemorySystem(storage);
 	const compressionManager = new CompressionManager(memorySystem, storage);
-	const agent = new CompressionAgent(
-		mockModel(),
-		api,
-		compressionManager,
-		memorySystem,
-	);
+	const agent = new CompressionAgent(mockModel(), api, compressionManager, memorySystem);
 	return { agent, compressionManager, storage };
 }
 
@@ -65,10 +60,7 @@ function sampleContext(overrides?: Partial<AgentContext>): AgentContext {
 	};
 }
 
-function makeMessage(
-	content: string,
-	overrides?: Partial<AgentMessage>,
-): AgentMessage {
+function makeMessage(content: string, overrides?: Partial<AgentMessage>): AgentMessage {
 	return {
 		id: overrides?.id ?? `msg-${Math.random().toString(36).slice(2)}`,
 		role: "user",
@@ -90,6 +82,7 @@ describe("CompressionAgent.constructor", () => {
 
 	test("stores model parameter", () => {
 		const { agent } = createManager();
+		// biome-ignore lint/suspicious/noExplicitAny: accessing protected property for test assertion
 		expect((agent as any).model).toEqual(mockModel());
 	});
 });
@@ -113,10 +106,7 @@ describe("CompressionAgent.compress", () => {
 
 		// Create messages that exceed 70% of 100 = 70 tokens
 		// Each message of ~200 chars = ~50 tokens
-		const messages = [
-			makeMessage("x".repeat(200)),
-			makeMessage("y".repeat(200)),
-		];
+		const messages = [makeMessage("x".repeat(200)), makeMessage("y".repeat(200))];
 		const result = await agent.compress(messages, 0.7);
 
 		expect(result.compressed).toBe(true);
@@ -156,10 +146,7 @@ describe("CompressionAgent.compress", () => {
 		const { agent } = createManager();
 		agent.init(sampleContext({ state: { maxContextTokens: 100 } }));
 
-		const messages = [
-			makeMessage("x".repeat(200)),
-			makeMessage("y".repeat(200)),
-		];
+		const messages = [makeMessage("x".repeat(200)), makeMessage("y".repeat(200))];
 		const result = await agent.compress(messages, 0.7);
 
 		// reduction = (1 - entries.length / messages.length) * 100
@@ -237,8 +224,8 @@ describe("CompressionAgent.decompress", () => {
 
 		// CompressSession stores an entry; decompress looks up by originalId
 		memorySystem.recordRaw("s1", "worker", "Test context data", 5);
-		const compressionMgr = (agent as any)
-			.compressionManager as CompressionManager;
+		// biome-ignore lint/suspicious/noExplicitAny: accessing protected property for test assertion
+		const compressionMgr = (agent as any).compressionManager as CompressionManager;
 		await compressionMgr.compressSession("s1");
 
 		const allEntries = storage.getAllCompressed();
@@ -273,16 +260,13 @@ describe("CompressionAgent.decompress", () => {
 		agent.init(sampleContext());
 
 		memorySystem.recordRaw("s2", "worker", "Valid compression test", 5);
-		const compressionMgr = (agent as any)
-			.compressionManager as CompressionManager;
+		// biome-ignore lint/suspicious/noExplicitAny: accessing protected property for test assertion
+		const compressionMgr = (agent as any).compressionManager as CompressionManager;
 		await compressionMgr.compressSession("s2");
 
 		const allEntries = storage.getAllCompressed();
 		if (allEntries.length > 0) {
-			const entries = await agent.decompress([
-				allEntries[0]?.originalId,
-				"bad-id",
-			]);
+			const entries = await agent.decompress([allEntries[0]?.originalId, "bad-id"]);
 			expect(entries).toHaveLength(1);
 		}
 	});
@@ -302,6 +286,7 @@ describe("CompressionAgent error handling", () => {
 
 	test("handles context with null state gracefully", async () => {
 		const { agent } = createManager();
+		// biome-ignore lint/suspicious/noExplicitAny: test intentionally passes null state
 		agent.init(sampleContext({ state: null as any }));
 
 		const messages = [makeMessage("test")];
@@ -336,9 +321,7 @@ describe("CompressionAgent edge cases", () => {
 		const { agent } = createManager();
 		agent.init(sampleContext({ state: { maxContextTokens: 1000 } }));
 
-		const messages = Array.from({ length: 10 }, (_, i) =>
-			makeMessage(`msg ${i}`),
-		);
+		const messages = Array.from({ length: 10 }, (_, i) => makeMessage(`msg ${i}`));
 		const result = await agent.compress(messages, 0.9);
 		// Small messages relative to maxContextTokens*0.9 = 900 tokens threshold
 		expect(result.compressed).toBe(false);
@@ -363,6 +346,7 @@ describe("CompressionAgent.init", () => {
 	test("stores context", () => {
 		const { agent } = createManager();
 		agent.init(sampleContext());
+		// biome-ignore lint/suspicious/noExplicitAny: accessing protected property for test assertion
 		expect((agent as any).context).not.toBeNull();
 	});
 });
@@ -409,9 +393,7 @@ describe("CompressionAgent additional edge cases", () => {
 		const { agent } = createManager();
 		agent.init(sampleContext({ state: { maxContextTokens: 100 } }));
 
-		const messages = Array.from({ length: 5 }, (_, _i) =>
-			makeMessage("x".repeat(200)),
-		);
+		const messages = Array.from({ length: 5 }, (_, _i) => makeMessage("x".repeat(200)));
 		const result = await agent.compress(messages, 0.7);
 		expect(result.originalCount).toBe(5);
 		expect(result.reduction).toMatch(/%$/);

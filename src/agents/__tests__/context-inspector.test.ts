@@ -60,7 +60,7 @@ describe("ContextInspectorAgent.constructor", () => {
 
 	test("stores model parameter", () => {
 		const agent = createInspector();
-		expect((agent as any).model).toEqual(mockModel());
+		expect(agent.getModel()).toEqual(mockModel());
 	});
 });
 
@@ -68,7 +68,7 @@ describe("ContextInspectorAgent.init", () => {
 	test("stores context", () => {
 		const agent = createInspector();
 		agent.init(sampleContext());
-		expect((agent as any).context).not.toBeNull();
+		expect(agent.getContext()).not.toBeNull();
 	});
 });
 
@@ -360,8 +360,7 @@ describe("ContextInspectorAgent.inspect", () => {
 			messages: [
 				{
 					role: "user",
-					content:
-						"Build a user authentication system with login registration and password reset",
+					content: "Build a user authentication system with login registration and password reset",
 				},
 				{ role: "user", content: "msg2" },
 				{ role: "user", content: "msg3" },
@@ -377,8 +376,7 @@ describe("ContextInspectorAgent.inspect", () => {
 			messages: [
 				{
 					role: "user",
-					content:
-						"Build a user authentication system with login registration and password reset",
+					content: "Build a user authentication system with login registration and password reset",
 				},
 				{ role: "user", content: "msg2" },
 				{ role: "user", content: "msg3" },
@@ -394,8 +392,7 @@ describe("ContextInspectorAgent.inspect", () => {
 			messages: [
 				{
 					role: "user",
-					content:
-						"Build a user authentication system with login registration and password reset",
+					content: "Build a user authentication system with login registration and password reset",
 				},
 				{ role: "user", content: "msg2" },
 				{ role: "user", content: "msg3" },
@@ -466,7 +463,7 @@ describe("ContextInspectorAgent edge cases", () => {
 			});
 		}
 
-		expect((agent as any).previousStates.length).toBeLessThanOrEqual(20);
+		expect(agent.getPreviousStates().length).toBeLessThanOrEqual(20);
 	});
 
 	test("handles inspection after many inspections", () => {
@@ -679,6 +676,7 @@ describe("ContextInspectorAgent.suggestRemediation", () => {
 		});
 
 		expect(api.chat).toHaveBeenCalledTimes(1);
+		// biome-ignore lint/suspicious/noExplicitAny: accessing mock internals from bun:test
 		const callArgs = (api.chat as any).mock.calls[0];
 		const prompt = callArgs[1][1].content;
 		expect(prompt).toContain("remediation");

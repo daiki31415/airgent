@@ -21,19 +21,8 @@ export class MemorySystem {
 	/**
 	 * Record a raw reasoning log.
 	 */
-	recordRaw(
-		sessionId: string,
-		agentRole: string,
-		content: string,
-		tokenCount = 0,
-	): void {
-		this.storage.insertRawLog(
-			randomUUID(),
-			sessionId,
-			agentRole,
-			content,
-			tokenCount,
-		);
+	recordRaw(sessionId: string, agentRole: string, content: string, tokenCount = 0): void {
+		this.storage.insertRawLog(randomUUID(), sessionId, agentRole, content, tokenCount);
 	}
 
 	/**
@@ -79,13 +68,7 @@ export class MemorySystem {
 
 			// Insert evidence entries
 			for (const ev of params.evidence) {
-				this.storage.insertEvidence(
-					randomUUID(),
-					id,
-					ev.type,
-					ev.content,
-					ev.source,
-				);
+				this.storage.insertEvidence(randomUUID(), id, ev.type, ev.content, ev.source);
 			}
 
 			// Auto-link to similar memories
@@ -104,9 +87,7 @@ export class MemorySystem {
 			return [];
 		}
 		const results = this.storage.searchMemories(tags, minConfidence);
-		return results
-			.map((r) => this.rowToMemory(r))
-			.filter((x): x is StructuredMemory => x !== null);
+		return results.map((r) => this.rowToMemory(r)).filter((x): x is StructuredMemory => x !== null);
 	}
 
 	/**
@@ -114,9 +95,7 @@ export class MemorySystem {
 	 */
 	getLinked(memoryId: string): StructuredMemory[] {
 		const results = this.storage.getLinkedMemories(memoryId);
-		return results
-			.map((r) => this.rowToMemory(r))
-			.filter((x): x is StructuredMemory => x !== null);
+		return results.map((r) => this.rowToMemory(r)).filter((x): x is StructuredMemory => x !== null);
 	}
 
 	/**
@@ -135,9 +114,7 @@ export class MemorySystem {
 	/**
 	 * Get raw links for a memory (type, target, confidence).
 	 */
-	getLinks(
-		memoryId: string,
-	): Array<{ type: string; target: string; confidence: number }> {
+	getLinks(memoryId: string): Array<{ type: string; target: string; confidence: number }> {
 		return this.storage.getMemoryLinks(memoryId);
 	}
 
@@ -178,17 +155,10 @@ export class MemorySystem {
 			// Calculate link confidence
 			const simTags = JSON.parse((sim.tags as string) || "[]") as string[];
 			const commonTags = tags.filter((t) => simTags.includes(t));
-			const linkConfidence =
-				commonTags.length / Math.max(tags.length, simTags.length);
+			const linkConfidence = commonTags.length / Math.max(tags.length, simTags.length);
 			const linkType = linkConfidence > 0.7 ? "same_cause" : "similar_pattern";
 
-			this.storage.insertLink(
-				randomUUID(),
-				newId,
-				simId,
-				linkType,
-				linkConfidence,
-			);
+			this.storage.insertLink(randomUUID(), newId, simId, linkType, linkConfidence);
 			this.logger.debug(
 				`Auto-linked: ${newId} <-> ${simId} (${linkType}, ${linkConfidence.toFixed(2)})`,
 			);

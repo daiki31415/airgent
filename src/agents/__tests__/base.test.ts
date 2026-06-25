@@ -7,12 +7,7 @@
 
 import { describe, expect, mock, test } from "bun:test";
 import { OpenCodeAPI } from "../../api/opencode";
-import type {
-	AgentContext,
-	AgentRole,
-	ModelEntry,
-	OpenCodeResponse,
-} from "../../types";
+import type { AgentContext, AgentRole, ModelEntry, OpenCodeResponse } from "../../types";
 import { BaseAgent } from "../base";
 
 // ---------------------------------------------------------------------------
@@ -37,6 +32,16 @@ class TestAgent extends BaseAgent {
 	/** Expose context for assertions */
 	getContext(): AgentContext | null {
 		return this.context;
+	}
+
+	/** Expose model for assertions */
+	getModel(): ModelEntry {
+		return this.model;
+	}
+
+	/** Expose api for assertions */
+	getApi(): OpenCodeAPI {
+		return this.api;
 	}
 }
 
@@ -103,13 +108,13 @@ describe("BaseAgent.constructor", () => {
 	test("sets model from constructor parameter", () => {
 		const model = mockModel();
 		const agent = new TestAgent("planner", model, mockApi());
-		expect((agent as any).model).toBe(model);
+		expect(agent.getModel()).toBe(model);
 	});
 
 	test("sets api from constructor parameter", () => {
 		const api = mockApi();
 		const agent = new TestAgent("planner", mockModel(), api);
-		expect((agent as any).api).toBe(api);
+		expect(agent.getApi()).toBe(api);
 	});
 
 	test("accepts all valid AgentRole values", () => {
@@ -167,6 +172,7 @@ describe("BaseAgent.think", () => {
 		const result = await agent.callThink("user prompt");
 
 		expect(api.chat).toHaveBeenCalledTimes(1);
+		// biome-ignore lint/suspicious/noExplicitAny: accessing mock internals from bun:test
 		const callArgs = (api.chat as any).mock.calls[0];
 		expect(callArgs[0]).toEqual(mockModel());
 		expect(callArgs[1]).toEqual([
@@ -204,6 +210,7 @@ describe("BaseAgent.think", () => {
 
 		const result = await agent.callThink("prompt");
 		expect(result).toBe("ok");
+		// biome-ignore lint/suspicious/noExplicitAny: accessing mock internals from bun:test
 		const callArgs = (api.chat as any).mock.calls[0];
 		expect(callArgs[1][0].content).toBe("");
 	});
@@ -260,6 +267,7 @@ describe("BaseAgent.think", () => {
 		agent.init(sampleContext());
 
 		await agent.callThink("prompt");
+		// biome-ignore lint/suspicious/noExplicitAny: accessing mock internals from bun:test
 		const callArgs = (api.chat as any).mock.calls[0];
 		expect(callArgs[0]).toEqual(customModel);
 	});
@@ -290,6 +298,7 @@ describe("BaseAgent.thinkStream", () => {
 		}
 
 		expect(api.streamChat).toHaveBeenCalledTimes(1);
+		// biome-ignore lint/suspicious/noExplicitAny: accessing mock internals from bun:test
 		const callArgs = (api.streamChat as any).mock.calls[0];
 		expect(callArgs[1]).toEqual([
 			{ role: "system", content: "You are a helpful assistant." },
@@ -367,6 +376,7 @@ describe("BaseAgent.thinkStream", () => {
 			/* consume */
 		}
 
+		// biome-ignore lint/suspicious/noExplicitAny: accessing mock internals from bun:test
 		const callArgs = (api.streamChat as any).mock.calls[0];
 		expect(callArgs[0]).toEqual(customModel);
 	});
@@ -380,6 +390,7 @@ describe("BaseAgent.thinkStream", () => {
 			/* consume */
 		}
 
+		// biome-ignore lint/suspicious/noExplicitAny: accessing mock internals from bun:test
 		const callArgs = (api.streamChat as any).mock.calls[0];
 		expect(callArgs[1][0].content).toBe("Custom system prompt.");
 	});
@@ -390,14 +401,14 @@ describe("BaseAgent.switchModel", () => {
 		const agent = new TestAgent("worker", mockModel(), mockApi());
 		const newModel: ModelEntry = { provider: "new", model: "new-model" };
 		agent.switchModel(newModel);
-		expect((agent as any).model).toEqual(newModel);
+		expect(agent.getModel()).toEqual(newModel);
 	});
 
 	test("switchModel updates to different provider", () => {
 		const agent = new TestAgent("worker", mockModel(), mockApi());
 		const newModel: ModelEntry = { provider: "another", model: "m2" };
 		agent.switchModel(newModel);
-		expect((agent as any).model.provider).toBe("another");
+		expect(agent.getModel().provider).toBe("another");
 	});
 });
 

@@ -10,14 +10,7 @@
  * Covers load, save, get, set, settings, models, MCP, and edge cases.
  */
 
-import {
-	afterAll,
-	beforeAll,
-	beforeEach,
-	describe,
-	expect,
-	test,
-} from "bun:test";
+import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { ConfigManager } from "../index";

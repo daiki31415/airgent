@@ -61,7 +61,7 @@ describe("WatchdogAgent.constructor", () => {
 
 	test("stores model parameter", () => {
 		const agent = createWatchdog();
-		expect((agent as any).model).toEqual(mockModel());
+		expect(agent.getModel()).toEqual(mockModel());
 	});
 });
 
@@ -69,7 +69,7 @@ describe("WatchdogAgent.init", () => {
 	test("stores context", () => {
 		const agent = createWatchdog();
 		agent.init(sampleContext());
-		expect((agent as any).context).not.toBeNull();
+		expect(agent.getContext()).not.toBeNull();
 	});
 });
 
@@ -168,7 +168,7 @@ describe("WatchdogAgent.check", () => {
 			agent.check({ currentTokens: 100 });
 		}
 		// Internal tokenUsage should have max 10 entries
-		expect((agent as any).tokenUsage.length).toBeLessThanOrEqual(10);
+		expect(agent.getTokenUsage().length).toBeLessThanOrEqual(10);
 	});
 
 	test("returns model_switch when retries >= 5", () => {
@@ -229,9 +229,7 @@ describe("WatchdogAgent.check", () => {
 			previousContext: "same same same same same",
 		});
 		// identical => drift = 0 => no action
-		expect(
-			result.actions.filter((a) => a.type === "compress_suggest"),
-		).toHaveLength(0);
+		expect(result.actions.filter((a) => a.type === "compress_suggest")).toHaveLength(0);
 	});
 
 	test("combines multiple issues into actions array", () => {
@@ -252,9 +250,7 @@ describe("WatchdogAgent.check", () => {
 			previousContext: "",
 		});
 		// Empty prev set => calculateDrift returns 0 => no action
-		expect(
-			result.actions.filter((a) => a.type === "compress_suggest"),
-		).toHaveLength(0);
+		expect(result.actions.filter((a) => a.type === "compress_suggest")).toHaveLength(0);
 	});
 });
 
@@ -268,10 +264,10 @@ describe("WatchdogAgent.reset", () => {
 		});
 
 		agent.reset();
-		expect((agent as any).consecutiveFailures.size).toBe(0);
-		expect((agent as any).tokenUsage).toHaveLength(0);
-		expect((agent as any).retryCounts.size).toBe(0);
-		expect((agent as any).contextDriftScore).toBe(0);
+		expect(agent.getConsecutiveFailures().size).toBe(0);
+		expect(agent.getTokenUsage()).toHaveLength(0);
+		expect(agent.getRetryCounts().size).toBe(0);
+		expect(agent.getContextDriftScore()).toBe(0);
 	});
 
 	test("after reset, check returns healthy", () => {
@@ -299,13 +295,13 @@ describe("WatchdogAgent edge cases", () => {
 
 	test("handles null context", () => {
 		const agent = createWatchdog();
-		const result = agent.check(null as any);
+		const result = agent.check(null as unknown);
 		expect(result.healthy).toBe(true);
 	});
 
 	test("handles undefined failures gracefully", () => {
 		const agent = createWatchdog();
-		const result = agent.check({ failures: undefined as any });
+		const result = agent.check({ failures: undefined as unknown });
 		expect(result.healthy).toBe(true);
 	});
 
@@ -333,7 +329,7 @@ describe("WatchdogAgent edge cases", () => {
 		const agent = createWatchdog();
 		const result = agent.check({ currentTokens: -1 });
 		expect(result.healthy).toBe(true);
-		expect((agent as any).tokenUsage).toContain(-1);
+		expect(agent.getTokenUsage()).toContain(-1);
 	});
 
 	test("zero tokens handled", () => {

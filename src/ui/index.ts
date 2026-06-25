@@ -141,9 +141,7 @@ export class UIManager {
 					contentOptions: { backgroundColor: "#1a1b26" },
 				});
 				renderer.root.add(scrollboxVNode);
-				this.scrollbox = renderer.root.findDescendantById(
-					"log-area",
-				) as ScrollBoxRenderable | null;
+				this.scrollbox = renderer.root.findDescendantById("log-area") as ScrollBoxRenderable | null;
 
 				const inputVNode = Input({
 					id: "input-line",
@@ -170,9 +168,7 @@ export class UIManager {
 				});
 				inputVNode.focus();
 				renderer.root.add(inputVNode);
-				this.input = renderer.root.findDescendantById(
-					"input-line",
-				) as InputRenderable | null;
+				this.input = renderer.root.findDescendantById("input-line") as InputRenderable | null;
 
 				const footerVNode = Box({
 					id: "footer",
@@ -194,9 +190,7 @@ export class UIManager {
 				});
 				this.statusBar.add(footerText);
 
-				renderer.on("selection", (sel: Selection) =>
-					this.handleSelection(sel, renderer),
-				);
+				renderer.on("selection", (sel: Selection) => this.handleSelection(sel, renderer));
 
 				renderer.keyInput.on("keypress", (event: any) => {
 					if (event.ctrl && event.name === "c") {
@@ -222,9 +216,7 @@ export class UIManager {
 			this._copyInProgress = true;
 			const text = sel.getSelectedText();
 			if (text && /\S/.test(text)) {
-				const result = copyToClipboard(text, (t) =>
-					renderer.copyToClipboardOSC52(t),
-				);
+				const result = copyToClipboard(text, (t) => renderer.copyToClipboardOSC52(t));
 				this.showCopyToast(result);
 			}
 		} catch {
@@ -237,7 +229,7 @@ export class UIManager {
 	copy(text: string): CopyResult {
 		const result = copyToClipboard(
 			text,
-			this.renderer ? (t) => this.renderer?.copyToClipboardOSC52(t) : undefined,
+			this.renderer ? (t) => this.renderer?.copyToClipboardOSC52(t) ?? false : undefined,
 		);
 		this.showCopyToast(result);
 		return result;
@@ -272,9 +264,7 @@ export class UIManager {
 					? `Copied to ${result.filePath}`
 					: "Copied!"
 				: "Copy failed";
-			toast.add(
-				Text({ content: msg, fg: result.success ? "#9ece6a" : "#f7768e" }),
-			);
+			toast.add(Text({ content: msg, fg: result.success ? "#9ece6a" : "#f7768e" }));
 		}
 		this.renderer.requestRender();
 		if (this.input) this.renderer.focusRenderable(this.input);
@@ -356,8 +346,7 @@ export class UIManager {
 		try {
 			const si = this.statusInfo;
 			const uptime = Math.floor((Date.now() - this.startTime) / 1000);
-			const statusDot =
-				si.status === "running" ? "●" : si.status === "error" ? "●" : "●";
+			const statusDot = si.status === "running" ? "●" : si.status === "error" ? "●" : "●";
 			const statusFg = si.status === "error" ? "#f7768e" : "#9ece6a";
 
 			const hTitle = this.headerBox.findDescendantById("header-title");
@@ -431,6 +420,7 @@ export class UIManager {
 
 		return new Promise((resolve) => {
 			const root = this.renderer?.root;
+			if (!root) return resolve(null);
 
 			const overlayVNode = Box({
 				id,
@@ -499,9 +489,10 @@ export class UIManager {
 		options: Array<{ name: string; description: string; value: unknown }>,
 	): Promise<unknown> {
 		console.log(`\n  ${title}`);
-		options.forEach((o, i) =>
-			console.log(`  ${i + 1}) ${o.name}  ${o.description}`),
-		);
+		for (let i = 0; i < options.length; i++) {
+			const opt = options[i];
+			if (opt) console.log(`  ${i + 1}) ${opt.name}  ${opt.description}`);
+		}
 		const rl = readline.createInterface({
 			input: process.stdin,
 			output: process.stdout,
@@ -510,7 +501,8 @@ export class UIManager {
 			rl.question(`  Choose (1-${options.length}): `, (answer) => {
 				rl.close();
 				const idx = parseInt(answer, 10) - 1;
-				resolve(options[idx]?.value ?? null);
+				const opt = options[idx];
+				resolve(opt ? opt.value : null);
 			});
 		});
 	}

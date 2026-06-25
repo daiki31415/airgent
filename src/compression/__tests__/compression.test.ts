@@ -96,8 +96,7 @@ describe("CompressionManager.compress", () => {
 			{
 				id: "1",
 				role: "user",
-				content:
-					"# Critical Bug\nTypeError in src/app.ts\n$ git revert\nSee ErrorManager",
+				content: "# Critical Bug\nTypeError in src/app.ts\n$ git revert\nSee ErrorManager",
 				timestamp: 0,
 			},
 		];
@@ -109,9 +108,7 @@ describe("CompressionManager.compress", () => {
 	test("truncates content over 1000 chars", async () => {
 		const mgr = createManager();
 		const longContent = "x".repeat(2000);
-		const msgs: AgentMessage[] = [
-			{ id: "1", role: "user", content: longContent, timestamp: 0 },
-		];
+		const msgs: AgentMessage[] = [{ id: "1", role: "user", content: longContent, timestamp: 0 }];
 		const entry = await mgr.compress(msgs);
 		expect(entry.compressedContent.endsWith("...[truncated]")).toBe(true);
 	});
@@ -119,9 +116,7 @@ describe("CompressionManager.compress", () => {
 	test("keeps content under 1000 chars as-is", async () => {
 		const mgr = createManager();
 		const shortContent = "short message";
-		const msgs: AgentMessage[] = [
-			{ id: "1", role: "user", content: shortContent, timestamp: 0 },
-		];
+		const msgs: AgentMessage[] = [{ id: "1", role: "user", content: shortContent, timestamp: 0 }];
 		const entry = await mgr.compress(msgs);
 		expect(entry.compressedContent).toBe("[user]\nshort message");
 	});
@@ -139,9 +134,7 @@ describe("CompressionManager.compress", () => {
 
 	test("baseline importance for empty metadata", async () => {
 		const mgr = createManager();
-		const msgs: AgentMessage[] = [
-			{ id: "1", role: "user", content: "hello world", timestamp: 0 },
-		];
+		const msgs: AgentMessage[] = [{ id: "1", role: "user", content: "hello world", timestamp: 0 }];
 		const entry = await mgr.compress(msgs);
 		expect(entry.importanceScore).toBe(0.3);
 	});
@@ -181,8 +174,7 @@ describe("CompressionManager.compress", () => {
 			{
 				id: "1",
 				role: "user",
-				content:
-					"Line with <script>alert('xss')</script> & special chars: ñ ø æ",
+				content: "Line with <script>alert('xss')</script> & special chars: ñ ø æ",
 				timestamp: 0,
 			},
 		];
@@ -268,9 +260,7 @@ describe("CompressionManager.compress", () => {
 
 	test("tokenCount is calculated from combined content length", async () => {
 		const mgr = createManager();
-		const msgs: AgentMessage[] = [
-			{ id: "1", role: "user", content: "hello world", timestamp: 0 },
-		];
+		const msgs: AgentMessage[] = [{ id: "1", role: "user", content: "hello world", timestamp: 0 }];
 		const entry = await mgr.compress(msgs);
 		// "[user]\nhello world" = 18 chars / 4 = 4.5 -> ceil = 5
 		expect(entry.tokenCount).toBe(5);
@@ -278,9 +268,7 @@ describe("CompressionManager.compress", () => {
 
 	test("originalId falls back to messages[0].id", async () => {
 		const mgr = createManager();
-		const msgs: AgentMessage[] = [
-			{ id: "custom-id", role: "user", content: "test", timestamp: 0 },
-		];
+		const msgs: AgentMessage[] = [{ id: "custom-id", role: "user", content: "test", timestamp: 0 }];
 		const entry = await mgr.compress(msgs);
 		expect(entry.originalId).toBe("custom-id");
 	});
@@ -297,9 +285,7 @@ describe("CompressionManager.extractMetadata", () => {
 	test("extracts file paths with various extensions", () => {
 		const mgr = createManager();
 		const extract = (mgr as any).extractMetadata.bind(mgr);
-		const result = extract(
-			"Edit src/main.ts and src/lib/helper.js and config.json",
-		);
+		const result = extract("Edit src/main.ts and src/lib/helper.js and config.json");
 		expect(result.files).toContain("src/main.ts");
 		expect(result.files).toContain("src/lib/helper.js");
 		expect(result.files).toContain("config.json");
@@ -325,9 +311,7 @@ describe("CompressionManager.calculateImportance", () => {
 	test("baseline score is 0.3", () => {
 		const mgr = createManager();
 		const calc = (mgr as any).calculateImportance.bind(mgr);
-		expect(calc({ errors: [], files: [], commands: [], entities: [] })).toBe(
-			0.3,
-		);
+		expect(calc({ errors: [], files: [], commands: [], entities: [] })).toBe(0.3);
 	});
 
 	test("errors add up to 0.3 max", () => {
@@ -434,9 +418,7 @@ describe("CompressionManager.decompress", () => {
 		const storage = new Storage(":memory:");
 		const memorySystem = new MemorySystem(storage);
 		const mgr = new CompressionManager(memorySystem, storage);
-		expect(mgr.decompress("nonexistent")).rejects.toThrow(
-			"Compressed entry not found",
-		);
+		expect(mgr.decompress("nonexistent")).rejects.toThrow("Compressed entry not found");
 	});
 });
 
@@ -456,12 +438,7 @@ describe("CompressionManager.compressSession", () => {
 		const memorySystem = new MemorySystem(storage);
 		const mgr = new CompressionManager(memorySystem, storage);
 
-		memorySystem.recordRaw(
-			"s1",
-			"worker",
-			"# Bug Report\nGot TypeError in app.ts",
-			10,
-		);
+		memorySystem.recordRaw("s1", "worker", "# Bug Report\nGot TypeError in app.ts", 10);
 		memorySystem.recordRaw("s1", "worker", "$ npm run build", 5);
 
 		await mgr.compressSession("s1");

@@ -45,10 +45,7 @@ export async function ensureOpenCodeServer(agent: ServerHandle): Promise<void> {
 				while (true) {
 					const { done, value } = await reader.read();
 					if (done) break;
-					for (const line of decoder
-						.decode(value)
-						.split("\n")
-						.filter(Boolean)) {
+					for (const line of decoder.decode(value).split("\n").filter(Boolean)) {
 						agent.ui.log("info", "opencode", line);
 					}
 				}
@@ -58,10 +55,7 @@ export async function ensureOpenCodeServer(agent: ServerHandle): Promise<void> {
 				while (true) {
 					const { done, value } = await reader.read();
 					if (done) break;
-					for (const line of decoder
-						.decode(value)
-						.split("\n")
-						.filter(Boolean)) {
+					for (const line of decoder.decode(value).split("\n").filter(Boolean)) {
 						agent.ui.log("error", "opencode", line);
 					}
 				}
@@ -70,21 +64,13 @@ export async function ensureOpenCodeServer(agent: ServerHandle): Promise<void> {
 			for (let i = 0; i < 30; i++) {
 				await new Promise((r) => setTimeout(r, 500));
 				if (i % 5 === 0 && agent.opencodeProcess) {
-					agent.ui.log(
-						"info",
-						"airgent",
-						`Waiting for opencode server... (${(i + 1) * 0.5}s)`,
-					);
+					agent.ui.log("info", "airgent", `Waiting for opencode server... (${(i + 1) * 0.5}s)`);
 				}
 				health = await agent.api.healthCheck();
 				if (health.healthy) break;
 			}
 		} catch (err) {
-			agent.ui.log(
-				"error",
-				"airgent",
-				`Failed to start OpenCode server: ${sanitizeError(err)}`,
-			);
+			agent.ui.log("error", "airgent", `Failed to start OpenCode server: ${sanitizeError(err)}`);
 		}
 	}
 
@@ -92,8 +78,7 @@ export async function ensureOpenCodeServer(agent: ServerHandle): Promise<void> {
 		agent.ui.log(
 			"info",
 			"airgent",
-			"OpenCode server connected" +
-				(health.version ? ` v${health.version}` : ""),
+			"OpenCode server connected" + (health.version ? ` v${health.version}` : ""),
 		);
 	} else {
 		agent.ui.log(

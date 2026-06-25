@@ -42,44 +42,42 @@ const mockReadlineInterface = {
 mock("readline", () => ({
 	createInterface: mock(() => mockReadlineInterface),
 }));
-mock.module(
-	resolve(import.meta.dir, "../../node_modules/@opentui/core"),
-	() => {
-		const r = () =>
-			mock(() => {
-				const obj: any = {
-					content: "",
-					fg: "",
-					width: "",
-					add: mock(),
-					remove: mock(),
-					findDescendantById: mock(() => null),
-					flexDirection: "",
-				};
-				return obj;
-			});
-		return {
-			createCliRenderer: mock(() => Promise.resolve(mockRenderer)),
-			InputRenderableEvents: { ENTER: "ENTER" },
-			SelectRenderableEvents: { ITEM_SELECTED: "ITEM_SELECTED" },
-			Text: r(),
-			ScrollBox: r(),
-			Input: mock(() => ({
-				value: "",
-				on: mock(),
-				focus: mock(),
-				focusable: false,
-			})),
-			Box: r(),
-			Select: mock(() => ({
-				on: mock(),
-				focus: mock(),
-				focusable: false,
-				getSelectedOption: mock(() => ({ value: null })),
-			})),
-		};
-	},
-);
+mock.module(resolve(import.meta.dir, "../../node_modules/@opentui/core"), () => {
+	const r = () =>
+		mock(() => {
+			// biome-ignore lint/suspicious/noExplicitAny: mock object for testing
+			const obj: any = {
+				content: "",
+				fg: "",
+				width: "",
+				add: mock(),
+				remove: mock(),
+				findDescendantById: mock(() => null),
+				flexDirection: "",
+			};
+			return obj;
+		});
+	return {
+		createCliRenderer: mock(() => Promise.resolve(mockRenderer)),
+		InputRenderableEvents: { ENTER: "ENTER" },
+		SelectRenderableEvents: { ITEM_SELECTED: "ITEM_SELECTED" },
+		Text: r(),
+		ScrollBox: r(),
+		Input: mock(() => ({
+			value: "",
+			on: mock(),
+			focus: mock(),
+			focusable: false,
+		})),
+		Box: r(),
+		Select: mock(() => ({
+			on: mock(),
+			focus: mock(),
+			focusable: false,
+			getSelectedOption: mock(() => ({ value: null })),
+		})),
+	};
+});
 
 // Application modules are loaded WITHOUT module-level mocking.
 // We use Object.create(Airgent.prototype) + manual property
@@ -330,11 +328,15 @@ function _clearAllMocks(mocks: ReturnType<typeof makeMockInstances>) {
 		...Object.values(mocks.rateLimiter),
 	];
 	for (const fn of all) {
-		if (typeof fn?.mockClear === "function") (fn as any).mockClear();
+		if (typeof fn?.mockClear === "function") {
+			// biome-ignore lint/suspicious/noExplicitAny: mock function from bun:test
+			(fn as any).mockClear();
+		}
 	}
 }
 
 interface AgentInstance {
+	// biome-ignore lint/suspicious/noExplicitAny: test helper type
 	[key: string]: any;
 }
 
@@ -343,10 +345,12 @@ function deepClone<T>(obj: T): T {
 }
 
 function createAgent(
+	// biome-ignore lint/suspicious/noExplicitAny: test helper accepts class constructor
 	AirgentClass: any,
 	mocks: ReturnType<typeof makeMockInstances>,
 ): AgentInstance {
 	// Create uninitialized instance — constructor is never called
+	// biome-ignore lint/suspicious/noExplicitAny: test helper creates uninitialized instance
 	const agent = Object.create(AirgentClass.prototype) as any;
 
 	// Deep clone config to prevent cross-test contamination
@@ -488,55 +492,35 @@ describe("Airgent — Command Handling", () => {
 
 	test("/help outputs command list", async () => {
 		await sendInput("/help");
-		expect(mocks.ui.log).toHaveBeenCalledWith(
-			"info",
-			"airgent",
-			expect.stringContaining("/quit"),
-		);
+		expect(mocks.ui.log).toHaveBeenCalledWith("info", "airgent", expect.stringContaining("/quit"));
 	});
 
 	test("/info shows system info", async () => {
 		await sendInput("/info");
-		expect(mocks.ui.notice).toHaveBeenCalledWith(
-			expect.stringContaining("Airgent v1.0.0"),
-		);
+		expect(mocks.ui.notice).toHaveBeenCalledWith(expect.stringContaining("Airgent v1.0.0"));
 	});
 
 	test("/info shows not connected when unhealthy", async () => {
 		mocks.api.healthCheck = mock(() => ({ healthy: false, version: "" }));
 		await sendInput("/info");
-		expect(mocks.ui.notice).toHaveBeenCalledWith(
-			expect.stringContaining("not connected"),
-		);
+		expect(mocks.ui.notice).toHaveBeenCalledWith(expect.stringContaining("not connected"));
 	});
 
 	test("/status shows uptime", async () => {
 		await sendInput("/status");
-		expect(mocks.ui.log).toHaveBeenCalledWith(
-			"info",
-			"airgent",
-			expect.stringContaining("Uptime"),
-		);
+		expect(mocks.ui.log).toHaveBeenCalledWith("info", "airgent", expect.stringContaining("Uptime"));
 	});
 
 	test("/session outputs session JSON", async () => {
 		mocks.storage.getSession = mock(() => ({ id: "s-1" }));
 		await sendInput("/session");
-		expect(mocks.ui.log).toHaveBeenCalledWith(
-			"info",
-			"airgent",
-			expect.any(String),
-		);
+		expect(mocks.ui.log).toHaveBeenCalledWith("info", "airgent", expect.any(String));
 	});
 
 	test("/copy with text copies to clipboard", async () => {
 		await sendInput("/copy hello world");
 		expect(mocks.ui.copy).toHaveBeenCalledWith("hello world");
-		expect(mocks.ui.log).toHaveBeenCalledWith(
-			"info",
-			"airgent",
-			expect.stringContaining("Copied"),
-		);
+		expect(mocks.ui.log).toHaveBeenCalledWith("info", "airgent", expect.stringContaining("Copied"));
 	});
 
 	test("/copy warns when nothing to copy", async () => {
@@ -571,18 +555,13 @@ describe("Airgent — Command Handling", () => {
 
 	test("/setting opens settings menu", async () => {
 		await sendInput("/setting");
-		expect(mocks.ui.showSelectMenu).toHaveBeenCalledWith(
-			"Settings",
-			expect.any(Array),
-		);
+		expect(mocks.ui.showSelectMenu).toHaveBeenCalledWith("Settings", expect.any(Array));
 	});
 
 	test("/compress triggers compression", async () => {
 		agent.sessionId = "sess-1";
 		await sendInput("/compress");
-		expect(mocks.compressionManager.compressSession).toHaveBeenCalledWith(
-			"sess-1",
-		);
+		expect(mocks.compressionManager.compressSession).toHaveBeenCalledWith("sess-1");
 	});
 
 	test("/providers lists providers", async () => {
@@ -599,11 +578,7 @@ describe("Airgent — Command Handling", () => {
 			throw new Error("fail");
 		});
 		await sendInput("/providers");
-		expect(mocks.ui.log).toHaveBeenCalledWith(
-			"error",
-			"providers",
-			expect.any(String),
-		);
+		expect(mocks.ui.log).toHaveBeenCalledWith("error", "providers", expect.any(String));
 	});
 
 	test("/sync push with URL pushes", async () => {
@@ -637,11 +612,7 @@ describe("Airgent — Command Handling", () => {
 
 	test("/cat without file shows usage", async () => {
 		await sendInput("/cat");
-		expect(mocks.ui.log).toHaveBeenCalledWith(
-			"info",
-			"cat",
-			expect.stringContaining("Usage"),
-		);
+		expect(mocks.ui.log).toHaveBeenCalledWith("info", "cat", expect.stringContaining("Usage"));
 	});
 
 	test("non-command input sends to processTask", async () => {
@@ -660,21 +631,13 @@ describe("Airgent — Command Handling", () => {
 			},
 		]);
 		await sendInput("/mcp list");
-		expect(mocks.ui.log).toHaveBeenCalledWith(
-			"info",
-			"mcp",
-			expect.stringContaining("my-srv"),
-		);
+		expect(mocks.ui.log).toHaveBeenCalledWith("info", "mcp", expect.stringContaining("my-srv"));
 	});
 
 	test("/mcp list shows 'no servers' when empty", async () => {
 		agent.configManager.loadMCPServers = mock(() => []);
 		await sendInput("/mcp list");
-		expect(mocks.ui.log).toHaveBeenCalledWith(
-			"info",
-			"mcp",
-			"No MCP servers configured",
-		);
+		expect(mocks.ui.log).toHaveBeenCalledWith("info", "mcp", "No MCP servers configured");
 	});
 
 	test("/mcp add saves local server", async () => {
@@ -706,11 +669,7 @@ describe("Airgent — Command Handling", () => {
 
 	test("/mcp add with missing args shows usage", async () => {
 		await sendInput("/mcp add");
-		expect(mocks.ui.log).toHaveBeenCalledWith(
-			"warn",
-			"mcp",
-			expect.stringContaining("Usage"),
-		);
+		expect(mocks.ui.log).toHaveBeenCalledWith("warn", "mcp", expect.stringContaining("Usage"));
 	});
 
 	test("/mcp add-remote saves remote", async () => {
@@ -730,11 +689,7 @@ describe("Airgent — Command Handling", () => {
 
 	test("/mcp add-remote missing args shows usage", async () => {
 		await sendInput("/mcp add-remote");
-		expect(mocks.ui.log).toHaveBeenCalledWith(
-			"warn",
-			"mcp",
-			expect.stringContaining("Usage"),
-		);
+		expect(mocks.ui.log).toHaveBeenCalledWith("warn", "mcp", expect.stringContaining("Usage"));
 	});
 
 	test("/mcp connect connects server", async () => {
@@ -744,11 +699,7 @@ describe("Airgent — Command Handling", () => {
 
 	test("/mcp connect without name shows usage", async () => {
 		await sendInput("/mcp connect");
-		expect(mocks.ui.log).toHaveBeenCalledWith(
-			"warn",
-			"mcp",
-			expect.stringContaining("Usage"),
-		);
+		expect(mocks.ui.log).toHaveBeenCalledWith("warn", "mcp", expect.stringContaining("Usage"));
 	});
 
 	test("/mcp disconnect disconnects", async () => {
@@ -777,11 +728,7 @@ describe("Airgent — Command Handling", () => {
 
 	test("/model lists current models", async () => {
 		await sendInput("/model");
-		expect(mocks.ui.log).toHaveBeenCalledWith(
-			"info",
-			"model",
-			expect.stringContaining("planner"),
-		);
+		expect(mocks.ui.log).toHaveBeenCalledWith("info", "model", expect.stringContaining("planner"));
 	});
 
 	test("unknown command is processed as task", async () => {
@@ -847,6 +794,7 @@ describe("Airgent — processTask flow", () => {
 			return new Map();
 		});
 		await agent.processTask("test");
+		// biome-ignore lint/suspicious/noExplicitAny: mock calls type from bun:test
 		const aiLogs = mocks.ui.log.mock.calls.filter((c: any) => c[1] === "ai");
 		expect(aiLogs.length).toBe(0);
 	});
@@ -885,9 +833,8 @@ describe("Airgent — processTask flow", () => {
 			score: 0.3,
 		}));
 		await agent.processTask("test");
-		const warns = mocks.ui.log.mock.calls.filter(
-			(c: any) => c[1] === "inspector",
-		);
+		// biome-ignore lint/suspicious/noExplicitAny: mock calls type from bun:test
+		const warns = mocks.ui.log.mock.calls.filter((c: any) => c[1] === "inspector");
 		expect(warns.length).toBe(0);
 	});
 
@@ -902,11 +849,7 @@ describe("Airgent — processTask flow", () => {
 			actions: [{ type: "warning", message: "issue" }],
 		}));
 		await agent.processTask("test");
-		expect(mocks.ui.log).toHaveBeenCalledWith(
-			"warn",
-			"watchdog",
-			expect.any(String),
-		);
+		expect(mocks.ui.log).toHaveBeenCalledWith("warn", "watchdog", expect.any(String));
 	});
 
 	test("processTask updates status", async () => {
@@ -1032,6 +975,7 @@ describe("Airgent — buildAgentContext", () => {
 describe("Airgent — Pipeline Handlers", () => {
 	let agent: AgentInstance;
 	let mocks: ReturnType<typeof makeMockInstances>;
+	// biome-ignore lint/complexity/noBannedTypes: test helper type
 	let handlers: Map<string, Function>;
 
 	beforeEach(async () => {
@@ -1100,9 +1044,8 @@ describe("Airgent — Pipeline Handlers", () => {
 	});
 
 	test("generate handler includes relevant memories", async () => {
-		mocks.memory.findRelevant = mock(() => [
-			{ id: "m1", bug: "b1", fix: "f1" } as any,
-		]);
+		// biome-ignore lint/suspicious/noExplicitAny: test mock return type
+		mocks.memory.findRelevant = mock(() => [{ id: "m1", bug: "b1", fix: "f1" } as any]);
 		mocks.worker.execute = mock(() => ({ content: "result" }));
 		const h = handlers.get("generate")!;
 		await h(new Map());
@@ -1120,6 +1063,7 @@ describe("Airgent — Pipeline Handlers", () => {
 		agent.pipelineData.generatedOutput = "some output";
 		mocks.api.chat = mock(() => ({ content: "test result" }));
 		const h = handlers.get("test")!;
+		// biome-ignore lint/suspicious/noExplicitAny: handler returns dynamic type
 		const result: any = await h(new Map());
 		expect(agent.pipelineData.testResult).toBe("test result");
 		expect(result).toHaveProperty("content");
@@ -1129,6 +1073,7 @@ describe("Airgent — Pipeline Handlers", () => {
 		agent.pipelineData.generatedOutput = "buggy";
 		mocks.api.chat = mock(() => ({ content: "found a bug here" }));
 		const h = handlers.get("test")!;
+		// biome-ignore lint/suspicious/noExplicitAny: handler returns dynamic type
 		const result: any = await h(new Map());
 		expect(result.passed).toBe(false);
 	});
@@ -1140,6 +1085,7 @@ describe("Airgent — Pipeline Handlers", () => {
 			content: "all looks correct, reviewed and approved",
 		}));
 		const h = handlers.get("test")!;
+		// biome-ignore lint/suspicious/noExplicitAny: handler returns dynamic type
 		const result: any = await h(new Map());
 		expect(result.passed).toBe(true);
 	});
@@ -1154,6 +1100,7 @@ describe("Airgent — Pipeline Handlers", () => {
 			overallHealth: "healthy",
 		}));
 		const h = handlers.get("validate")!;
+		// biome-ignore lint/suspicious/noExplicitAny: handler returns dynamic type
 		const result: any = await h(new Map());
 		expect(result.overallHealth).toBe("healthy");
 	});
@@ -1178,11 +1125,10 @@ describe("Airgent — Pipeline Handlers", () => {
 
 	test("report handler organizes and compresses", async () => {
 		const h = handlers.get("report")!;
+		// biome-ignore lint/suspicious/noExplicitAny: handler returns dynamic type
 		const result: any = await h(new Map());
 		expect(mocks.memoryOrganizer.organize).toHaveBeenCalledWith("sess-1");
-		expect(mocks.compressionManager.compressSession).toHaveBeenCalledWith(
-			"sess-1",
-		);
+		expect(mocks.compressionManager.compressSession).toHaveBeenCalledWith("sess-1");
 		expect(result.status).toBe("completed");
 	});
 
@@ -1251,12 +1197,7 @@ describe("Airgent — Streaming (streamNodeOutput)", () => {
 		});
 		const model: ModelEntry = { provider: "test", model: "gpt-4" };
 		const msgs = [{ role: "user" as const, content: "hi" }];
-		const result = await agent.streamNodeOutput(
-			model,
-			msgs,
-			"test-node",
-			"plan",
-		);
+		const result = await agent.streamNodeOutput(model, msgs, "test-node", "plan");
 		expect(result).toBe("hello world");
 		expect(agent.pipelineData.plan).toBe("hello world");
 	});
@@ -1275,7 +1216,8 @@ describe("Airgent — Streaming (streamNodeOutput)", () => {
 	});
 
 	test("streamNodeOutput falls back to non-streaming on error", async () => {
-		mocks.api.streamChat = mock(function* () {
+		mocks.api.streamChat = mock(async function* () {
+			yield "";
 			throw new Error("stream failed");
 		});
 		mocks.api.chat = mock(() => ({ content: "fallback" }));

@@ -94,12 +94,8 @@ export class Storage {
         token_count INTEGER DEFAULT 0
       )
     `);
-		this.db.exec(
-			"CREATE INDEX IF NOT EXISTS idx_raw_session ON raw_logs(session_id)",
-		);
-		this.db.exec(
-			"CREATE INDEX IF NOT EXISTS idx_raw_ts ON raw_logs(timestamp)",
-		);
+		this.db.exec("CREATE INDEX IF NOT EXISTS idx_raw_session ON raw_logs(session_id)");
+		this.db.exec("CREATE INDEX IF NOT EXISTS idx_raw_ts ON raw_logs(timestamp)");
 
 		// Structured memories
 		this.db.exec(`
@@ -119,9 +115,7 @@ export class Storage {
         updated INTEGER NOT NULL
       )
     `);
-		this.db.exec(
-			"CREATE INDEX IF NOT EXISTS idx_mem_session ON memories(session_id)",
-		);
+		this.db.exec("CREATE INDEX IF NOT EXISTS idx_mem_session ON memories(session_id)");
 
 		// Evidence entries
 		this.db.exec(`
@@ -135,9 +129,7 @@ export class Storage {
         FOREIGN KEY (memory_id) REFERENCES memories(id) ON DELETE CASCADE
       )
     `);
-		this.db.exec(
-			"CREATE INDEX IF NOT EXISTS idx_ev_memory ON evidence(memory_id)",
-		);
+		this.db.exec("CREATE INDEX IF NOT EXISTS idx_ev_memory ON evidence(memory_id)");
 
 		// Memory links
 		this.db.exec(`
@@ -151,9 +143,7 @@ export class Storage {
         FOREIGN KEY (target_id) REFERENCES memories(id) ON DELETE CASCADE
       )
     `);
-		this.db.exec(
-			"CREATE INDEX IF NOT EXISTS idx_link_source ON memory_links(source_id)",
-		);
+		this.db.exec("CREATE INDEX IF NOT EXISTS idx_link_source ON memory_links(source_id)");
 
 		// Memory tags (for efficient tag-based search)
 		this.db.exec(`
@@ -164,9 +154,7 @@ export class Storage {
         FOREIGN KEY (memory_id) REFERENCES memories(id) ON DELETE CASCADE
       )
     `);
-		this.db.exec(
-			"CREATE INDEX IF NOT EXISTS idx_mem_tags_tag ON memory_tags(tag)",
-		);
+		this.db.exec("CREATE INDEX IF NOT EXISTS idx_mem_tags_tag ON memory_tags(tag)");
 
 		// Sessions
 		this.db.exec(`
@@ -193,9 +181,7 @@ export class Storage {
         FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE
       )
     `);
-		this.db.exec(
-			"CREATE INDEX IF NOT EXISTS idx_sm_session ON session_messages(session_id)",
-		);
+		this.db.exec("CREATE INDEX IF NOT EXISTS idx_sm_session ON session_messages(session_id)");
 
 		// Compressed entries
 		this.db.exec(`
@@ -214,9 +200,7 @@ export class Storage {
         compressed_content TEXT NOT NULL
       )
     `);
-		this.db.exec(
-			"CREATE INDEX IF NOT EXISTS idx_comp_topics ON compressed_entries(topics)",
-		);
+		this.db.exec("CREATE INDEX IF NOT EXISTS idx_comp_topics ON compressed_entries(topics)");
 		this.db.exec(
 			"CREATE INDEX IF NOT EXISTS idx_comp_importance ON compressed_entries(importance_score)",
 		);
@@ -249,9 +233,7 @@ export class Storage {
 
 	getRawLogs(sessionId: string, limit = 100): RawLogRow[] {
 		return this.db
-			.prepare(
-				"SELECT * FROM raw_logs WHERE session_id = ? ORDER BY timestamp DESC LIMIT ?",
-			)
+			.prepare("SELECT * FROM raw_logs WHERE session_id = ? ORDER BY timestamp DESC LIMIT ?")
 			.all(sessionId, limit) as RawLogRow[];
 	}
 
@@ -298,9 +280,7 @@ export class Storage {
 
 		// Insert tags into memory_tags junction table for efficient search
 		if (m.tags.length > 0) {
-			const stmt = this.db.prepare(
-				"INSERT INTO memory_tags (memory_id, tag) VALUES (?, ?)",
-			);
+			const stmt = this.db.prepare("INSERT INTO memory_tags (memory_id, tag) VALUES (?, ?)");
 			for (const tag of m.tags) {
 				stmt.run(m.id, tag);
 			}
@@ -308,9 +288,7 @@ export class Storage {
 	}
 
 	getMemory(id: string): MemoryRow | null {
-		return this.db
-			.prepare("SELECT * FROM memories WHERE id = ?")
-			.get(id) as MemoryRow | null;
+		return this.db.prepare("SELECT * FROM memories WHERE id = ?").get(id) as MemoryRow | null;
 	}
 
 	searchMemories(tags: string[], minConfidence = 0.3): MemoryRow[] {
@@ -345,9 +323,7 @@ export class Storage {
 		})[];
 	}
 
-	getMemoryLinks(
-		memoryId: string,
-	): Array<{ type: string; target: string; confidence: number }> {
+	getMemoryLinks(memoryId: string): Array<{ type: string; target: string; confidence: number }> {
 		return this.db
 			.prepare(`
       SELECT type, target_id as target, confidence
@@ -467,15 +443,11 @@ export class Storage {
 	}
 
 	getSession(id: string): SessionRow | null {
-		return this.db
-			.prepare("SELECT * FROM sessions WHERE id = ?")
-			.get(id) as SessionRow | null;
+		return this.db.prepare("SELECT * FROM sessions WHERE id = ?").get(id) as SessionRow | null;
 	}
 
 	getActiveSessions(): SessionRow[] {
-		return this.db
-			.prepare("SELECT * FROM sessions WHERE status = 'active'")
-			.all() as SessionRow[];
+		return this.db.prepare("SELECT * FROM sessions WHERE status = 'active'").all() as SessionRow[];
 	}
 
 	addSessionMessage(
@@ -572,9 +544,9 @@ export class Storage {
 	}
 
 	getMetadata(key: string): string | null {
-		const row = this.db
-			.prepare("SELECT value FROM metadata WHERE key = ?")
-			.get(key) as { value: string } | null;
+		const row = this.db.prepare("SELECT value FROM metadata WHERE key = ?").get(key) as {
+			value: string;
+		} | null;
 		return row?.value || null;
 	}
 
@@ -631,9 +603,10 @@ export class Storage {
 	}
 
 	getAllMetadata(): Record<string, string> {
-		const rows = this.db
-			.prepare("SELECT key, value FROM metadata")
-			.all() as Array<{ key: string; value: string }>;
+		const rows = this.db.prepare("SELECT key, value FROM metadata").all() as Array<{
+			key: string;
+			value: string;
+		}>;
 		const result: Record<string, string> = {};
 		for (const row of rows) result[row.key] = row.value;
 		return result;

@@ -6,15 +6,7 @@
  * Does NOT use mock.module (avoids process-global leakage).
  */
 
-import {
-	afterAll,
-	beforeAll,
-	beforeEach,
-	describe,
-	expect,
-	mock,
-	test,
-} from "bun:test";
+import { afterAll, beforeAll, beforeEach, describe, expect, mock, test } from "bun:test";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
@@ -34,9 +26,7 @@ let realStorage: StorageType;
 const ORIGINAL_SPAWN_SYNC = Bun.spawnSync;
 
 // Helper: create a spawn mock that returns success by default
-function createSpawnMock(
-	overrides?: Partial<ReturnType<typeof Bun.spawnSync>>,
-) {
+function createSpawnMock(overrides?: Partial<ReturnType<typeof Bun.spawnSync>>) {
 	return mock((..._args: any[]) => ({
 		exitCode: 0,
 		stdout: Buffer.from(""),
@@ -210,10 +200,7 @@ describe("DeviceSync", () => {
 			sessions: [{ id: "s1", summary: "active" }],
 			exportedAt: new Date().toISOString(),
 		};
-		fs.writeFileSync(
-			path.join(SYNC_DIR, "export.json"),
-			JSON.stringify(exportData),
-		);
+		fs.writeFileSync(path.join(SYNC_DIR, "export.json"), JSON.stringify(exportData));
 
 		const sync = new DeviceSync(realStorage, SYNC_DIR);
 		sync.pull();

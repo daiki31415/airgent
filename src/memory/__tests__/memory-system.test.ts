@@ -344,9 +344,7 @@ describe("MemorySystem", () => {
 		});
 
 		const results = ms.findRelevant(["test"]);
-		expect(results[0]?.confidence).toBeGreaterThanOrEqual(
-			results[1]?.confidence,
-		);
+		expect(results[0]?.confidence).toBeGreaterThanOrEqual(results[1]?.confidence);
 	});
 
 	test("createMemory with empty evidence stores no evidence", () => {
@@ -398,9 +396,7 @@ describe("MemorySystem", () => {
 			rootCause: "",
 			fix: "",
 			reason: "",
-			evidence: [
-				{ type: "observed", content: "crash", source: "log", timestamp: 0 },
-			],
+			evidence: [{ type: "observed", content: "crash", source: "log", timestamp: 0 }],
 			confidence: 0.8,
 			tags: ["crash", "null"],
 			files: [],
@@ -473,9 +469,7 @@ describe("MemorySystem", () => {
 			rootCause: "",
 			fix: "",
 			reason: "",
-			evidence: [
-				{ type: "observed", content: "ev", source: "log", timestamp: 0 },
-			],
+			evidence: [{ type: "observed", content: "ev", source: "log", timestamp: 0 }],
 			confidence: 0.5,
 			tags: [],
 			files: [],

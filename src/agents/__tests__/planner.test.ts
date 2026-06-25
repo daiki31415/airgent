@@ -65,7 +65,7 @@ describe("PlannerAgent.constructor", () => {
 	test("stores model parameter", () => {
 		const model = mockModel();
 		const agent = new PlannerAgent(model, createApi(""));
-		expect((agent as any).model).toEqual(model);
+		expect(agent.getModel()).toEqual(model);
 	});
 });
 
@@ -74,17 +74,14 @@ describe("PlannerAgent.init", () => {
 		const agent = new PlannerAgent(mockModel(), createApi(""));
 		const ctx = sampleContext();
 		agent.init(ctx);
-		expect((agent as any).context).not.toBeNull();
-		expect((agent as any).context?.sessionId).toBe("planner-session");
+		expect(agent.getContext()).not.toBeNull();
+		expect(agent.getContext()?.sessionId).toBe("planner-session");
 	});
 });
 
 describe("PlannerAgent.selectNodes", () => {
 	test("returns generate and report always even when LLM omits them", async () => {
-		const agent = new PlannerAgent(
-			mockModel(),
-			createApi("clarify, plan, test, validate"),
-		);
+		const agent = new PlannerAgent(mockModel(), createApi("clarify, plan, test, validate"));
 		agent.init(sampleContext());
 
 		const nodes = await agent.selectNodes("some task");
@@ -102,37 +99,22 @@ describe("PlannerAgent.selectNodes", () => {
 
 		const nodes = await agent.selectNodes("build login");
 		expect(nodes).toHaveLength(6);
-		expect(nodes).toEqual([
-			"clarify",
-			"plan",
-			"generate",
-			"test",
-			"validate",
-			"report",
-		]);
+		expect(nodes).toEqual(["clarify", "plan", "generate", "test", "validate", "report"]);
 	});
 
 	test("handles spaces around commas", async () => {
-		const agent = new PlannerAgent(
-			mockModel(),
-			createApi("  clarify ,   plan , generate "),
-		);
+		const agent = new PlannerAgent(mockModel(), createApi("  clarify ,   plan , generate "));
 		agent.init(sampleContext());
 
 		const nodes = await agent.selectNodes("task");
 		expect(nodes).toContain("clarify");
 		expect(nodes).toContain("plan");
 		// generate + report are always added
-		expect(
-			nodes.every((n) => ["clarify", "plan", "generate", "report"].includes(n)),
-		);
+		expect(nodes.every((n) => ["clarify", "plan", "generate", "report"].includes(n)));
 	});
 
 	test("deduplicates nodes", async () => {
-		const agent = new PlannerAgent(
-			mockModel(),
-			createApi("generate, generate, plan, generate"),
-		);
+		const agent = new PlannerAgent(mockModel(), createApi("generate, generate, plan, generate"));
 		agent.init(sampleContext());
 
 		const nodes = await agent.selectNodes("task");
@@ -141,24 +123,18 @@ describe("PlannerAgent.selectNodes", () => {
 	});
 
 	test("filters out invalid node names", async () => {
-		const agent = new PlannerAgent(
-			mockModel(),
-			createApi("clarify, invalid, garbage, plan"),
-		);
+		const agent = new PlannerAgent(mockModel(), createApi("clarify, invalid, garbage, plan"));
 		agent.init(sampleContext());
 
 		const nodes = await agent.selectNodes("task");
-		expect(nodes).not.toContain("invalid" as any);
-		expect(nodes).not.toContain("garbage" as any);
+		expect(nodes).not.toContain("invalid");
+		expect(nodes).not.toContain("garbage");
 		expect(nodes).toContain("clarify");
 		expect(nodes).toContain("plan");
 	});
 
 	test("lowercases all node names", async () => {
-		const agent = new PlannerAgent(
-			mockModel(),
-			createApi("CLARIFY, PLAN, GENERATE"),
-		);
+		const agent = new PlannerAgent(mockModel(), createApi("CLARIFY, PLAN, GENERATE"));
 		agent.init(sampleContext());
 
 		const nodes = await agent.selectNodes("task");
@@ -217,12 +193,11 @@ describe("PlannerAgent.selectNodes", () => {
 		await agent.selectNodes("my task description");
 
 		expect(api.chat).toHaveBeenCalledTimes(1);
+		// biome-ignore lint/suspicious/noExplicitAny: accessing mock internals from bun:test
 		const callArgs = (api.chat as any).mock.calls[0];
 		const promptText = callArgs[1][1].content;
 		expect(promptText).toContain("my task description");
-		expect(promptText).toContain(
-			"clarify, plan, generate, test, validate, report",
-		);
+		expect(promptText).toContain("clarify, plan, generate, test, validate, report");
 	});
 
 	test("selectNodes with partial match returns valid subset", async () => {
@@ -240,10 +215,7 @@ describe("PlannerAgent.selectNodes", () => {
 
 describe("PlannerAgent.analyzeTask", () => {
 	test("returns PipelineNode[] from selectNodes", async () => {
-		const agent = new PlannerAgent(
-			mockModel(),
-			createApi("plan, generate, test, report"),
-		);
+		const agent = new PlannerAgent(mockModel(), createApi("plan, generate, test, report"));
 		agent.init(sampleContext());
 
 		const nodes = await agent.analyzeTask("build feature X");
@@ -268,10 +240,7 @@ describe("PlannerAgent.analyzeTask", () => {
 	});
 
 	test("returns ordered list matching LLM selection plus mandatory", async () => {
-		const agent = new PlannerAgent(
-			mockModel(),
-			createApi("plan, test, generate, report"),
-		);
+		const agent = new PlannerAgent(mockModel(), createApi("plan, test, generate, report"));
 		agent.init(sampleContext());
 
 		const nodes = await agent.analyzeTask("task");
@@ -282,10 +251,7 @@ describe("PlannerAgent.analyzeTask", () => {
 
 	test("handles very long task description", async () => {
 		const longTask = "a".repeat(10000);
-		const agent = new PlannerAgent(
-			mockModel(),
-			createApi("plan, generate, report"),
-		);
+		const agent = new PlannerAgent(mockModel(), createApi("plan, generate, report"));
 		agent.init(sampleContext());
 
 		const nodes = await agent.analyzeTask(longTask);
@@ -294,10 +260,7 @@ describe("PlannerAgent.analyzeTask", () => {
 	});
 
 	test("handles task description with special characters", async () => {
-		const agent = new PlannerAgent(
-			mockModel(),
-			createApi("plan, generate, report"),
-		);
+		const agent = new PlannerAgent(mockModel(), createApi("plan, generate, report"));
 		agent.init(sampleContext());
 
 		const nodes = await agent.analyzeTask(
@@ -325,6 +288,7 @@ describe("PlannerAgent.replan", () => {
 
 		await agent.replan("old plan", "error occurred");
 
+		// biome-ignore lint/suspicious/noExplicitAny: accessing mock internals from bun:test
 		const callArgs = (api.chat as any).mock.calls[0];
 		const promptText = callArgs[1][1].content;
 		expect(promptText).toContain("old plan");
@@ -381,6 +345,7 @@ describe("PlannerAgent model parameter", () => {
 		agent.init(sampleContext());
 
 		await agent.selectNodes("task");
+		// biome-ignore lint/suspicious/noExplicitAny: accessing mock internals from bun:test
 		const callArgs = (api.chat as any).mock.calls[0];
 		expect(callArgs[0]).toEqual(model);
 	});

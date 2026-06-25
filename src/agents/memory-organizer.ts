@@ -33,11 +33,16 @@ export class MemoryOrganizerAgent extends BaseAgent {
 	}
 
 	/**
+	 * Get the memory system.
+	 */
+	getMemorySystem(): MemorySystem {
+		return this.memorySystem;
+	}
+
+	/**
 	 * Organize raw logs for a session into structured memories.
 	 */
-	async organize(
-		sessionId: string,
-	): Promise<{ count: number; memories: string[] }> {
+	async organize(sessionId: string): Promise<{ count: number; memories: string[] }> {
 		const rawLogs = this.memorySystem.getRawLogsBySession(sessionId);
 		if (rawLogs.length === 0) {
 			this.logger.info("No raw logs to organize");
@@ -145,36 +150,30 @@ export class MemoryOrganizerAgent extends BaseAgent {
 						rootCause: "",
 						fix: "",
 						reason: "",
-						evidenceItems: [
-							{ content: combinedLog.slice(0, 500), source: "log" },
-						],
+						evidenceItems: [{ content: combinedLog.slice(0, 500), source: "log" }],
 						files: [],
 						commands: [],
 					},
 				];
 	}
 
-	private classifyEvidence(content: string, source: string): EvidenceType {
+	protected classifyEvidence(content: string, source: string): EvidenceType {
 		const lower = content.toLowerCase();
 		const src = source.toLowerCase();
 
-		if (/test passed|verified|confirmed/.test(lower) || src === "test")
-			return "verified";
+		if (/test passed|verified|confirmed/.test(lower) || src === "test") return "verified";
 		if (
 			src === "log" ||
 			src === "console" ||
 			lower.includes("output:") ||
-			(!lower.includes("i think") &&
-				!lower.includes("probably") &&
-				!lower.includes("might"))
+			(!lower.includes("i think") && !lower.includes("probably") && !lower.includes("might"))
 		)
 			return "observed";
-		if (src === "llm" || src === "model" || src === "generated")
-			return "generated";
+		if (src === "llm" || src === "model" || src === "generated") return "generated";
 		return "inferred";
 	}
 
-	private calculateConfidence(evidence: EvidenceEntry[]): number {
+	protected calculateConfidence(evidence: EvidenceEntry[]): number {
 		if (evidence.length === 0) return 0.3;
 		const weights: Record<EvidenceType, number> = {
 			verified: 1.0,
@@ -186,11 +185,7 @@ export class MemoryOrganizerAgent extends BaseAgent {
 		return Math.min(total / evidence.length + 0.1, 1.0);
 	}
 
-	private extractTags(pattern: {
-		bug: string;
-		fix: string;
-		files: string[];
-	}): string[] {
+	protected extractTags(pattern: { bug: string; fix: string; files: string[] }): string[] {
 		const tags = new Set<string>();
 		for (const file of pattern.files) {
 			const ext = file.split(".").pop();

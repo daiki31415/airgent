@@ -52,11 +52,7 @@ export function registerPipelineHandlers(agent: PipelineHandle): void {
 
 		const parsed = safeParseJSON<{ goal?: string }>(content);
 		if (!parsed?.goal) {
-			agent.ui.log(
-				"warn",
-				"clarify",
-				"LLM returned invalid JSON for clarification",
-			);
+			agent.ui.log("warn", "clarify", "LLM returned invalid JSON for clarification");
 		}
 
 		agent.pipelineData.clarifiedTask = content;
@@ -105,9 +101,7 @@ export function registerPipelineHandlers(agent: PipelineHandle): void {
 		const parts = [
 			memoryStr ? `Relevant context:\n${memoryStr}` : "",
 			agent.pipelineData.plan ? `Approach:\n${agent.pipelineData.plan}` : "",
-			agent.pipelineData.clarifiedTask
-				? `Requirements:\n${agent.pipelineData.clarifiedTask}`
-				: "",
+			agent.pipelineData.clarifiedTask ? `Requirements:\n${agent.pipelineData.clarifiedTask}` : "",
 			`Task: ${agent.currentTask}`,
 		].filter(Boolean);
 		const generationPrompt = parts.join("\n\n");
@@ -126,18 +120,13 @@ export function registerPipelineHandlers(agent: PipelineHandle): void {
 		);
 		agent.pipelineData.generatedOutput = result.content;
 		if (!agent.config.settings.showPipelineProgress) {
-			agent.ui.log(
-				"info",
-				"generate",
-				`Generated: ${result.content.length} chars`,
-			);
+			agent.ui.log("info", "generate", `Generated: ${result.content.length} chars`);
 		}
 		return result;
 	});
 
 	agent.pipeline.registerHandler("test", async () => {
-		if (!agent.pipelineData.generatedOutput)
-			return { status: "skipped", reason: "no output" };
+		if (!agent.pipelineData.generatedOutput) return { status: "skipped", reason: "no output" };
 		const messages = [
 			{
 				role: "system" as const,
@@ -171,11 +160,7 @@ export function registerPipelineHandlers(agent: PipelineHandle): void {
 		}
 
 		if (!agent.config.settings.showPipelineProgress) {
-			agent.ui.log(
-				"info",
-				"test",
-				passed ? "No issues detected" : "Issues found",
-			);
+			agent.ui.log("info", "test", passed ? "No issues detected" : "Issues found");
 		}
 		return { content, passed };
 	});

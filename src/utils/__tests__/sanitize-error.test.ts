@@ -8,9 +8,7 @@ describe("sanitizeError", () => {
 	});
 
 	test("strips stack traces", () => {
-		const err = new Error(
-			"Top level\n    at foo (bar.ts:10)\n    at baz (qux.ts:20)",
-		);
+		const err = new Error("Top level\n    at foo (bar.ts:10)\n    at baz (qux.ts:20)");
 		const result = sanitizeError(err);
 		expect(result).toBe("Top level");
 		expect(result).not.toContain("at foo");
@@ -45,9 +43,7 @@ describe("sanitizeError", () => {
 
 	test("redacts home directory paths", () => {
 		const home = process.env.HOME || "/home/user";
-		const result = sanitizeError(
-			new Error(`Error at ${home}/project/src/file.ts:10`),
-		);
+		const result = sanitizeError(new Error(`Error at ${home}/project/src/file.ts:10`));
 		expect(result).toContain("~/project/src/file.ts:10");
 		expect(result).not.toContain(home);
 	});

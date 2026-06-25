@@ -6,21 +6,10 @@
  */
 
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import {
-	existsSync,
-	mkdirSync,
-	readFileSync,
-	rmSync,
-	writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const SKILLS_DIR = join(
-	process.env.HOME || "/tmp",
-	".config",
-	"Airgent",
-	"skills",
-);
+const SKILLS_DIR = join(process.env.HOME || "/tmp", ".config", "Airgent", "skills");
 
 const TEST_SKILLS = [
 	{
@@ -223,9 +212,7 @@ describe("SkillsManager", () => {
 	});
 
 	test("handles malformed index.json gracefully", () => {
-		const _backup = existsSync(INDEX_PATH)
-			? readFileSync(INDEX_PATH, "utf-8")
-			: "";
+		const _backup = existsSync(INDEX_PATH) ? readFileSync(INDEX_PATH, "utf-8") : "";
 		writeFileSync(INDEX_PATH, "not valid json", "utf-8");
 
 		const { SkillsManager } = require("../index");

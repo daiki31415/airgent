@@ -11,12 +11,7 @@ import { CompressionManager } from "../../compression";
 import { MemorySystem } from "../../memory";
 import { SkillsManager } from "../../skills";
 import { Storage } from "../../storage";
-import type {
-	AgentContext,
-	CompressedEntry,
-	ModelEntry,
-	OpenCodeResponse,
-} from "../../types";
+import type { AgentContext, CompressedEntry, ModelEntry, OpenCodeResponse } from "../../types";
 import { WorkerAgent } from "../worker";
 
 // ---------------------------------------------------------------------------
@@ -80,13 +75,7 @@ function createWorker(overrides?: {
 	const storage = createMockStorage();
 	const memorySystem = new MemorySystem(storage);
 
-	const worker = new WorkerAgent(
-		mockModel(),
-		api,
-		compression,
-		skills,
-		memorySystem,
-	);
+	const worker = new WorkerAgent(mockModel(), api, compression, skills, memorySystem);
 	return { worker, api, storage };
 }
 
@@ -116,7 +105,7 @@ describe("WorkerAgent.constructor", () => {
 
 	test("stores model parameter", () => {
 		const { worker } = createWorker();
-		expect((worker as any).model).toEqual(mockModel());
+		expect(worker.getModel()).toEqual(mockModel());
 	});
 });
 
@@ -124,8 +113,8 @@ describe("WorkerAgent.init", () => {
 	test("stores context from init call", () => {
 		const { worker } = createWorker();
 		worker.init(sampleContext());
-		expect((worker as any).context).not.toBeNull();
-		expect((worker as any).context?.sessionId).toBe("worker-session");
+		expect(worker.getContext()).not.toBeNull();
+		expect(worker.getContext()?.sessionId).toBe("worker-session");
 	});
 });
 
@@ -145,6 +134,7 @@ describe("WorkerAgent.execute (non-streaming)", () => {
 		await worker.execute("test prompt");
 
 		expect(api.chat).toHaveBeenCalledTimes(1);
+		// biome-ignore lint/suspicious/noExplicitAny: accessing mock internals from bun:test
 		const callArgs = (api.chat as any).mock.calls[0];
 		expect(callArgs[1][0].content).toBe("You are a coding assistant.");
 		expect(callArgs[1][1].content).toContain("test prompt");
@@ -181,6 +171,7 @@ describe("WorkerAgent.execute (non-streaming)", () => {
 
 		await worker.execute("do something");
 
+		// biome-ignore lint/suspicious/noExplicitAny: accessing mock internals from bun:test
 		const callArgs = (api.chat as any).mock.calls[0];
 		const fullPrompt = callArgs[1][1].content;
 		expect(fullPrompt).toContain("do something");
@@ -298,16 +289,14 @@ describe("WorkerAgent error handling", () => {
 				usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
 			}));
 			streamChat = mock(async function* (): AsyncGenerator<string> {
+				yield "";
 				throw new Error("Stream failure");
-				yield "never"; // unreachable
 			});
 		})();
 		const { worker } = createWorker({ api });
 		worker.init(sampleContext());
 
-		expect(worker.execute("fail stream", () => {})).rejects.toThrow(
-			"Stream failure",
-		);
+		expect(worker.execute("fail stream", () => {})).rejects.toThrow("Stream failure");
 	});
 
 	test("throws if not initialized", async () => {
@@ -317,9 +306,7 @@ describe("WorkerAgent error handling", () => {
 
 	test("throws if not initialized with streaming", async () => {
 		const { worker } = createWorker();
-		expect(worker.execute("nope", () => {})).rejects.toThrow(
-			"Agent not initialized",
-		);
+		expect(worker.execute("nope", () => {})).rejects.toThrow("Agent not initialized");
 	});
 });
 
@@ -327,7 +314,7 @@ describe("WorkerAgent with context enhancement", () => {
 	test("includes compressed context in prompt when available", async () => {
 		const compression = new (class extends CompressionManager {
 			constructor() {
-				super(null as any, null as any);
+				super(null as unknown as MemorySystem, null as unknown as Storage);
 			}
 			override findForDecompression() {
 				return [
@@ -353,6 +340,7 @@ describe("WorkerAgent with context enhancement", () => {
 
 		await worker.execute("bug: TypeError in src/auth.ts");
 
+		// biome-ignore lint/suspicious/noExplicitAny: accessing mock internals from bun:test
 		const callArgs = (api.chat as any).mock.calls[0];
 		const fullPrompt = callArgs[1][1].content;
 		expect(fullPrompt).toContain("Auth fix");
@@ -365,6 +353,7 @@ describe("WorkerAgent with context enhancement", () => {
 
 		await worker.execute("simple task");
 
+		// biome-ignore lint/suspicious/noExplicitAny: accessing mock internals from bun:test
 		const callArgs = (api.chat as any).mock.calls[0];
 		const fullPrompt = callArgs[1][1].content;
 		// Should not contain "Relevant past context" header

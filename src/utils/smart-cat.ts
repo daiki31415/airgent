@@ -10,10 +10,9 @@ import { gunzipSync } from "node:zlib";
  * than captured at module load time.
  */
 export function getAllowedDirs(): string[] {
-	return [
-		resolve(process.cwd()),
-		...(process.env.HOME ? [process.env.HOME] : []),
-	].map((d) => normalize(resolve(d)));
+	return [resolve(process.cwd()), ...(process.env.HOME ? [process.env.HOME] : [])].map((d) =>
+		normalize(resolve(d)),
+	);
 }
 
 const ARCHIVE_EXTS = [".zip", ".7z", ".rar", ".tar", ".tgz"];
@@ -23,8 +22,7 @@ const UNSUPPORTED_COMPRESSION_EXTS = [".xz", ".bz2", ".lzma"];
 function archiveExtension(file: string): boolean {
 	const lower = file.toLowerCase();
 	return (
-		ARCHIVE_EXTS.some((ext) => lower.endsWith(ext)) ||
-		/\.(tar\.gz|tar\.xz|tar\.bz2)$/.test(lower)
+		ARCHIVE_EXTS.some((ext) => lower.endsWith(ext)) || /\.(tar\.gz|tar\.xz|tar\.bz2)$/.test(lower)
 	);
 }
 
@@ -94,9 +92,7 @@ export function smartCat(
 	if (options?.lineNumbers) {
 		const lines = output.split("\n");
 		const width = String(lines.length).length;
-		output = lines
-			.map((line, i) => `${String(i + 1).padStart(width)}: ${line}`)
-			.join("\n");
+		output = lines.map((line, i) => `${String(i + 1).padStart(width)}: ${line}`).join("\n");
 	}
 
 	return output;

@@ -3,13 +3,7 @@ import { writeFileSync as _writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-export type CopyMethod =
-	| "osc52"
-	| "xclip"
-	| "wl-copy"
-	| "pbcopy"
-	| "xsel"
-	| "file";
+export type CopyMethod = "osc52" | "xclip" | "wl-copy" | "pbcopy" | "xsel" | "file";
 
 export interface CopyResult {
 	success: boolean;

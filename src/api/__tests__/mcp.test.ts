@@ -3,20 +3,14 @@ import { OpenCodeAPI } from "../opencode";
 
 const originalFetch = globalThis.fetch;
 
-function mockFetch(
-	status: number,
-	body: unknown,
-	headers?: Record<string, string>,
-): void {
+function mockFetch(status: number, body: unknown, headers?: Record<string, string>): void {
 	globalThis.fetch = (async (_url: string, _init?: RequestInit) => {
 		return {
 			ok: status >= 200 && status < 300,
 			status,
 			json: async () => body,
 			text: async () => JSON.stringify(body),
-			headers: new Map(
-				Object.entries(headers || { "content-type": "application/json" }),
-			),
+			headers: new Map(Object.entries(headers || { "content-type": "application/json" })),
 		} as unknown as Response;
 	}) as typeof fetch;
 }
@@ -74,9 +68,9 @@ describe("OpenCodeAPI MCP", () => {
 
 	test("addMCP throws on non-ok", async () => {
 		mockFetch(400, { error: "bad request" });
-		expect(
-			api.addMCP("bad", { type: "local", command: ["bad"], enabled: true }),
-		).rejects.toThrow("Failed to add MCP server");
+		expect(api.addMCP("bad", { type: "local", command: ["bad"], enabled: true })).rejects.toThrow(
+			"Failed to add MCP server",
+		);
 	});
 
 	test("addMCP sends remote server config", async () => {
@@ -115,9 +109,7 @@ describe("OpenCodeAPI MCP", () => {
 
 	test("connectMCP throws on non-ok", async () => {
 		mockFetch(404, {});
-		expect(api.connectMCP("nonexistent")).rejects.toThrow(
-			"Failed to connect MCP server",
-		);
+		expect(api.connectMCP("nonexistent")).rejects.toThrow("Failed to connect MCP server");
 	});
 
 	test("disconnectMCP sends POST and returns void on success", async () => {
@@ -137,9 +129,7 @@ describe("OpenCodeAPI MCP", () => {
 
 	test("disconnectMCP throws on non-ok", async () => {
 		mockFetch(500, {});
-		expect(api.disconnectMCP("broken")).rejects.toThrow(
-			"Failed to disconnect MCP server",
-		);
+		expect(api.disconnectMCP("broken")).rejects.toThrow("Failed to disconnect MCP server");
 	});
 
 	test("listMCP returns empty object for no servers", async () => {
@@ -250,9 +240,9 @@ describe("OpenCodeAPI MCP", () => {
 
 	test("addMCP throws on 403 forbidden", async () => {
 		mockFetch(403, { error: "forbidden" });
-		expect(
-			api.addMCP("bad", { type: "local", command: ["bad"], enabled: true }),
-		).rejects.toThrow("Failed to add MCP server");
+		expect(api.addMCP("bad", { type: "local", command: ["bad"], enabled: true })).rejects.toThrow(
+			"Failed to add MCP server",
+		);
 	});
 
 	test("connectMCP with special characters in name", async () => {

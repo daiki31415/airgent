@@ -55,14 +55,7 @@ function minimalConfig(overrides?: Partial<AirgentConfig>): AirgentConfig {
 }
 
 describe("PromptManager.buildNodePrompt", () => {
-	const nodeTypes = [
-		"clarify",
-		"plan",
-		"generate",
-		"test",
-		"validate",
-		"report",
-	];
+	const nodeTypes = ["clarify", "plan", "generate", "test", "validate", "report"];
 
 	for (const node of nodeTypes) {
 		test(`returns string for node type: ${node}`, () => {

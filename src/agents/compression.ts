@@ -11,6 +11,7 @@ import { BaseAgent } from "./base";
 
 export class CompressionAgent extends BaseAgent {
 	private compressionManager: CompressionManager;
+	private memorySystem: MemorySystem;
 
 	constructor(
 		model: import("../types").ModelEntry,
@@ -23,6 +24,20 @@ export class CompressionAgent extends BaseAgent {
 		this.memorySystem = memorySystem;
 	}
 
+	/**
+	 * Get the compression manager.
+	 */
+	getCompressionManager(): CompressionManager {
+		return this.compressionManager;
+	}
+
+	/**
+	 * Get the memory system.
+	 */
+	getMemorySystem(): MemorySystem {
+		return this.memorySystem;
+	}
+
 	async compress(
 		messages: AgentMessage[],
 		threshold = 0.7,
@@ -33,17 +48,11 @@ export class CompressionAgent extends BaseAgent {
 		compressedCount: number;
 		reduction: string;
 	}> {
-		const totalTokens = messages.reduce(
-			(sum, m) => sum + this.estimateTokens(m.content),
-			0,
-		);
-		const maxTokens =
-			(this.context?.state?.maxContextTokens as number) || 32000;
+		const totalTokens = messages.reduce((sum, m) => sum + this.estimateTokens(m.content), 0);
+		const maxTokens = (this.context?.state?.maxContextTokens as number) || 32000;
 		const usageRatio = totalTokens / maxTokens;
 
-		this.logger.info(
-			`Context: ${totalTokens}/${maxTokens} (${(usageRatio * 100).toFixed(1)}%)`,
-		);
+		this.logger.info(`Context: ${totalTokens}/${maxTokens} (${(usageRatio * 100).toFixed(1)}%)`);
 
 		if (usageRatio < threshold) {
 			return {
@@ -63,9 +72,7 @@ export class CompressionAgent extends BaseAgent {
 			entries.push(entry);
 		}
 
-		this.logger.info(
-			`Compressed ${messages.length} -> ${entries.length} entries`,
-		);
+		this.logger.info(`Compressed ${messages.length} -> ${entries.length} entries`);
 		return {
 			compressed: true,
 			entries,

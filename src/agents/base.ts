@@ -32,6 +32,27 @@ export abstract class BaseAgent {
 	}
 
 	/**
+	 * Get the current model configuration.
+	 */
+	getModel(): ModelEntry {
+		return this.model;
+	}
+
+	/**
+	 * Get the API instance.
+	 */
+	getApi(): OpenCodeAPI {
+		return this.api;
+	}
+
+	/**
+	 * Get the current context.
+	 */
+	getContext(): AgentContext | null {
+		return this.context;
+	}
+
+	/**
 	 * Send a prompt to the model and get the response text.
 	 */
 	protected async think(prompt: string): Promise<string> {

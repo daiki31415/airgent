@@ -24,9 +24,7 @@ describe("resolveSafePath", () => {
 	});
 
 	test("throws on non-existent file", () => {
-		expect(() => resolveSafePath(join(tmpDir, "nonexistent.txt"))).toThrow(
-			"File not found",
-		);
+		expect(() => resolveSafePath(join(tmpDir, "nonexistent.txt"))).toThrow("File not found");
 	});
 
 	test("throws on path traversal attempt", () => {
@@ -87,9 +85,7 @@ describe("resolveSafePath", () => {
 
 	test("throws on path with null byte", () => {
 		// null byte gets treated as part of a non-existent filename
-		expect(() => resolveSafePath("safe.txt\0")).toThrow(
-			/File not found|Access denied/,
-		);
+		expect(() => resolveSafePath("safe.txt\0")).toThrow(/File not found|Access denied/);
 	});
 
 	test("throws on symlink pointing outside allowed dirs", () => {

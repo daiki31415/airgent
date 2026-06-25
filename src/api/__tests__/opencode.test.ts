@@ -34,11 +34,7 @@ function resetCapture(): void {
  * Install a simple static mock for all fetch calls.
  * Captures the first call's url/method/headers/body.
  */
-function mockFetch(
-	status: number,
-	body: unknown,
-	responseHeaders?: Record<string, string>,
-): void {
+function mockFetch(status: number, body: unknown, responseHeaders?: Record<string, string>): void {
 	globalThis.fetch = (async (url: string, init?: RequestInit) => {
 		if (!capture.url) {
 			capture.url = url;
@@ -53,11 +49,7 @@ function mockFetch(
 			status,
 			json: async () => body,
 			text: async () => JSON.stringify(body),
-			headers: new Map(
-				Object.entries(
-					responseHeaders || { "content-type": "application/json" },
-				),
-			),
+			headers: new Map(Object.entries(responseHeaders || { "content-type": "application/json" })),
 		} as unknown as Response;
 	}) as typeof fetch;
 }
@@ -91,11 +83,7 @@ function mockFetchSequence(
 			status: h.status,
 			json: async () => h.body,
 			text: async () => JSON.stringify(h.body),
-			headers: new Map(
-				Object.entries(
-					h.responseHeaders || { "content-type": "application/json" },
-				),
-			),
+			headers: new Map(Object.entries(h.responseHeaders || { "content-type": "application/json" })),
 		} as unknown as Response;
 	}) as typeof fetch;
 }
@@ -253,9 +241,7 @@ describe("OpenCodeAPI sessions", () => {
 	test("deleteSession throws on non-ok", async () => {
 		mockFetch(500, {});
 		const api = new OpenCodeAPI();
-		expect(api.deleteSession("bad-sess")).rejects.toThrow(
-			"Failed to delete session",
-		);
+		expect(api.deleteSession("bad-sess")).rejects.toThrow("Failed to delete session");
 	});
 
 	test("abortSession sends POST", async () => {
@@ -291,11 +277,7 @@ describe("OpenCodeAPI messages", () => {
 			parts: [],
 		});
 		const api = new OpenCodeAPI();
-		await api.sendMessage(
-			"sess-1",
-			{ providerID: "openai", modelID: "gpt-4" },
-			"test prompt",
-		);
+		await api.sendMessage("sess-1", { providerID: "openai", modelID: "gpt-4" }, "test prompt");
 		expect(capture.method).toBe("POST");
 		expect(capture.body).toMatchObject({
 			parts: [{ type: "text", text: "test prompt" }],
@@ -308,12 +290,9 @@ describe("OpenCodeAPI messages", () => {
 			parts: [],
 		});
 		const api = new OpenCodeAPI();
-		await api.sendMessage(
-			"s1",
-			{ providerID: "openai", modelID: "gpt-4" },
-			"Hi",
-			{ system: "Be helpful" },
-		);
+		await api.sendMessage("s1", { providerID: "openai", modelID: "gpt-4" }, "Hi", {
+			system: "Be helpful",
+		});
 		expect((capture.body as any).system).toBe("Be helpful");
 	});
 
@@ -321,11 +300,7 @@ describe("OpenCodeAPI messages", () => {
 		mockFetch(500, { error: "server error" });
 		const api = new OpenCodeAPI();
 		expect(
-			api.sendMessage(
-				"sess-1",
-				{ providerID: "openai", modelID: "gpt-4" },
-				"Hi",
-			),
+			api.sendMessage("sess-1", { providerID: "openai", modelID: "gpt-4" }, "Hi"),
 		).rejects.toThrow("Failed to send message");
 	});
 
@@ -440,8 +415,7 @@ describe("OpenCodeAPI.chat", () => {
 		let call = 0;
 		globalThis.fetch = (async (url: string, init?: RequestInit) => {
 			call++;
-			if (call === 2)
-				sentBody = init?.body ? JSON.parse(init.body as string) : null;
+			if (call === 2) sentBody = init?.body ? JSON.parse(init.body as string) : null;
 			return origFetch(url, init);
 		}) as typeof fetch;
 
@@ -534,17 +508,13 @@ describe("OpenCodeAPI.chat", () => {
 
 	test("throws when no user message in input", async () => {
 		const api = new OpenCodeAPI();
-		expect(
-			api.chat({ provider: "openai", model: "gpt-4" }, []),
-		).rejects.toThrow("No user message");
+		expect(api.chat({ provider: "openai", model: "gpt-4" }, [])).rejects.toThrow("No user message");
 	});
 
 	test("throws when only system message provided", async () => {
 		const api = new OpenCodeAPI();
 		expect(
-			api.chat({ provider: "openai", model: "gpt-4" }, [
-				{ role: "system", content: "be nice" },
-			]),
+			api.chat({ provider: "openai", model: "gpt-4" }, [{ role: "system", content: "be nice" }]),
 		).rejects.toThrow("No user message");
 	});
 
@@ -638,10 +608,9 @@ describe("OpenCodeAPI.streamChat", () => {
 
 		const api = new OpenCodeAPI();
 		const chunks: string[] = [];
-		for await (const c of api.streamChat(
-			{ provider: "openai", model: "gpt-4" },
-			[{ role: "user", content: "Hi" }],
-		)) {
+		for await (const c of api.streamChat({ provider: "openai", model: "gpt-4" }, [
+			{ role: "user", content: "Hi" },
+		])) {
 			chunks.push(c);
 		}
 		expect(chunks.join("")).toBe("Hello World");
@@ -678,10 +647,9 @@ describe("OpenCodeAPI.streamChat", () => {
 
 		const api = new OpenCodeAPI();
 		const chunks: string[] = [];
-		for await (const c of api.streamChat(
-			{ provider: "openai", model: "gpt-4" },
-			[{ role: "user", content: "Hi" }],
-		)) {
+		for await (const c of api.streamChat({ provider: "openai", model: "gpt-4" }, [
+			{ role: "user", content: "Hi" },
+		])) {
 			chunks.push(c);
 		}
 		expect(chunks).toContain("from content");
@@ -734,10 +702,9 @@ describe("OpenCodeAPI.streamChat", () => {
 
 		const api = new OpenCodeAPI();
 		const chunks: string[] = [];
-		for await (const c of api.streamChat(
-			{ provider: "openai", model: "gpt-4" },
-			[{ role: "user", content: "Hi" }],
-		)) {
+		for await (const c of api.streamChat({ provider: "openai", model: "gpt-4" }, [
+			{ role: "user", content: "Hi" },
+		])) {
 			chunks.push(c);
 		}
 		expect(chunks).toContain("Fallback response");
@@ -784,10 +751,9 @@ describe("OpenCodeAPI.streamChat", () => {
 
 		const api = new OpenCodeAPI();
 		const chunks: string[] = [];
-		for await (const c of api.streamChat(
-			{ provider: "openai", model: "gpt-4" },
-			[{ role: "user", content: "Hi" }],
-		)) {
+		for await (const c of api.streamChat({ provider: "openai", model: "gpt-4" }, [
+			{ role: "user", content: "Hi" },
+		])) {
 			chunks.push(c);
 		}
 		expect(chunks).toContain("No reader fallback");
@@ -828,10 +794,9 @@ describe("OpenCodeAPI.streamChat", () => {
 
 		const api = new OpenCodeAPI();
 		const chunks: string[] = [];
-		for await (const c of api.streamChat(
-			{ provider: "openai", model: "gpt-4" },
-			[{ role: "user", content: "Hi" }],
-		)) {
+		for await (const c of api.streamChat({ provider: "openai", model: "gpt-4" }, [
+			{ role: "user", content: "Hi" },
+		])) {
 			chunks.push(c);
 		}
 		expect(chunks).toContain("Error fallback");
@@ -866,10 +831,9 @@ describe("OpenCodeAPI.streamChat", () => {
 
 		const api = new OpenCodeAPI();
 		const chunks: string[] = [];
-		for await (const c of api.streamChat(
-			{ provider: "openai", model: "gpt-4" },
-			[{ role: "user", content: "Hi" }],
-		)) {
+		for await (const c of api.streamChat({ provider: "openai", model: "gpt-4" }, [
+			{ role: "user", content: "Hi" },
+		])) {
 			chunks.push(c);
 		}
 		expect(chunks).toContain("JSON response from stream");

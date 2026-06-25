@@ -50,37 +50,27 @@ describe("smartCat", () => {
 
 	test("throws on archive file (zip)", () => {
 		const { smartCat } = require("../smart-cat");
-		expect(() => smartCat(join(TEST_TMP, "archive.zip"))).toThrow(
-			"Refusing to read archive",
-		);
+		expect(() => smartCat(join(TEST_TMP, "archive.zip"))).toThrow("Refusing to read archive");
 	});
 
 	test("throws on archive file (tar.gz)", () => {
 		const { smartCat } = require("../smart-cat");
-		expect(() => smartCat(join(TEST_TMP, "archive.tar.gz"))).toThrow(
-			"Refusing to read archive",
-		);
+		expect(() => smartCat(join(TEST_TMP, "archive.tar.gz"))).toThrow("Refusing to read archive");
 	});
 
 	test("throws on archive file (7z)", () => {
 		const { smartCat } = require("../smart-cat");
-		expect(() => smartCat(join(TEST_TMP, "data.7z"))).toThrow(
-			"Refusing to read archive",
-		);
+		expect(() => smartCat(join(TEST_TMP, "data.7z"))).toThrow("Refusing to read archive");
 	});
 
 	test("throws on archive file (rar)", () => {
 		const { smartCat } = require("../smart-cat");
-		expect(() => smartCat(join(TEST_TMP, "data.rar"))).toThrow(
-			"Refusing to read archive",
-		);
+		expect(() => smartCat(join(TEST_TMP, "data.rar"))).toThrow("Refusing to read archive");
 	});
 
 	test("throws on archive file (tgz)", () => {
 		const { smartCat } = require("../smart-cat");
-		expect(() => smartCat(join(TEST_TMP, "data.tgz"))).toThrow(
-			"Refusing to read archive",
-		);
+		expect(() => smartCat(join(TEST_TMP, "data.tgz"))).toThrow("Refusing to read archive");
 	});
 
 	test("reads nested file in subdirectory", () => {

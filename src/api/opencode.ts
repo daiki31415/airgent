@@ -65,8 +65,7 @@ export class OpenCodeAPI {
 		).replace(/\/+$/, "");
 
 		const username = process.env.OPENCODE_SERVER_USERNAME || "opencode";
-		const password =
-			options?.password || process.env.OPENCODE_SERVER_PASSWORD || "";
+		const password = options?.password || process.env.OPENCODE_SERVER_PASSWORD || "";
 		if (password) {
 			this.authHeader = `Basic ${btoa(`${username}:${password}`)}`;
 		}
@@ -126,8 +125,7 @@ export class OpenCodeAPI {
 			headers: this.headers(),
 			body: JSON.stringify({ type: "api", key: apiKey }),
 		});
-		if (!res.ok)
-			throw new Error(`Failed to set auth for ${providerId}: ${res.status}`);
+		if (!res.ok) throw new Error(`Failed to set auth for ${providerId}: ${res.status}`);
 		return true;
 	}
 
@@ -200,9 +198,7 @@ export class OpenCodeAPI {
 
 		if (!res.ok) {
 			const errText = await res.text().catch(() => "");
-			throw new Error(
-				`Failed to send message: ${res.status} ${errText.slice(0, 200)}`,
-			);
+			throw new Error(`Failed to send message: ${res.status} ${errText.slice(0, 200)}`);
 		}
 
 		return res.json() as Promise<PromptResult>;
@@ -217,9 +213,7 @@ export class OpenCodeAPI {
 			: `${this.baseUrl}/session/${sessionId}/message`;
 		const res = await fetch(url, { headers: this.headers() });
 		if (!res.ok) throw new Error(`Failed to list messages: ${res.status}`);
-		return res.json() as Promise<
-			Array<{ info: MessageInfo; parts: MessagePart[] }>
-		>;
+		return res.json() as Promise<Array<{ info: MessageInfo; parts: MessagePart[] }>>;
 	}
 
 	// ---- Legacy compatibility ----
@@ -235,9 +229,7 @@ export class OpenCodeAPI {
 	// per airgent session for production workloads. The current approach
 	// prioritizes isolation and simplicity over throughput.
 
-	private async withTempSession<T>(
-		fn: (sessionId: string) => Promise<T>,
-	): Promise<T> {
+	private async withTempSession<T>(fn: (sessionId: string) => Promise<T>): Promise<T> {
 		const session = await this.createSession();
 		try {
 			return await fn(session.id);
@@ -294,12 +286,9 @@ export class OpenCodeAPI {
 		messages: Array<{ role: string; content: string }>,
 	): Promise<OpenCodeResponse> {
 		const startTime = Date.now();
-		const { fullPrompt, systemPrompt, providerID, modelID } =
-			this.buildPromptSpec(model, messages);
+		const { fullPrompt, systemPrompt, providerID, modelID } = this.buildPromptSpec(model, messages);
 
-		logger.debug(
-			`chat() ${providerID}/${modelID} - ${messages.length} messages`,
-		);
+		logger.debug(`chat() ${providerID}/${modelID} - ${messages.length} messages`);
 
 		const result = await this.withTempSession((sessionId) =>
 			this.sendMessage(sessionId, { providerID, modelID }, fullPrompt, {
@@ -328,12 +317,9 @@ export class OpenCodeAPI {
 		messages: Array<{ role: string; content: string }>,
 	): AsyncGenerator<string> {
 		const startTime = Date.now();
-		const { fullPrompt, systemPrompt, providerID, modelID } =
-			this.buildPromptSpec(model, messages);
+		const { fullPrompt, systemPrompt, providerID, modelID } = this.buildPromptSpec(model, messages);
 
-		logger.debug(
-			`streamChat() ${providerID}/${modelID} - ${messages.length} messages`,
-		);
+		logger.debug(`streamChat() ${providerID}/${modelID} - ${messages.length} messages`);
 
 		// Create a temporary session for this stream
 		const session = await this.createSession();
@@ -444,9 +430,7 @@ export class OpenCodeAPI {
 	async listMCP(): Promise<Record<string, { status: string; error?: string }>> {
 		const res = await fetch(`${this.baseUrl}/mcp`, { headers: this.headers() });
 		if (!res.ok) throw new Error(`Failed to list MCP servers: ${res.status}`);
-		return res.json() as Promise<
-			Record<string, { status: string; error?: string }>
-		>;
+		return res.json() as Promise<Record<string, { status: string; error?: string }>>;
 	}
 
 	async addMCP(
@@ -463,25 +447,18 @@ export class OpenCodeAPI {
 	}
 
 	async connectMCP(name: string): Promise<void> {
-		const res = await fetch(
-			`${this.baseUrl}/mcp/${encodeURIComponent(name)}/connect`,
-			{
-				method: "POST",
-				headers: this.headers(),
-			},
-		);
+		const res = await fetch(`${this.baseUrl}/mcp/${encodeURIComponent(name)}/connect`, {
+			method: "POST",
+			headers: this.headers(),
+		});
 		if (!res.ok) throw new Error(`Failed to connect MCP server: ${res.status}`);
 	}
 
 	async disconnectMCP(name: string): Promise<void> {
-		const res = await fetch(
-			`${this.baseUrl}/mcp/${encodeURIComponent(name)}/disconnect`,
-			{
-				method: "POST",
-				headers: this.headers(),
-			},
-		);
-		if (!res.ok)
-			throw new Error(`Failed to disconnect MCP server: ${res.status}`);
+		const res = await fetch(`${this.baseUrl}/mcp/${encodeURIComponent(name)}/disconnect`, {
+			method: "POST",
+			headers: this.headers(),
+		});
+		if (!res.ok) throw new Error(`Failed to disconnect MCP server: ${res.status}`);
 	}
 }

@@ -28,8 +28,7 @@ export class RateLimiter {
 		const elapsed = now - this.lastRefill;
 		this.tokens = Math.min(
 			this.maxTokens,
-			this.tokens +
-				Math.floor(elapsed / this.refillIntervalMs) * this.refillAmount,
+			this.tokens + Math.floor(elapsed / this.refillIntervalMs) * this.refillAmount,
 		);
 		this.lastRefill = now;
 		if (this.tokens <= 0) return false;

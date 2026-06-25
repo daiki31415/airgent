@@ -8,8 +8,26 @@ import { describe, expect, mock, test } from "bun:test";
 import { OpenCodeAPI } from "../../api/opencode";
 import { MemorySystem } from "../../memory";
 import { Storage } from "../../storage";
-import type { AgentContext, ModelEntry } from "../../types";
+import type { AgentContext, EvidenceEntry, ModelEntry } from "../../types";
 import { MemoryOrganizerAgent } from "../memory-organizer";
+
+// ---------------------------------------------------------------------------
+// Test subclass exposing protected methods
+// ---------------------------------------------------------------------------
+
+class TestMemoryOrganizerAgent extends MemoryOrganizerAgent {
+	exposeClassifyEvidence(content: string, source: string) {
+		return this.classifyEvidence(content, source);
+	}
+
+	exposeCalculateConfidence(evidence: EvidenceEntry[]) {
+		return this.calculateConfidence(evidence);
+	}
+
+	exposeExtractTags(pattern: { bug: string; fix: string; files: string[] }) {
+		return this.extractTags(pattern);
+	}
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -32,14 +50,14 @@ function createApi(): OpenCodeAPI {
 }
 
 function createSystem(): {
-	agent: MemoryOrganizerAgent;
+	agent: TestMemoryOrganizerAgent;
 	storage: Storage;
 	memorySystem: MemorySystem;
 } {
 	const api = createApi();
 	const storage = new Storage(":memory:");
 	const memorySystem = new MemorySystem(storage);
-	const agent = new MemoryOrganizerAgent(mockModel(), api, memorySystem);
+	const agent = new TestMemoryOrganizerAgent(mockModel(), api, memorySystem);
 	return { agent, storage, memorySystem };
 }
 
@@ -69,7 +87,7 @@ describe("MemoryOrganizerAgent.constructor", () => {
 
 	test("stores model parameter", () => {
 		const { agent } = createSystem();
-		expect((agent as any).model).toEqual(mockModel());
+		expect(agent.getModel()).toEqual(mockModel());
 	});
 });
 
@@ -77,7 +95,7 @@ describe("MemoryOrganizerAgent.init", () => {
 	test("stores context", () => {
 		const { agent } = createSystem();
 		agent.init(sampleContext());
-		expect((agent as any).context).not.toBeNull();
+		expect(agent.getContext()).not.toBeNull();
 	});
 });
 
@@ -103,13 +121,7 @@ describe("MemoryOrganizerAgent.organize", () => {
 			"Bug: login button not working on mobile",
 			10,
 		);
-		storage.insertRawLog(
-			"log2",
-			"test-session",
-			"worker",
-			"Fix: Added touch event handler",
-			10,
-		);
+		storage.insertRawLog("log2", "test-session", "worker", "Fix: Added touch event handler", 10);
 
 		const result = await agent.organize("test-session");
 		expect(result.count).toBeGreaterThanOrEqual(1);
@@ -120,13 +132,7 @@ describe("MemoryOrganizerAgent.organize", () => {
 		const { agent, storage } = createSystem();
 		agent.init(sampleContext());
 
-		storage.insertRawLog(
-			"log1",
-			"s1",
-			"worker",
-			"Bug: TypeError in parse function",
-			10,
-		);
+		storage.insertRawLog("log1", "s1", "worker", "Bug: TypeError in parse function", 10);
 		storage.insertRawLog("log2", "s1", "worker", "Fix: Added null check", 10);
 
 		const result = await agent.organize("s1");
@@ -142,13 +148,7 @@ describe("MemoryOrganizerAgent.organize", () => {
 		const { agent, storage } = createSystem();
 		agent.init(sampleContext());
 
-		storage.insertRawLog(
-			"log1",
-			"s1",
-			"worker",
-			"Bug: Memory leak detected",
-			10,
-		);
+		storage.insertRawLog("log1", "s1", "worker", "Bug: Memory leak detected", 10);
 		storage.insertRawLog(
 			"log2",
 			"s1",
@@ -156,20 +156,8 @@ describe("MemoryOrganizerAgent.organize", () => {
 			"Investigation: Found circular reference in cache",
 			10,
 		);
-		storage.insertRawLog(
-			"log3",
-			"s1",
-			"worker",
-			"Reason: Cache entries never expired",
-			10,
-		);
-		storage.insertRawLog(
-			"log4",
-			"s1",
-			"worker",
-			"Fix: Added TTL to cache entries",
-			10,
-		);
+		storage.insertRawLog("log3", "s1", "worker", "Reason: Cache entries never expired", 10);
+		storage.insertRawLog("log4", "s1", "worker", "Fix: Added TTL to cache entries", 10);
 
 		const result = await agent.organize("s1");
 		expect(result.count).toBe(1);
@@ -238,13 +226,7 @@ describe("MemoryOrganizerAgent with structured log patterns", () => {
 			"Bug: TypeError - cannot read property 'x' of undefined",
 			10,
 		);
-		storage.insertRawLog(
-			"l2",
-			"s1",
-			"worker",
-			"Fix: Added optional chaining",
-			10,
-		);
+		storage.insertRawLog("l2", "s1", "worker", "Fix: Added optional chaining", 10);
 
 		const result = await agent.organize("s1");
 		expect(result.count).toBeGreaterThanOrEqual(1);
@@ -265,13 +247,7 @@ describe("MemoryOrganizerAgent with structured log patterns", () => {
 		agent.init(sampleContext());
 
 		storage.insertRawLog("l1", "s1", "worker", "Bug: Data corruption", 10);
-		storage.insertRawLog(
-			"l2",
-			"s1",
-			"worker",
-			"root cause: Race condition in write path",
-			10,
-		);
+		storage.insertRawLog("l2", "s1", "worker", "root cause: Race condition in write path", 10);
 		storage.insertRawLog("l3", "s1", "worker", "Fix: Added mutex lock", 10);
 
 		const result = await agent.organize("s1");
@@ -283,13 +259,7 @@ describe("MemoryOrganizerAgent with structured log patterns", () => {
 		agent.init(sampleContext());
 
 		storage.insertRawLog("l1", "s1", "worker", "Bug: UI not rendering", 10);
-		storage.insertRawLog(
-			"l2",
-			"s1",
-			"worker",
-			"fixed: Updated CSS selector",
-			10,
-		);
+		storage.insertRawLog("l2", "s1", "worker", "fixed: Updated CSS selector", 10);
 
 		const result = await agent.organize("s1");
 		expect(result.count).toBeGreaterThanOrEqual(1);
@@ -300,13 +270,7 @@ describe("MemoryOrganizerAgent with structured log patterns", () => {
 		agent.init(sampleContext());
 
 		storage.insertRawLog("l1", "s1", "worker", "Bug: Build failure", 10);
-		storage.insertRawLog(
-			"l2",
-			"s1",
-			"worker",
-			"because: Missing dependency in package.json",
-			10,
-		);
+		storage.insertRawLog("l2", "s1", "worker", "because: Missing dependency in package.json", 10);
 		storage.insertRawLog("l3", "s1", "worker", "Fix: Added dependency", 10);
 
 		const result = await agent.organize("s1");
@@ -317,13 +281,7 @@ describe("MemoryOrganizerAgent with structured log patterns", () => {
 		const { agent, storage } = createSystem();
 		agent.init(sampleContext());
 
-		storage.insertRawLog(
-			"l1",
-			"s1",
-			"worker",
-			"Just some random conversation about code",
-			10,
-		);
+		storage.insertRawLog("l1", "s1", "worker", "Just some random conversation about code", 10);
 
 		const result = await agent.organize("s1");
 		// Falls back to a single pattern with the combined content
@@ -334,56 +292,49 @@ describe("MemoryOrganizerAgent with structured log patterns", () => {
 describe("MemoryOrganizerAgent classifyEvidence", () => {
 	test("classifies test source as verified", () => {
 		const { agent } = createSystem();
-		// Access private method via prototype
-		const classify = (agent as any).classifyEvidence.bind(agent);
-		expect(classify("test passed", "test")).toBe("verified");
-		expect(classify("Verified: positive", "test")).toBe("verified");
-		expect(classify("confirmed working", "ci")).toBe("verified");
+		expect(agent.exposeClassifyEvidence("test passed", "test")).toBe("verified");
+		expect(agent.exposeClassifyEvidence("Verified: positive", "test")).toBe("verified");
+		expect(agent.exposeClassifyEvidence("confirmed working", "ci")).toBe("verified");
 	});
 
 	test("classifies log source as observed", () => {
 		const { agent } = createSystem();
-		const classify = (agent as any).classifyEvidence.bind(agent);
-		expect(classify("some log output", "log")).toBe("observed");
-		expect(classify("console output", "console")).toBe("observed");
-		expect(classify("output: data", "file")).toBe("observed");
+		expect(agent.exposeClassifyEvidence("some log output", "log")).toBe("observed");
+		expect(agent.exposeClassifyEvidence("console output", "console")).toBe("observed");
+		expect(agent.exposeClassifyEvidence("output: data", "file")).toBe("observed");
 	});
 
 	test("classifies LLM source as generated", () => {
 		const { agent } = createSystem();
-		const classify = (agent as any).classifyEvidence.bind(agent);
 		// "observed" check comes first, so LLM content without uncertainty becomes "observed"
-		expect(classify("suggested fix", "llm")).toBe("observed");
-		expect(classify("analysis result", "model")).toBe("observed");
+		expect(agent.exposeClassifyEvidence("suggested fix", "llm")).toBe("observed");
+		expect(agent.exposeClassifyEvidence("analysis result", "model")).toBe("observed");
 		// Content with uncertainty bypasses "observed", gets "generated"
-		expect(classify("I think this", "llm")).toBe("generated");
-		expect(classify("Probably that", "model")).toBe("generated");
-		expect(classify("might work", "generated")).toBe("generated");
+		expect(agent.exposeClassifyEvidence("I think this", "llm")).toBe("generated");
+		expect(agent.exposeClassifyEvidence("Probably that", "model")).toBe("generated");
+		expect(agent.exposeClassifyEvidence("might work", "generated")).toBe("generated");
 	});
 
 	test("classifies uncertain content as inferred", () => {
 		const { agent } = createSystem();
-		const classify = (agent as any).classifyEvidence.bind(agent);
 		// Log/console source always returns "observed" regardless of content
-		expect(classify("I think the bug is...", "log")).toBe("observed");
-		expect(classify("Probably a memory issue", "console")).toBe("observed");
+		expect(agent.exposeClassifyEvidence("I think the bug is...", "log")).toBe("observed");
+		expect(agent.exposeClassifyEvidence("Probably a memory issue", "console")).toBe("observed");
 		// Non-log src with uncertainty => inferred
-		expect(classify("might be related", "file")).toBe("inferred");
-		expect(classify("I think this might be it", "analysis")).toBe("inferred");
+		expect(agent.exposeClassifyEvidence("might be related", "file")).toBe("inferred");
+		expect(agent.exposeClassifyEvidence("I think this might be it", "analysis")).toBe("inferred");
 	});
 });
 
 describe("MemoryOrganizerAgent calculateConfidence", () => {
 	test("returns 0.3 for empty evidence", () => {
 		const { agent } = createSystem();
-		const calc = (agent as any).calculateConfidence.bind(agent);
-		expect(calc([])).toBe(0.3);
+		expect(agent.exposeCalculateConfidence([])).toBe(0.3);
 	});
 
 	test("verified evidence yields high confidence", () => {
 		const { agent } = createSystem();
-		const calc = (agent as any).calculateConfidence.bind(agent);
-		const result = calc([
+		const result = agent.exposeCalculateConfidence([
 			{ type: "verified", content: "test", source: "test", timestamp: 0 },
 		]);
 		expect(result).toBeGreaterThan(0.5);
@@ -391,8 +342,7 @@ describe("MemoryOrganizerAgent calculateConfidence", () => {
 
 	test("observed evidence yields medium confidence", () => {
 		const { agent } = createSystem();
-		const calc = (agent as any).calculateConfidence.bind(agent);
-		const result = calc([
+		const result = agent.exposeCalculateConfidence([
 			{ type: "observed", content: "log", source: "log", timestamp: 0 },
 		]);
 		expect(result).toBeCloseTo(0.9, 1); // 0.8 + 0.1 = 0.9
@@ -400,22 +350,20 @@ describe("MemoryOrganizerAgent calculateConfidence", () => {
 
 	test("capped at 1.0", () => {
 		const { agent } = createSystem();
-		const calc = (agent as any).calculateConfidence.bind(agent);
 		const manyVerified = Array.from({ length: 10 }, () => ({
 			type: "verified" as const,
 			content: "x",
 			source: "x",
 			timestamp: 0,
 		}));
-		expect(calc(manyVerified)).toBeLessThanOrEqual(1.0);
+		expect(agent.exposeCalculateConfidence(manyVerified)).toBeLessThanOrEqual(1.0);
 	});
 });
 
 describe("MemoryOrganizerAgent extractTags", () => {
 	test("extracts file extension tags", () => {
 		const { agent } = createSystem();
-		const extract = (agent as any).extractTags.bind(agent);
-		const tags = extract({
+		const tags = agent.exposeExtractTags({
 			bug: "bug in code",
 			fix: "fix",
 			files: ["src/main.ts", "src/style.css"],
@@ -426,8 +374,7 @@ describe("MemoryOrganizerAgent extractTags", () => {
 
 	test("extracts keyword tags from bug text", () => {
 		const { agent } = createSystem();
-		const extract = (agent as any).extractTags.bind(agent);
-		const tags = extract({
+		const tags = agent.exposeExtractTags({
 			bug: "Got a crash with memory error",
 			fix: "",
 			files: [],
@@ -438,8 +385,7 @@ describe("MemoryOrganizerAgent extractTags", () => {
 
 	test("deduplicates tags", () => {
 		const { agent } = createSystem();
-		const extract = (agent as any).extractTags.bind(agent);
-		const tags = extract({
+		const tags = agent.exposeExtractTags({
 			bug: "error crash error crash",
 			fix: "",
 			files: ["src/main.ts", "src/helper.ts"],
@@ -454,20 +400,8 @@ describe("MemoryOrganizerAgent error handling", () => {
 		const { agent, storage } = createSystem();
 		agent.init(sampleContext());
 
-		storage.insertRawLog(
-			"l1",
-			"s1",
-			"worker",
-			"Planning the implementation of feature X",
-			10,
-		);
-		storage.insertRawLog(
-			"l2",
-			"s1",
-			"worker",
-			"Generated code for feature X",
-			10,
-		);
+		storage.insertRawLog("l1", "s1", "worker", "Planning the implementation of feature X", 10);
+		storage.insertRawLog("l2", "s1", "worker", "Generated code for feature X", 10);
 
 		const result = await agent.organize("s1");
 		expect(result.count).toBe(1); // fallback pattern

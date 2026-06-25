@@ -28,6 +28,8 @@ export interface Persona {
 	rules: string[];
 }
 
+export type ModelRole = "planner" | "generate" | "compression" | "validation" | "watchdog";
+
 export interface ModelConfig {
 	planner: ModelEntry;
 	generate: ModelEntry;
@@ -109,24 +111,14 @@ export interface MemoryContext {
 // Pipeline Types
 // ============================================================
 
-export type RetryStrategy =
-	| "rollback"
-	| "retry"
-	| "model_switch"
-	| "alternate_strategy";
+export type RetryStrategy = "rollback" | "retry" | "model_switch" | "alternate_strategy";
 
 export interface RetryContext {
 	attempt: number;
 	strategy: RetryStrategy;
 }
 
-export type PipelineNode =
-	| "clarify"
-	| "plan"
-	| "generate"
-	| "test"
-	| "validate"
-	| "report";
+export type PipelineNode = "clarify" | "plan" | "generate" | "test" | "validate" | "report";
 
 export interface DAGNode {
 	id: string;
@@ -196,11 +188,7 @@ export interface EvidenceEntry {
 	timestamp: number;
 }
 
-export type LinkType =
-	| "same_cause"
-	| "derived"
-	| "similar_pattern"
-	| "related_component";
+export type LinkType = "same_cause" | "derived" | "similar_pattern" | "related_component";
 
 export interface MemoryLink {
 	type: LinkType;

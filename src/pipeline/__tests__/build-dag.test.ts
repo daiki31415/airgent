@@ -20,14 +20,7 @@ describe("buildDAG", () => {
 	});
 
 	test("resolves all nodes for full pipeline", () => {
-		const allNodes = [
-			"clarify",
-			"plan",
-			"generate",
-			"test",
-			"validate",
-			"report",
-		];
+		const allNodes = ["clarify", "plan", "generate", "test", "validate", "report"];
 		const dag = engine.buildDAG(allNodes);
 		expect(dag.nodes.length).toBe(6);
 	});
@@ -74,14 +67,7 @@ describe("buildDAG", () => {
 	test("report pulls in entire pipeline", () => {
 		const dag = engine.buildDAG(["report"]);
 		const ids = dag.nodes.map((n) => n.id);
-		expect(ids).toEqual([
-			"clarify",
-			"plan",
-			"generate",
-			"test",
-			"validate",
-			"report",
-		]);
+		expect(ids).toEqual(["clarify", "plan", "generate", "test", "validate", "report"]);
 	});
 
 	test("clarify has no dependencies", () => {
@@ -90,14 +76,7 @@ describe("buildDAG", () => {
 	});
 
 	test("each node has correct dependency edges", () => {
-		const dag = engine.buildDAG([
-			"clarify",
-			"plan",
-			"generate",
-			"test",
-			"validate",
-			"report",
-		]);
+		const dag = engine.buildDAG(["clarify", "plan", "generate", "test", "validate", "report"]);
 		const byId = new Map(dag.nodes.map((n) => [n.id, n]));
 		expect(byId.get("clarify")?.dependsOn).toEqual([]);
 		expect(byId.get("plan")?.dependsOn).toEqual(["clarify"]);

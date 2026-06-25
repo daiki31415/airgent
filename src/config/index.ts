@@ -118,10 +118,7 @@ export class ConfigManager {
 
 	private loadModels(): ModelConfig {
 		const filePath = path.join(this.configDir, "models.json");
-		const raw = this.readOrCreate(
-			filePath,
-			JSON.stringify(DEFAULT_MODELS, null, 2),
-		);
+		const raw = this.readOrCreate(filePath, JSON.stringify(DEFAULT_MODELS, null, 2));
 		try {
 			return JSON.parse(raw);
 		} catch {
@@ -132,10 +129,7 @@ export class ConfigManager {
 
 	private loadSettings(): Settings {
 		const filePath = path.join(this.configDir, "settings.json");
-		const raw = this.readOrCreate(
-			filePath,
-			JSON.stringify(DEFAULT_SETTINGS, null, 2),
-		);
+		const raw = this.readOrCreate(filePath, JSON.stringify(DEFAULT_SETTINGS, null, 2));
 		try {
 			return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
 		} catch {
@@ -146,24 +140,39 @@ export class ConfigManager {
 
 	needsConfig(): boolean {
 		const m = this.cache?.models;
+		if (!m) return true;
 		return (
-			!m.planner.provider ||
-			!m.planner.model ||
-			!m.generate.provider ||
-			!m.generate.model ||
-			!m.compression.provider ||
-			!m.compression.model ||
-			!m.validation.provider ||
-			!m.validation.model ||
-			!m.watchdog.provider ||
-			!m.watchdog.model
+			!m.planner?.provider ||
+			!m.planner?.model ||
+			!m.generate?.provider ||
+			!m.generate?.model ||
+			!m.compression?.provider ||
+			!m.compression?.model ||
+			!m.validation?.provider ||
+			!m.validation?.model ||
+			!m.watchdog?.provider ||
+			!m.watchdog?.model
 		);
 	}
 
 	saveSettings(partial: Partial<Settings>): void {
 		const filePath = path.join(this.configDir, "settings.json");
-		const updated = { ...this.cache?.settings, ...partial };
-		this.cache!.settings = updated;
+		const currentSettings = this.cache?.settings ?? DEFAULT_SETTINGS;
+		const updated = { ...currentSettings, ...partial };
+		if (!this.cache)
+			this.cache = {
+				constitution: {
+					name: "",
+					version: "",
+					principles: [],
+					constraints: [],
+					ethical_guidelines: [],
+				},
+				persona: { name: "", role: "", tone: "", rules: [] },
+				settings: DEFAULT_SETTINGS,
+				models: DEFAULT_MODELS,
+			};
+		this.cache.settings = updated;
 		fs.writeFileSync(filePath, JSON.stringify(updated, null, 2), {
 			mode: 0o600,
 			encoding: "utf-8",
@@ -173,7 +182,8 @@ export class ConfigManager {
 
 	saveModels(models: Partial<ModelConfig>): void {
 		const filePath = path.join(this.configDir, "models.json");
-		const updated = { ...this.cache?.models, ...models };
+		const currentModels = this.cache?.models ?? DEFAULT_MODELS;
+		const updated = { ...currentModels, ...models };
 
 		// Strip apiKey before persisting to disk
 		const serialized = structuredClone(updated) as Record<string, unknown>;
@@ -184,7 +194,20 @@ export class ConfigManager {
 			}
 		}
 
-		this.cache!.models = updated as ModelConfig;
+		if (!this.cache)
+			this.cache = {
+				constitution: {
+					name: "",
+					version: "",
+					principles: [],
+					constraints: [],
+					ethical_guidelines: [],
+				},
+				persona: { name: "", role: "", tone: "", rules: [] },
+				settings: DEFAULT_SETTINGS,
+				models: DEFAULT_MODELS,
+			};
+		this.cache.models = updated as ModelConfig;
 		fs.writeFileSync(filePath, JSON.stringify(serialized, null, 2), {
 			mode: 0o600,
 			encoding: "utf-8",
@@ -193,17 +216,14 @@ export class ConfigManager {
 	}
 
 	getModels(): ModelConfig {
-		return { ...this.cache?.models };
+		return { ...(this.cache?.models ?? DEFAULT_MODELS) };
 	}
 
 	// ---- MCP ----
 
 	loadMCPServers(): MCPServerConfig[] {
 		const filePath = path.join(this.configDir, "mcp.json");
-		const raw = this.readOrCreate(
-			filePath,
-			JSON.stringify({ servers: [] }, null, 2),
-		);
+		const raw = this.readOrCreate(filePath, JSON.stringify({ servers: [] }, null, 2));
 		try {
 			const data = JSON.parse(raw);
 			return data.servers || [];
@@ -242,15 +262,15 @@ export class ConfigManager {
 
 	private extractFrontmatter(content: string, key: string): string | null {
 		const match = content.match(new RegExp(`^${key}:\\s*(.+)$`, "m"));
-		return match ? match[1]?.trim() : null;
+		return match && match[1] ? match[1].trim() : null;
 	}
 
 	private extractList(content: string, section: string): string[] {
 		const regex = new RegExp(`#\\s*${section}\\s*\\n([\\s\\S]*?)(?:\\n#\\s|$)`);
 		const match = content.match(regex);
-		if (!match) return [];
+		if (!match || !match[1]) return [];
 		return match[1]
-			?.split("\n")
+			.split("\n")
 			.map((l) => l.replace(/^-\s*/, "").trim())
 			.filter(Boolean);
 	}

@@ -5,15 +5,7 @@
  * No real terminal or clipboard access.
  */
 
-import {
-	afterEach,
-	beforeEach,
-	describe,
-	expect,
-	mock,
-	spyOn,
-	test,
-} from "bun:test";
+import { afterEach, beforeEach, describe, expect, mock, spyOn, test } from "bun:test";
 import { resolve } from "node:path";
 
 // ============================================================
@@ -136,8 +128,7 @@ const mockScrollBoxCtor = mock((opts?: any) => {
 const mockInputCtor = mock((opts?: any) => {
 	const inp = makeInputMock();
 	if (opts?.id) (inp as any).id = opts.id;
-	if (opts?.placeholder !== undefined)
-		(inp as any).placeholder = opts.placeholder;
+	if (opts?.placeholder !== undefined) (inp as any).placeholder = opts.placeholder;
 	return inp;
 });
 
@@ -189,12 +180,10 @@ mock.module("node:readline", () => ({
 }));
 
 // --- clipboard mock (absolute path for reliable module interception) ---
-const mockCopyToClipboard = mock(
-	(_text: string, _osc52?: (t: string) => boolean) => ({
-		success: true,
-		method: "osc52",
-	}),
-);
+const mockCopyToClipboard = mock((_text: string, _osc52?: (t: string) => boolean) => ({
+	success: true,
+	method: "osc52",
+}));
 mock.module(resolve(import.meta.dir, "../../utils/clipboard"), () => ({
 	copyToClipboard: mockCopyToClipboard,
 }));
@@ -781,10 +770,7 @@ describe("UIManager — handleSelection (copy on select)", () => {
 		const selHandler = (ui as any).handleSelection.bind(ui);
 		selHandler({ getSelectedText: mockGetSelectedText }, mockRenderer);
 		// clipboard copy should be called
-		expect(mockCopyToClipboard).toHaveBeenCalledWith(
-			"selected text",
-			expect.any(Function),
-		);
+		expect(mockCopyToClipboard).toHaveBeenCalledWith("selected text", expect.any(Function));
 	});
 
 	test("handleSelection ignores empty selection", async () => {
@@ -1040,9 +1026,7 @@ function mockClearAll() {
 		if (typeof m?.mockClear === "function") m.mockClear();
 	}
 	// Restore mocks whose implementations may have been overridden per-test
-	mockFindDescendantById.mockImplementation(
-		(id: string) => _vnodeMap[id] || null,
-	);
+	mockFindDescendantById.mockImplementation((id: string) => _vnodeMap[id] || null);
 	mockReadlineCreateInterface.mockImplementation(() => ({
 		question: mock((_q: string, cb: (a: string) => void) => cb("answer")),
 		close: mock(),

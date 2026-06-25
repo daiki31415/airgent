@@ -29,6 +29,13 @@ export class ValidationAgent extends BaseAgent {
 		this.memorySystem = memorySystem;
 	}
 
+	/**
+	 * Get the memory system.
+	 */
+	getMemorySystem(): MemorySystem {
+		return this.memorySystem;
+	}
+
 	async validate(): Promise<ValidationReport> {
 		const report: ValidationReport = {
 			contradictions: 0,
@@ -51,8 +58,7 @@ export class ValidationAgent extends BaseAgent {
 			report.circularReferences +
 			report.hallucinatedLinks +
 			report.inferenceAsFact;
-		report.overallHealth =
-			total === 0 ? "healthy" : total <= 3 ? "warning" : "critical";
+		report.overallHealth = total === 0 ? "healthy" : total <= 3 ? "warning" : "critical";
 
 		this.logger.info(`Validation: ${total} issues (${report.overallHealth})`);
 		return report;
@@ -84,9 +90,7 @@ export class ValidationAgent extends BaseAgent {
 			const links = this.memorySystem.getLinks(mem.id);
 			for (const link of links) {
 				if (link.confidence < 0.3) {
-					flagged.push(
-						`Low confidence: ${mem.id} -> ${link.target} (${link.confidence})`,
-					);
+					flagged.push(`Low confidence: ${mem.id} -> ${link.target} (${link.confidence})`);
 				}
 			}
 		}
@@ -115,9 +119,7 @@ export class ValidationAgent extends BaseAgent {
 					const lower = ev.content.toLowerCase();
 					if (markers.some((m) => lower.includes(m))) {
 						count++;
-						report.issues.push(
-							`Inference labeled as ${ev.type}: "${ev.content.slice(0, 100)}"`,
-						);
+						report.issues.push(`Inference labeled as ${ev.type}: "${ev.content.slice(0, 100)}"`);
 						break;
 					}
 				}

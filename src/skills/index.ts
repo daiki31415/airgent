@@ -53,13 +53,8 @@ export class SkillsManager {
 
 		try {
 			const skillPath = path.resolve(summary.filePath);
-			if (
-				!skillPath.startsWith(`${SKILLS_DIR_RESOLVED}/`) &&
-				skillPath !== SKILLS_DIR_RESOLVED
-			) {
-				this.logger.warn(
-					`Skill path outside skills directory: ${summary.name}`,
-				);
+			if (!skillPath.startsWith(`${SKILLS_DIR_RESOLVED}/`) && skillPath !== SKILLS_DIR_RESOLVED) {
+				this.logger.warn(`Skill path outside skills directory: ${summary.name}`);
 				return null;
 			}
 			const content = fs.readFileSync(skillPath, "utf-8");
@@ -85,17 +80,11 @@ export class SkillsManager {
 	injectSkill(prompt: string, skillName: string): string {
 		const skill = this.loadSkill(skillName);
 		if (!skill) {
-			return prompt.replace(
-				new RegExp(`\\{\\{skill:${skillName}\\}\\}`, "g"),
-				"",
-			);
+			return prompt.replace(new RegExp(`\\{\\{skill:${skillName}\\}\\}`, "g"), "");
 		}
 
 		const injection = `[Skill: ${skill.name}]\n${skill.content}\n[/Skill]`;
-		return prompt.replace(
-			new RegExp(`\\{\\{skill:${skillName}\\}\\}`, "g"),
-			injection,
-		);
+		return prompt.replace(new RegExp(`\\{\\{skill:${skillName}\\}\\}`, "g"), injection);
 	}
 
 	private loadIndex(): void {
@@ -104,9 +93,7 @@ export class SkillsManager {
 			if (fs.existsSync(indexPath)) {
 				const raw = fs.readFileSync(indexPath, "utf-8");
 				this.index = JSON.parse(raw);
-				this.logger.info(
-					`Loaded ${this.index.skills.length} skills from index`,
-				);
+				this.logger.info(`Loaded ${this.index.skills.length} skills from index`);
 			} else {
 				this.logger.info("No skills index found, creating default");
 				fs.mkdirSync(SKILLS_DIR, { recursive: true });

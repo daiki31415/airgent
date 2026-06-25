@@ -11,6 +11,7 @@ const GITIGNORE = `${["*.db", "raw/", "*.log"].join("\n")}\n`;
 export class DeviceSync {
 	private storage: Storage;
 	private syncDir: string;
+	private remoteUrl: string = "";
 	private logger = rootLogger.child("sync");
 	private get exportFile(): string {
 		return join(this.syncDir, "export.json");
@@ -107,8 +108,7 @@ export class DeviceSync {
 		});
 
 		if (result.exitCode !== 0) {
-			const msg =
-				result.stderr?.toString().trim() || `exit code ${result.exitCode}`;
+			const msg = result.stderr?.toString().trim() || `exit code ${result.exitCode}`;
 			throw new Error(`git ${args[0]} failed: ${msg}`);
 		}
 
