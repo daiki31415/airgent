@@ -196,6 +196,15 @@ export interface MemoryLink {
 	confidence: number;
 }
 
+export interface ValidationReport {
+	contradictions: number;
+	circularReferences: number;
+	hallucinatedLinks: number;
+	inferenceAsFact: number;
+	issues: string[];
+	overallHealth: "healthy" | "warning" | "critical";
+}
+
 export interface CompressedEntry {
 	id: string;
 	originalId: string;
@@ -248,7 +257,7 @@ export interface WatchdogState {
 
 export type WatchdogAction =
 	| { type: "force_stop"; reason: string }
-	| { type: "warning"; message: string }
+	| { type: "warning"; reason: string }
 	| { type: "model_switch"; reason: string; model: ModelEntry }
 	| { type: "compress_suggest"; reason: string };
 

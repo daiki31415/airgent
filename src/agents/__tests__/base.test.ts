@@ -55,7 +55,7 @@ function mockModel(): ModelEntry {
 
 function mockApi(): OpenCodeAPI {
 	const api = new (class extends OpenCodeAPI {
-		chat = mock(
+		override chat = mock(
 			async (
 				_model: ModelEntry,
 				_messages: Array<{ role: string; content: string }>,
@@ -69,7 +69,7 @@ function mockApi(): OpenCodeAPI {
 			},
 		);
 
-		streamChat = mock(async function* (
+		override streamChat = mock(async function* (
 			_model: ModelEntry,
 			_messages: Array<{ role: string; content: string }>,
 		): AsyncGenerator<string> {

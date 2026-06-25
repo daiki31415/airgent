@@ -6,16 +6,8 @@
  */
 
 import type { MemorySystem } from "../memory";
+import type { ValidationReport } from "../types";
 import { BaseAgent } from "./base";
-
-export interface ValidationReport {
-	contradictions: number;
-	circularReferences: number;
-	hallucinatedLinks: number;
-	inferenceAsFact: number;
-	issues: string[];
-	overallHealth: "healthy" | "warning" | "critical";
-}
 
 export class ValidationAgent extends BaseAgent {
 	private memorySystem: MemorySystem;

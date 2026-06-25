@@ -108,7 +108,7 @@ export class WatchdogAgent extends BaseAgent {
 		if (recentAvg > avg * 1.5 && avg > 0) {
 			return {
 				type: "warning",
-				message: `Token surge: ${Math.round(recentAvg)} vs avg ${Math.round(avg)}`,
+				reason: `Token surge: ${Math.round(recentAvg)} vs avg ${Math.round(avg)}`,
 			};
 		}
 		return null;

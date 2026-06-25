@@ -24,7 +24,7 @@ function mockModel(): ModelEntry {
 
 function createApi(chatResponse?: string): OpenCodeAPI {
 	const api = new (class extends OpenCodeAPI {
-		chat = mock(
+		override chat = mock(
 			async (
 				_model: ModelEntry,
 				_messages: Array<{ role: string; content: string }>,
@@ -38,7 +38,7 @@ function createApi(chatResponse?: string): OpenCodeAPI {
 			},
 		);
 
-		streamChat = mock(async function* (
+		override streamChat = mock(async function* (
 			_model: ModelEntry,
 			_messages: Array<{ role: string; content: string }>,
 		): AsyncGenerator<string> {
@@ -52,7 +52,7 @@ function createApi(chatResponse?: string): OpenCodeAPI {
 function createCompressionManager(): CompressionManager {
 	return new (class extends CompressionManager {
 		constructor() {
-			super(null as any, null as any);
+			super(null as unknown as MemorySystem, null as unknown as Storage);
 		}
 		override findForDecompression(): CompressedEntry[] {
 			return [];

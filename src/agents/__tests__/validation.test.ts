@@ -9,7 +9,7 @@ import { describe, expect, mock, test } from "bun:test";
 import { OpenCodeAPI } from "../../api/opencode";
 import { MemorySystem } from "../../memory";
 import { Storage } from "../../storage";
-import type { AgentContext, ModelEntry } from "../../types";
+import type { AgentContext, ModelEntry, ValidationReport } from "../../types";
 import { ValidationAgent } from "../validation";
 
 // ---------------------------------------------------------------------------
@@ -22,13 +22,13 @@ function mockModel(): ModelEntry {
 
 function createApi(): OpenCodeAPI {
 	return new (class extends OpenCodeAPI {
-		chat = mock(async () => ({
+		override chat = mock(async () => ({
 			id: "resp",
 			content: "ok",
 			model: "m",
 			usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
 		}));
-		streamChat = mock(async function* () {});
+		override streamChat = mock(async function* () {});
 	})();
 }
 

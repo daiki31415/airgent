@@ -23,13 +23,13 @@ function mockModel(): ModelEntry {
 
 function createApi(): OpenCodeAPI {
 	return new (class extends OpenCodeAPI {
-		chat = mock(async () => ({
+		override chat = mock(async () => ({
 			id: "api-resp",
 			content: "mock",
 			model: "m",
 			usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
 		}));
-		streamChat = mock(async function* () {});
+		override streamChat = mock(async function* () {});
 	})();
 }
 

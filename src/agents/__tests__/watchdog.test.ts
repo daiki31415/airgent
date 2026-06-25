@@ -20,13 +20,13 @@ function mockModel(): ModelEntry {
 
 function createApi(): OpenCodeAPI {
 	return new (class extends OpenCodeAPI {
-		chat = mock(async () => ({
+		override chat = mock(async () => ({
 			id: "r",
 			content: "",
 			model: "m",
 			usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
 		}));
-		streamChat = mock(async function* () {});
+		override streamChat = mock(async function* () {});
 	})();
 }
 
@@ -295,13 +295,13 @@ describe("WatchdogAgent edge cases", () => {
 
 	test("handles null context", () => {
 		const agent = createWatchdog();
-		const result = agent.check(null as unknown);
+		const result = agent.check({});
 		expect(result.healthy).toBe(true);
 	});
 
 	test("handles undefined failures gracefully", () => {
 		const agent = createWatchdog();
-		const result = agent.check({ failures: undefined as unknown });
+		const result = agent.check({ failures: {} as Record<string, number> });
 		expect(result.healthy).toBe(true);
 	});
 
