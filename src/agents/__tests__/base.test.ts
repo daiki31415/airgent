@@ -30,17 +30,17 @@ class TestAgent extends BaseAgent {
 	}
 
 	/** Expose context for assertions */
-	getContext(): AgentContext | null {
+	override getContext(): AgentContext | null {
 		return this.context;
 	}
 
 	/** Expose model for assertions */
-	getModel(): ModelEntry {
+	override getModel(): ModelEntry {
 		return this.model;
 	}
 
 	/** Expose api for assertions */
-	getApi(): OpenCodeAPI {
+	override getApi(): OpenCodeAPI {
 		return this.api;
 	}
 }

@@ -285,7 +285,7 @@ describe("OpenCodeAPI MCP", () => {
 	test("healthCheck returns unhealthy on fetch error", async () => {
 		globalThis.fetch = (async () => {
 			throw new Error("ECONNREFUSED");
-		}) as typeof fetch;
+		}) as unknown as typeof fetch;
 		const result = await api.healthCheck();
 		expect(result.healthy).toBe(false);
 	});

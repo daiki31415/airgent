@@ -208,7 +208,7 @@ describe("DeviceSync", () => {
 		// Verify data landed in Storage
 		const all = realStorage.getAllCompressed();
 		expect(all).toHaveLength(1);
-		expect(all[0].title).toBe("Test");
+		expect(all[0]!.title).toBe("Test");
 		expect(realStorage.getMetadata("key1")).toBe("val1");
 	});
 
@@ -307,7 +307,7 @@ describe("DeviceSync", () => {
 
 		const all = realStorage.getAllCompressed();
 		expect(all).toHaveLength(1);
-		expect(all[0].title).toBe("Overwritten");
+		expect(all[0]!.title).toBe("Overwritten");
 		expect(realStorage.getMetadata("key1")).toBe("newval");
 	});
 

@@ -232,7 +232,7 @@ describe("CompressionAgent.decompress", () => {
 		// decompress(id) calls getCompressedByOriginalId(id) internally
 		// So we need to pass originalId, not entry.id
 		if (allEntries.length > 0) {
-			const originalId = allEntries[0]?.originalId;
+			const originalId = allEntries[0]!.originalId;
 			const entries = await agent.decompress([originalId]);
 			expect(entries).toHaveLength(1);
 		}
@@ -266,7 +266,7 @@ describe("CompressionAgent.decompress", () => {
 
 		const allEntries = storage.getAllCompressed();
 		if (allEntries.length > 0) {
-			const entries = await agent.decompress([allEntries[0]?.originalId, "bad-id"]);
+			const entries = await agent.decompress([allEntries[0]!.originalId, "bad-id"]);
 			expect(entries).toHaveLength(1);
 		}
 	});

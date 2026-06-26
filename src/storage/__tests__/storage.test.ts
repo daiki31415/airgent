@@ -726,9 +726,9 @@ describe("Storage memory edge cases", () => {
 			commands: [],
 		});
 		const mem = s.getMemory("m1");
-		expect(JSON.parse(mem?.tags)).toEqual([]);
-		expect(JSON.parse(mem?.files)).toEqual([]);
-		expect(JSON.parse(mem?.commands)).toEqual([]);
+		expect(JSON.parse(mem!.tags)).toEqual([]);
+		expect(JSON.parse(mem!.files)).toEqual([]);
+		expect(JSON.parse(mem!.commands)).toEqual([]);
 	});
 
 	test("insertMemory with special characters in tags", () => {
@@ -747,6 +747,6 @@ describe("Storage memory edge cases", () => {
 			commands: [],
 		});
 		const mem = s.getMemory("m1");
-		expect(JSON.parse(mem?.tags)).toContain("tag-with-dashes");
+		expect(JSON.parse(mem!.tags)).toContain("tag-with-dashes");
 	});
 });

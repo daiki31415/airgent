@@ -54,7 +54,7 @@ function makeScrollBoxMock() {
 }
 
 function makeTextMock() {
-	const obj = { add: mock(), content: "" };
+	const obj = { add: mock(), content: "", fg: "" };
 	Object.defineProperty(obj, "content", {
 		get: () => obj.content,
 		set: (v: string) => {

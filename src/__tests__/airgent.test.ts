@@ -8,9 +8,10 @@
  * This avoids filesystem, SQLite, and network operations entirely.
  */
 
+import type { Mock } from "bun:test";
 import { beforeEach, describe, expect, mock, test } from "bun:test";
 import { resolve } from "node:path";
-import type { AgentContext, ModelEntry } from "../types";
+import type { AgentContext, ModelEntry, StructuredMemory } from "../types";
 
 // ============================================================
 // External package mocks — these MUST be hoisted above imports
@@ -39,6 +40,7 @@ const mockReadlineInterface = {
 	close: mock(),
 };
 
+// @ts-expect-error - bun:test mock module signature
 mock("readline", () => ({
 	createInterface: mock(() => mockReadlineInterface),
 }));
@@ -168,7 +170,7 @@ function makeMockInstances() {
 				],
 			})),
 			chat: mock(() => ({ content: "mock response" })),
-			streamChat: mock(function* () {
+			streamChat: mock(function* (): Generator<string, void, unknown> {
 				yield "chunk1";
 				yield "chunk2";
 			}),
@@ -179,8 +181,10 @@ function makeMockInstances() {
 			disconnectMCP: mock(),
 		},
 		skills: {
-			getIndex: mock(() => ({ skills: [] })),
-			getActiveSkills: mock(() => []),
+			getIndex: mock(() => ({ skills: [] })) as Mock<
+				() => { skills: { name: string; description: string; tags: string[]; filePath: string }[] }
+			>,
+			getActiveSkills: mock(() => []) as Mock<() => string[]>,
 			loadSkill: mock(() => null),
 			injectSkill: mock((p: string) => p),
 		},
@@ -196,7 +200,9 @@ function makeMockInstances() {
 			recordRaw: mock(),
 			getRawLogsBySession: mock(() => []),
 			createMemory: mock(() => "mem-id"),
-			findRelevant: mock(() => []),
+			findRelevant: mock(() => []) as Mock<
+				() => { id: string; bug: string; fix: string; confidence: number }[]
+			>,
 			getLinked: mock(() => []),
 			getEvidence: mock(() => []),
 			findContradictions: mock(() => []),
@@ -223,7 +229,14 @@ function makeMockInstances() {
 			stream: mock(),
 			notice: mock(),
 			updateStatus: mock(),
-			copy: mock(() => ({ success: true, method: "osc52" as const })),
+			copy: mock(() => ({ success: true, method: "osc52" })) as Mock<
+				() => {
+					success: boolean;
+					method: "osc52" | "file" | "wl-copy" | "pbcopy" | "xsel" | "xclip";
+					filePath?: string;
+					error?: string;
+				}
+			>,
 			prompt: mock(() => ""),
 			selectModel: mock(() => null),
 			showSelectMenu: mock(() => null),
@@ -258,14 +271,31 @@ function makeMockInstances() {
 				circularReferences: 0,
 				hallucinatedLinks: 0,
 				inferenceAsFact: 0,
-				issues: [],
+				issues: [] as string[],
 				overallHealth: "healthy" as const,
-			})),
+			})) as Mock<
+				() => {
+					contradictions: number;
+					circularReferences: number;
+					hallucinatedLinks: number;
+					inferenceAsFact: number;
+					issues: string[];
+					overallHealth: "healthy" | "warning" | "critical";
+				}
+			>,
 		},
 		watchdog: {
 			init: mock(),
 			switchModel: mock(),
-			check: mock(() => ({ healthy: true, actions: [] })),
+			check: mock(() => ({ healthy: true, actions: [] })) as Mock<
+				() => {
+					healthy: boolean;
+					actions: {
+						type: "warning" | "force_stop" | "model_switch" | "compress_suggest";
+						reason: string;
+					}[];
+				}
+			>,
 		},
 		contextInspector: {
 			init: mock(),
@@ -326,7 +356,7 @@ function _clearAllMocks(mocks: ReturnType<typeof makeMockInstances>) {
 		...Object.values(mocks.watchdog),
 		...Object.values(mocks.contextInspector),
 		...Object.values(mocks.rateLimiter),
-	];
+	].filter((v): v is Mock<(...args: any[]) => any> => typeof v === "function");
 	for (const fn of all) {
 		if (typeof fn?.mockClear === "function") {
 			// biome-ignore lint/suspicious/noExplicitAny: mock function from bun:test
@@ -392,10 +422,11 @@ function createAgent(
 
 describe("Airgent — Constructor & Initialization", () => {
 	let agent: AgentInstance;
-	let mocks: ReturnType<typeof makeMockInstances>;
+	// biome-ignore lint/suspicious/noExplicitAny: test mocks need wider types for reassignment
+	let mocks: any;
 
 	beforeEach(async () => {
-		mocks = makeMockInstances();
+		mocks = makeMockInstances() as any;
 		agent = createAgent(AirgentClass, mocks);
 	});
 
@@ -427,7 +458,7 @@ describe("Airgent — start() and stop()", () => {
 	let mocks: ReturnType<typeof makeMockInstances>;
 
 	beforeEach(async () => {
-		mocks = makeMockInstances();
+		mocks = makeMockInstances() as any;
 		agent = createAgent(AirgentClass, mocks);
 	});
 
@@ -484,7 +515,7 @@ describe("Airgent — Command Handling", () => {
 	}
 
 	beforeEach(async () => {
-		mocks = makeMockInstances();
+		mocks = makeMockInstances() as any;
 		agent = createAgent(AirgentClass, mocks);
 		agent.sessionId = "test-session";
 		agent.running = true;
@@ -544,7 +575,14 @@ describe("Airgent — Command Handling", () => {
 			success: false,
 			method: "file",
 			error: "failed",
-		}));
+		})) as Mock<
+			() => {
+				success: boolean;
+				method: "osc52" | "file" | "wl-copy" | "pbcopy" | "xsel" | "xclip";
+				filePath?: string;
+				error?: string;
+			}
+		>;
 		await sendInput("/copy text");
 		expect(mocks.ui.log).toHaveBeenCalledWith(
 			"error",
@@ -754,7 +792,7 @@ describe("Airgent — processTask flow", () => {
 	let mocks: ReturnType<typeof makeMockInstances>;
 
 	beforeEach(async () => {
-		mocks = makeMockInstances();
+		mocks = makeMockInstances() as any;
 		agent = createAgent(AirgentClass, mocks);
 		agent.sessionId = "test-session";
 		agent.running = true;
@@ -846,8 +884,8 @@ describe("Airgent — processTask flow", () => {
 	test("processTask warns on unhealthy watchdog", async () => {
 		mocks.watchdog.check = mock(() => ({
 			healthy: false,
-			actions: [{ type: "warning", message: "issue" }],
-		}));
+			actions: [{ type: "warning", reason: "issue" }],
+		})) as Mock<() => { healthy: boolean; actions: { type: "warning"; reason: string }[] }>;
 		await agent.processTask("test");
 		expect(mocks.ui.log).toHaveBeenCalledWith("warn", "watchdog", expect.any(String));
 	});
@@ -900,7 +938,7 @@ describe("Airgent — buildAgentContext", () => {
 	let mocks: ReturnType<typeof makeMockInstances>;
 
 	beforeEach(async () => {
-		mocks = makeMockInstances();
+		mocks = makeMockInstances() as any;
 		agent = createAgent(AirgentClass, mocks);
 		agent.sessionId = "test-session";
 	});
@@ -927,8 +965,26 @@ describe("Airgent — buildAgentContext", () => {
 	});
 
 	test("includes relevant memories", () => {
-		const mems = [{ id: "m1", bug: "b", fix: "f", confidence: 0.9 }];
-		mocks.memory.findRelevant = mock(() => mems);
+		const mems: StructuredMemory[] = [
+			{
+				id: "m1",
+				sessionId: "sess-1",
+				bug: "b",
+				investigation: "",
+				root_cause: "",
+				fix: "f",
+				reason: "",
+				evidence: [],
+				confidence: 0.9,
+				tags: [],
+				files: [],
+				commands: [],
+				created: 0,
+				updated: 0,
+				links: [],
+			},
+		];
+		mocks.memory.findRelevant = mock(() => mems) as Mock<() => StructuredMemory[]>;
 		const ctx: AgentContext = agent.buildAgentContext("task");
 		expect(ctx.memory.relevantMemories).toEqual(mems);
 	});
@@ -936,14 +992,16 @@ describe("Airgent — buildAgentContext", () => {
 	test("includes skillIndex", () => {
 		mocks.skills.getIndex = mock(() => ({
 			skills: [{ name: "s1", description: "d1", tags: [], filePath: "/x" }],
-		}));
+		})) as Mock<
+			() => { skills: { name: string; description: string; tags: string[]; filePath: string }[] }
+		>;
 		const ctx: AgentContext = agent.buildAgentContext("t");
 		expect(ctx.skillIndex.skills).toHaveLength(1);
 		expect(ctx.skillIndex.skills[0]?.name).toBe("s1");
 	});
 
 	test("includes activeSkills", () => {
-		mocks.skills.getActiveSkills = mock(() => ["skill-a", "skill-b"]);
+		mocks.skills.getActiveSkills = mock(() => ["skill-a", "skill-b"]) as Mock<() => string[]>;
 		const ctx: AgentContext = agent.buildAgentContext("t");
 		expect(ctx.activeSkills).toEqual(["skill-a", "skill-b"]);
 	});
@@ -979,7 +1037,7 @@ describe("Airgent — Pipeline Handlers", () => {
 	let handlers: Map<string, Function>;
 
 	beforeEach(async () => {
-		mocks = makeMockInstances();
+		mocks = makeMockInstances() as any;
 		agent = createAgent(AirgentClass, mocks);
 		agent.sessionId = "sess-1";
 		agent.currentTask = "test task";
@@ -1002,9 +1060,9 @@ describe("Airgent — Pipeline Handlers", () => {
 
 	test("clarify handler uses streaming when showPipelineProgress", async () => {
 		agent.config.settings.showPipelineProgress = true; // only affects this handler call
-		mocks.api.streamChat = mock(function* () {
+		mocks.api.streamChat = mock(function* (): Generator<string, void, unknown> {
 			yield "streamed output";
-		});
+		}) as Mock<() => Generator<string, void, unknown>>;
 		const h = handlers.get("clarify")!;
 		const result = await h(new Map());
 		expect(result).toHaveProperty("content");
@@ -1044,8 +1102,25 @@ describe("Airgent — Pipeline Handlers", () => {
 	});
 
 	test("generate handler includes relevant memories", async () => {
-		// biome-ignore lint/suspicious/noExplicitAny: test mock return type
-		mocks.memory.findRelevant = mock(() => [{ id: "m1", bug: "b1", fix: "f1" } as any]);
+		mocks.memory.findRelevant = mock(() => [
+			{
+				id: "m1",
+				sessionId: "sess-1",
+				bug: "b1",
+				investigation: "",
+				root_cause: "",
+				fix: "f1",
+				reason: "",
+				evidence: [],
+				confidence: 0.9,
+				tags: [],
+				files: [],
+				commands: [],
+				created: 0,
+				updated: 0,
+				links: [],
+			},
+		]) as Mock<() => StructuredMemory[]>;
 		mocks.worker.execute = mock(() => ({ content: "result" }));
 		const h = handlers.get("generate")!;
 		await h(new Map());
@@ -1113,7 +1188,16 @@ describe("Airgent — Pipeline Handlers", () => {
 			inferenceAsFact: 0,
 			issues: ["i1"],
 			overallHealth: "warning",
-		}));
+		})) as Mock<
+			() => {
+				contradictions: number;
+				circularReferences: number;
+				hallucinatedLinks: number;
+				inferenceAsFact: number;
+				issues: string[];
+				overallHealth: "warning";
+			}
+		>;
 		const h = handlers.get("validate")!;
 		await h(new Map());
 		expect(mocks.ui.log).toHaveBeenCalledWith(
@@ -1145,7 +1229,7 @@ describe("Airgent — Edge Cases", () => {
 	let mocks: ReturnType<typeof makeMockInstances>;
 
 	beforeEach(async () => {
-		mocks = makeMockInstances();
+		mocks = makeMockInstances() as any;
 		agent = createAgent(AirgentClass, mocks);
 		agent.sessionId = "sess-1";
 		agent.running = true;
@@ -1186,15 +1270,15 @@ describe("Airgent — Streaming (streamNodeOutput)", () => {
 	let mocks: ReturnType<typeof makeMockInstances>;
 
 	beforeEach(async () => {
-		mocks = makeMockInstances();
+		mocks = makeMockInstances() as any;
 		agent = createAgent(AirgentClass, mocks);
 	});
 
 	test("streamNodeOutput streams and returns content", async () => {
-		mocks.api.streamChat = mock(function* () {
+		mocks.api.streamChat = mock(function* (): Generator<string, void, unknown> {
 			yield "hello ";
 			yield "world";
-		});
+		}) as Mock<() => Generator<string, void, unknown>>;
 		const model: ModelEntry = { provider: "test", model: "gpt-4" };
 		const msgs = [{ role: "user" as const, content: "hi" }];
 		const result = await agent.streamNodeOutput(model, msgs, "test-node", "plan");
@@ -1203,9 +1287,9 @@ describe("Airgent — Streaming (streamNodeOutput)", () => {
 	});
 
 	test("streamNodeOutput stores in pipelineData field", async () => {
-		mocks.api.streamChat = mock(function* () {
+		mocks.api.streamChat = mock(function* (): Generator<string, void, unknown> {
 			yield "stored";
-		});
+		}) as Mock<() => Generator<string, void, unknown>>;
 		await agent.streamNodeOutput(
 			{ provider: "test", model: "gpt-4" },
 			[{ role: "user", content: "hi" }],
@@ -1216,10 +1300,10 @@ describe("Airgent — Streaming (streamNodeOutput)", () => {
 	});
 
 	test("streamNodeOutput falls back to non-streaming on error", async () => {
-		mocks.api.streamChat = mock(async function* () {
+		mocks.api.streamChat = mock(function* (): Generator<string, void, unknown> {
 			yield "";
 			throw new Error("stream failed");
-		});
+		}) as Mock<() => Generator<string, void, unknown>>;
 		mocks.api.chat = mock(() => ({ content: "fallback" }));
 		const result = await agent.streamNodeOutput(
 			{ provider: "test", model: "gpt-4" },
@@ -1232,9 +1316,9 @@ describe("Airgent — Streaming (streamNodeOutput)", () => {
 	});
 
 	test("streamNodeOutput shows node prefix", async () => {
-		mocks.api.streamChat = mock(function* () {
+		mocks.api.streamChat = mock(function* (): Generator<string, void, unknown> {
 			yield "data";
-		});
+		}) as Mock<() => Generator<string, void, unknown>>;
 		await agent.streamNodeOutput(
 			{ provider: "test", model: "gpt-4" },
 			[{ role: "user", content: "hi" }],
@@ -1250,7 +1334,7 @@ describe("Airgent — applyModelConfig", () => {
 	let mocks: ReturnType<typeof makeMockInstances>;
 
 	beforeEach(async () => {
-		mocks = makeMockInstances();
+		mocks = makeMockInstances() as any;
 		agent = createAgent(AirgentClass, mocks);
 	});
 
@@ -1282,7 +1366,7 @@ describe("Airgent — updateStatus", () => {
 	let mocks: ReturnType<typeof makeMockInstances>;
 
 	beforeEach(async () => {
-		mocks = makeMockInstances();
+		mocks = makeMockInstances() as any;
 		agent = createAgent(AirgentClass, mocks);
 	});
 

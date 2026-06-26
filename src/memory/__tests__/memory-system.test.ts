@@ -275,9 +275,9 @@ describe("MemorySystem", () => {
 		expect(mem?.fix).toBe("the fix");
 		expect(mem?.reason).toBe("because");
 		expect(mem?.confidence).toBe(0.75);
-		expect(JSON.parse(mem?.tags)).toEqual(["tag1", "tag2"]);
-		expect(JSON.parse(mem?.files)).toEqual(["src/file1.ts"]);
-		expect(JSON.parse(mem?.commands)).toEqual(["npm test"]);
+		expect(JSON.parse(mem!.tags)).toEqual(["tag1", "tag2"]);
+		expect(JSON.parse(mem!.files)).toEqual(["src/file1.ts"]);
+		expect(JSON.parse(mem!.commands)).toEqual(["npm test"]);
 	});
 
 	test("createMemory stores multiple evidence entries", () => {
@@ -344,7 +344,7 @@ describe("MemorySystem", () => {
 		});
 
 		const results = ms.findRelevant(["test"]);
-		expect(results[0]?.confidence).toBeGreaterThanOrEqual(results[1]?.confidence);
+		expect(results[0]!.confidence).toBeGreaterThanOrEqual(results[1]!.confidence);
 	});
 
 	test("createMemory with empty evidence stores no evidence", () => {

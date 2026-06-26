@@ -19,19 +19,19 @@ const tempFiles: string[] = [];
 function successfulSpawn() {
 	return mock((..._: any[]) => ({
 		status: 0,
-		stdout: "",
-		stderr: "",
+		stdout: Buffer.from(""),
+		stderr: Buffer.from(""),
 		pid: 0,
 		output: [],
 		signal: null,
-	}));
+	})) as unknown as typeof import("node:child_process").spawnSync;
 }
 
 /** Helper: returns spawnSync mock that throws */
 function throwingSpawn(errorMsg = "command not found") {
 	return mock((..._: any[]) => {
 		throw new Error(errorMsg);
-	});
+	}) as unknown as typeof import("node:child_process").spawnSync;
 }
 
 describe("copyToClipboard", () => {
@@ -150,12 +150,12 @@ describe("copyToClipboard", () => {
 		const result = copyToClipboard("fallback text", undefined, {
 			spawnSync: mock((..._: any[]) => ({
 				status: 1,
-				stdout: "",
-				stderr: "error",
+				stdout: Buffer.from(""),
+				stderr: Buffer.from("error"),
 				pid: 0,
 				output: [],
 				signal: null,
-			})),
+			})) as unknown as typeof import("node:child_process").spawnSync,
 		});
 		expect(result.method).toBe("file");
 		if (result.filePath) tempFiles.push(result.filePath);
@@ -194,13 +194,13 @@ describe("copyToClipboard", () => {
 				if (callCount === 1) throw new Error("no wl-copy");
 				return {
 					status: 0,
-					stdout: "",
-					stderr: "",
+					stdout: Buffer.from(""),
+					stderr: Buffer.from(""),
 					pid: 0,
 					output: [],
 					signal: null,
 				};
-			}),
+			}) as unknown as typeof import("node:child_process").spawnSync,
 		});
 		expect(result.success).toBe(true);
 		expect(result.method).toBe("xclip");
@@ -237,13 +237,13 @@ describe("copyToClipboard", () => {
 				if (callCount === 1) throw new Error("no xclip");
 				return {
 					status: 0,
-					stdout: "",
-					stderr: "",
+					stdout: Buffer.from(""),
+					stderr: Buffer.from(""),
 					pid: 0,
 					output: [],
 					signal: null,
 				};
-			}),
+			}) as unknown as typeof import("node:child_process").spawnSync,
 		});
 		expect(result.success).toBe(true);
 		expect(result.method).toBe("xsel");
@@ -263,13 +263,13 @@ describe("copyToClipboard", () => {
 				if (callCount === 1) throw new Error("no xclip");
 				return {
 					status: 0,
-					stdout: "",
-					stderr: "",
+					stdout: Buffer.from(""),
+					stderr: Buffer.from(""),
 					pid: 0,
 					output: [],
 					signal: null,
 				};
-			}),
+			}) as unknown as typeof import("node:child_process").spawnSync,
 		});
 		expect(result.success).toBe(true);
 		expect(result.method).toBe("xsel");
@@ -290,21 +290,21 @@ describe("copyToClipboard", () => {
 				if (callCount === 1)
 					return {
 						status: 1,
-						stdout: "",
-						stderr: "xclip error",
+						stdout: Buffer.from(""),
+						stderr: Buffer.from("xclip error"),
 						pid: 0,
 						output: [],
 						signal: null,
 					};
 				return {
 					status: 0,
-					stdout: "",
-					stderr: "",
+					stdout: Buffer.from(""),
+					stderr: Buffer.from(""),
 					pid: 0,
 					output: [],
 					signal: null,
 				};
-			}),
+			}) as unknown as typeof import("node:child_process").spawnSync,
 		});
 		expect(result.success).toBe(true);
 		expect(result.method).toBe("xsel");
@@ -410,21 +410,21 @@ describe("copyToClipboard", () => {
 				if (callCount === 1)
 					return {
 						status: 1,
-						stdout: "",
-						stderr: "wl-copy failed",
+						stdout: Buffer.from(""),
+						stderr: Buffer.from("wl-copy failed"),
 						pid: 0,
 						output: [],
 						signal: null,
 					};
 				return {
 					status: 0,
-					stdout: "",
-					stderr: "",
+					stdout: Buffer.from(""),
+					stderr: Buffer.from(""),
 					pid: 0,
 					output: [],
 					signal: null,
 				};
-			}),
+			}) as unknown as typeof import("node:child_process").spawnSync,
 		});
 		expect(result.success).toBe(true);
 		expect(result.method).toBe("xclip");

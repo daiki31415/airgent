@@ -183,7 +183,7 @@ describe("OpenCodeAPI.healthCheck", () => {
 	test("returns healthy:false when fetch throws", async () => {
 		globalThis.fetch = (async () => {
 			throw new Error("ECONNREFUSED");
-		}) as typeof fetch;
+		}) as unknown as typeof fetch;
 		const api = new OpenCodeAPI();
 		const result = await api.healthCheck();
 		expect(result.healthy).toBe(false);
@@ -643,7 +643,7 @@ describe("OpenCodeAPI.streamChat", () => {
 				status: 200,
 				json: async () => true,
 			} as unknown as Response;
-		}) as typeof fetch;
+		}) as unknown as typeof fetch;
 
 		const api = new OpenCodeAPI();
 		const chunks: string[] = [];
@@ -827,7 +827,7 @@ describe("OpenCodeAPI.streamChat", () => {
 				status: 200,
 				json: async () => true,
 			} as unknown as Response;
-		}) as typeof fetch;
+		}) as unknown as typeof fetch;
 
 		const api = new OpenCodeAPI();
 		const chunks: string[] = [];

@@ -208,7 +208,7 @@ describe("MemoryOrganizerAgent.organize", () => {
 
 		// Check tags were extracted
 		const memory = storage.getMemory(result.memories[0]!);
-		const tags = JSON.parse(memory?.tags);
+		const tags = JSON.parse(memory!.tags ?? "[]");
 		// Should include keywords from the bug text
 		expect(tags.length).toBeGreaterThanOrEqual(1);
 	});

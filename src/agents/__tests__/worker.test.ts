@@ -243,13 +243,13 @@ describe("WorkerAgent.execute (streaming with onChunk)", () => {
 
 	test("onChunk is called with incremental content", async () => {
 		const api = new (class extends OpenCodeAPI {
-			chat = mock(async () => ({
+			override chat = mock(async () => ({
 				id: "id",
 				content: "",
 				model: "m",
 				usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
 			}));
-			streamChat = mock(async function* (): AsyncGenerator<string> {
+			override streamChat = mock(async function* (): AsyncGenerator<string> {
 				yield "part1";
 				yield "part2";
 				yield "part3";
@@ -282,13 +282,13 @@ describe("WorkerAgent error handling", () => {
 
 	test("propagates error from api.streamChat (streaming)", async () => {
 		const api = new (class extends OpenCodeAPI {
-			chat = mock(async () => ({
+			override chat = mock(async () => ({
 				id: "id",
 				content: "",
 				model: "m",
 				usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
 			}));
-			streamChat = mock(async function* (): AsyncGenerator<string> {
+			override streamChat = mock(async function* (): AsyncGenerator<string> {
 				yield "";
 				throw new Error("Stream failure");
 			});
@@ -427,13 +427,13 @@ describe("WorkerAgent edge cases", () => {
 
 	test("execute with onChunk but empty stream yields empty content", async () => {
 		const api = new (class extends OpenCodeAPI {
-			chat = mock(async () => ({
+			override chat = mock(async () => ({
 				id: "id",
 				content: "",
 				model: "m",
 				usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
 			}));
-			streamChat = mock(async function* (): AsyncGenerator<string> {
+			override streamChat = mock(async function* (): AsyncGenerator<string> {
 				// no yields
 			});
 		})();
