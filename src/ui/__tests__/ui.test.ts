@@ -5,12 +5,30 @@
  * No real terminal or clipboard access.
  */
 
-import { afterEach, beforeEach, describe, expect, mock, spyOn, test } from "bun:test";
+import {
+	afterAll,
+	afterEach,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	mock,
+	spyOn,
+	test,
+} from "bun:test";
 import { resolve } from "node:path";
 
 // ============================================================
 // Mock Setup
 // ============================================================
+
+beforeAll(() => {
+	(globalThis as any).__mockClipboard = true;
+});
+
+afterAll(() => {
+	delete (globalThis as any).__mockClipboard;
+});
 
 // Mock process.stdout/stderr.isTTY to true for most tests
 const _originalStdoutIsTTY = process.stdout.isTTY;
@@ -180,10 +198,18 @@ mock.module("node:readline", () => ({
 }));
 
 // --- clipboard mock (absolute path for reliable module interception) ---
-const mockCopyToClipboard = mock((_text: string, _osc52?: (t: string) => boolean) => ({
-	success: true,
-	method: "osc52",
-}));
+const originalClipboard = require("../../utils/clipboard");
+const mockCopyToClipboard = mock(
+	(text: string, osc52?: (t: string) => boolean, overrides?: any) => {
+		if ((globalThis as any).__mockClipboard) {
+			return {
+				success: true,
+				method: "osc52",
+			};
+		}
+		return originalClipboard.copyToClipboard(text, osc52, overrides);
+	},
+);
 mock.module(resolve(import.meta.dir, "../../utils/clipboard"), () => ({
 	copyToClipboard: mockCopyToClipboard,
 }));
