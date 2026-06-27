@@ -15,6 +15,7 @@
 
 import { afterAll, beforeAll, describe, expect, mock, test } from "bun:test";
 import { copyToClipboard } from "../clipboard";
+import type { CopyOverrides } from "../clipboard";
 
 /** Track temp files created during file-fallback tests for cleanup */
 const tempFiles: string[] = [];
