@@ -9,7 +9,7 @@
  * Tests pass mock functions via overrides. File fallback tests use real fs.
  */
 
-import { afterAll, beforeAll, describe, expect, test, mock } from "bun:test";
+import { afterAll, beforeAll, describe, expect, mock, test } from "bun:test";
 import type { CopyOverrides, CopyResult } from "../clipboard";
 
 /** Track temp files created during file-fallback tests for cleanup */
