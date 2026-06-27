@@ -7,10 +7,15 @@
  *
  * Solution: copyToClipboard() accepts optional overrides for spawnSync/writeFileSync.
  * Tests pass mock functions via overrides. File fallback tests use real fs.
+ *
+ * Note: static import is used (not dynamic import in beforeAll) to avoid
+ * a Bun 1.2.x/aarch64 race where tests run before beforeAll resolves,
+ * causing mock() call tracking to silently fail.
  */
 
 import { afterAll, beforeAll, describe, expect, mock, test } from "bun:test";
-import type { CopyOverrides, CopyResult } from "../clipboard";
+import { copyToClipboard } from "../clipboard";
+import type { CopyOverrides } from "../clipboard";
 
 /** Track temp files created during file-fallback tests for cleanup */
 const tempFiles: string[] = [];
@@ -41,17 +46,9 @@ function throwingSpawn(errorMsg = "command not found") {
 
 describe("copyToClipboard", () => {
 	let originalWaylandDisplay: string | undefined;
-	// Store a reference to copyToClipboard loaded via dynamic import
-	let copyToClipboard: (
-		text: string,
-		osc52Copy?: (text: string) => boolean,
-		overrides?: CopyOverrides,
-	) => CopyResult;
 
-	beforeAll(async () => {
+	beforeAll(() => {
 		originalWaylandDisplay = process.env.WAYLAND_DISPLAY;
-		const mod = await import("../clipboard");
-		copyToClipboard = mod.copyToClipboard;
 	});
 
 	afterAll(() => {
