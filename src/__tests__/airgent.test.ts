@@ -426,7 +426,7 @@ describe("Airgent — Constructor & Initialization", () => {
 	let mocks: any;
 
 	beforeEach(async () => {
-		mocks = makeMockInstances() as any;
+		mocks = makeMockInstances() as ReturnType<typeof makeMockInstances>;
 		agent = createAgent(AirgentClass, mocks);
 	});
 
@@ -458,7 +458,7 @@ describe("Airgent — start() and stop()", () => {
 	let mocks: ReturnType<typeof makeMockInstances>;
 
 	beforeEach(async () => {
-		mocks = makeMockInstances() as any;
+		mocks = makeMockInstances() as ReturnType<typeof makeMockInstances>;
 		agent = createAgent(AirgentClass, mocks);
 	});
 
@@ -515,7 +515,7 @@ describe("Airgent — Command Handling", () => {
 	}
 
 	beforeEach(async () => {
-		mocks = makeMockInstances() as any;
+		mocks = makeMockInstances() as ReturnType<typeof makeMockInstances>;
 		agent = createAgent(AirgentClass, mocks);
 		agent.sessionId = "test-session";
 		agent.running = true;
@@ -792,7 +792,7 @@ describe("Airgent — processTask flow", () => {
 	let mocks: ReturnType<typeof makeMockInstances>;
 
 	beforeEach(async () => {
-		mocks = makeMockInstances() as any;
+		mocks = makeMockInstances() as ReturnType<typeof makeMockInstances>;
 		agent = createAgent(AirgentClass, mocks);
 		agent.sessionId = "test-session";
 		agent.running = true;
@@ -938,7 +938,7 @@ describe("Airgent — buildAgentContext", () => {
 	let mocks: ReturnType<typeof makeMockInstances>;
 
 	beforeEach(async () => {
-		mocks = makeMockInstances() as any;
+		mocks = makeMockInstances() as ReturnType<typeof makeMockInstances>;
 		agent = createAgent(AirgentClass, mocks);
 		agent.sessionId = "test-session";
 	});
@@ -1037,7 +1037,7 @@ describe("Airgent — Pipeline Handlers", () => {
 	let handlers: Map<string, Function>;
 
 	beforeEach(async () => {
-		mocks = makeMockInstances() as any;
+		mocks = makeMockInstances() as ReturnType<typeof makeMockInstances>;
 		agent = createAgent(AirgentClass, mocks);
 		agent.sessionId = "sess-1";
 		agent.currentTask = "test task";
@@ -1229,7 +1229,7 @@ describe("Airgent — Edge Cases", () => {
 	let mocks: ReturnType<typeof makeMockInstances>;
 
 	beforeEach(async () => {
-		mocks = makeMockInstances() as any;
+		mocks = makeMockInstances() as ReturnType<typeof makeMockInstances>;
 		agent = createAgent(AirgentClass, mocks);
 		agent.sessionId = "sess-1";
 		agent.running = true;
@@ -1270,7 +1270,7 @@ describe("Airgent — Streaming (streamNodeOutput)", () => {
 	let mocks: ReturnType<typeof makeMockInstances>;
 
 	beforeEach(async () => {
-		mocks = makeMockInstances() as any;
+		mocks = makeMockInstances() as ReturnType<typeof makeMockInstances>;
 		agent = createAgent(AirgentClass, mocks);
 	});
 
@@ -1334,7 +1334,7 @@ describe("Airgent — applyModelConfig", () => {
 	let mocks: ReturnType<typeof makeMockInstances>;
 
 	beforeEach(async () => {
-		mocks = makeMockInstances() as any;
+		mocks = makeMockInstances() as ReturnType<typeof makeMockInstances>;
 		agent = createAgent(AirgentClass, mocks);
 	});
 
@@ -1366,7 +1366,7 @@ describe("Airgent — updateStatus", () => {
 	let mocks: ReturnType<typeof makeMockInstances>;
 
 	beforeEach(async () => {
-		mocks = makeMockInstances() as any;
+		mocks = makeMockInstances() as ReturnType<typeof makeMockInstances>;
 		agent = createAgent(AirgentClass, mocks);
 	});
 

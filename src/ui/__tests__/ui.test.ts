@@ -17,6 +17,7 @@ import {
 	test,
 } from "bun:test";
 import { resolve } from "node:path";
+import type { StatusInfo } from "../index";
 
 // ============================================================
 // Mock Setup
@@ -267,7 +268,7 @@ describe("UIManager — Constructor", () => {
 		const mod = await import("../index");
 		UIManager = mod.UIManager;
 		const ui = new UIManager({ refreshIntervalMs: 200 });
-		expect((ui as any).statusInfo).toEqual({
+		expect((ui as unknown as { statusInfo: StatusInfo }).statusInfo).toEqual({
 			sessionId: "",
 			status: "idle",
 			pipelineNode: "",
@@ -504,30 +505,30 @@ describe("UIManager — updateStatus", () => {
 
 	test("updateStatus merges into statusInfo", async () => {
 		ui.updateStatus({ status: "running", pipelineNode: "plan" });
-		expect((ui as any).statusInfo.status).toBe("running");
-		expect((ui as any).statusInfo.pipelineNode).toBe("plan");
+		expect((ui as unknown as { statusInfo: StatusInfo }).statusInfo.status).toBe("running");
+		expect((ui as unknown as { statusInfo: StatusInfo }).statusInfo.pipelineNode).toBe("plan");
 	});
 
 	test("updateStatus with partial updates works", async () => {
 		ui.updateStatus({ tokenUsage: 500 });
-		expect((ui as any).statusInfo.tokenUsage).toBe(500);
+		expect((ui as unknown as { statusInfo: StatusInfo }).statusInfo.tokenUsage).toBe(500);
 		// Other fields unchanged
-		expect((ui as any).statusInfo.status).toBe("idle");
+		expect((ui as unknown as { statusInfo: StatusInfo }).statusInfo.status).toBe("idle");
 	});
 
 	test("updateStatus with sessionId", async () => {
 		ui.updateStatus({ sessionId: "sess-abc" });
-		expect((ui as any).statusInfo.sessionId).toBe("sess-abc");
+		expect((ui as unknown as { statusInfo: StatusInfo }).statusInfo.sessionId).toBe("sess-abc");
 	});
 
 	test("updateStatus with memoryCount", async () => {
 		ui.updateStatus({ memoryCount: 42 });
-		expect((ui as any).statusInfo.memoryCount).toBe(42);
+		expect((ui as unknown as { statusInfo: StatusInfo }).statusInfo.memoryCount).toBe(42);
 	});
 
 	test("updateStatus sets error status styling", async () => {
 		ui.updateStatus({ status: "error" });
-		expect((ui as any).statusInfo.status).toBe("error");
+		expect((ui as unknown as { statusInfo: StatusInfo }).statusInfo.status).toBe("error");
 	});
 
 	test("updateStatus does not throw when header/footer not set up", async () => {
@@ -921,9 +922,9 @@ describe("UIManager — Edge Cases", () => {
 		ui.updateStatus({ status: "running" });
 		ui.updateStatus({ pipelineNode: "plan" });
 		ui.updateStatus({ tokenUsage: 100 });
-		expect((ui as any).statusInfo.status).toBe("running");
-		expect((ui as any).statusInfo.pipelineNode).toBe("plan");
-		expect((ui as any).statusInfo.tokenUsage).toBe(100);
+		expect((ui as unknown as { statusInfo: StatusInfo }).statusInfo.status).toBe("running");
+		expect((ui as unknown as { statusInfo: StatusInfo }).statusInfo.pipelineNode).toBe("plan");
+		expect((ui as unknown as { statusInfo: StatusInfo }).statusInfo.tokenUsage).toBe(100);
 	});
 
 	test("log with unknown source uses default color", () => {
@@ -981,7 +982,7 @@ describe("UIManager — Integration", () => {
 
 		// update status
 		ui.updateStatus({ status: "running", memoryCount: 5 });
-		expect((ui as any).statusInfo.status).toBe("running");
+		expect((ui as unknown as { statusInfo: StatusInfo }).statusInfo.status).toBe("running");
 
 		// copy
 		mockCopyToClipboard.mockImplementation(() => ({

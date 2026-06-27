@@ -120,7 +120,7 @@ describe("WorkerAgent.init", () => {
 
 describe("WorkerAgent.execute (non-streaming)", () => {
 	test("returns { content } with response text", async () => {
-		const { worker, api } = createWorker({ chatResponse: "final output" });
+		const { worker } = createWorker({ chatResponse: "final output" });
 		worker.init(sampleContext());
 
 		const result = await worker.execute("build feature");

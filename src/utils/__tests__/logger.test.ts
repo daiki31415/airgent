@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import type { LogLevel } from "../logger";
 import { Logger, sanitizeError } from "../logger";
 
 describe("Logger", () => {
@@ -11,13 +12,13 @@ describe("Logger", () => {
 	test("child inherits log level from parent", () => {
 		const parent = new Logger("p", "error");
 		const child = parent.child("c");
-		expect((child as any).level).toBe("error");
+		expect((child as unknown as { level: LogLevel }).level).toBe("error");
 	});
 
 	test("child inherits debug mode from parent", () => {
 		const parent = new Logger("p", "info", true);
 		const child = parent.child("c");
-		expect((child as any).debugMode).toBe(true);
+		expect((child as unknown as { debugMode: boolean }).debugMode).toBe(true);
 	});
 
 	test("setDebug toggles debug mode", () => {
@@ -105,13 +106,13 @@ describe("Logger extended", () => {
 	test("child inherits level from parent", () => {
 		const parent = new Logger("app", "error");
 		const child = parent.child("net");
-		expect((child as any).level).toBe("error");
+		expect((child as unknown as { level: LogLevel }).level).toBe("error");
 	});
 
 	test("child inherits debugMode from parent", () => {
 		const parent = new Logger("app", "debug", true);
 		const child = parent.child("cache");
-		expect((child as any).debugMode).toBe(true);
+		expect((child as unknown as { debugMode: boolean }).debugMode).toBe(true);
 	});
 
 	test("multiple child loggers from same parent", () => {
