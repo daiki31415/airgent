@@ -11,6 +11,7 @@ const GITIGNORE = `${["*.db", "raw/", "*.log"].join("\n")}\n`;
 export class DeviceSync {
 	private storage: Storage;
 	private syncDir: string;
+	private remoteUrl: string = "";
 	private logger = rootLogger.child("sync");
 	private get exportFile(): string {
 		return join(this.syncDir, "export.json");
