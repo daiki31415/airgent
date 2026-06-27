@@ -9,15 +9,20 @@
  * Tests pass mock functions via overrides. File fallback tests use real fs.
  */
 
-import { afterAll, beforeAll, describe, expect, mock, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, test, mock } from "bun:test";
 import type { CopyOverrides, CopyResult } from "../clipboard";
 
 /** Track temp files created during file-fallback tests for cleanup */
 const tempFiles: string[] = [];
 
+/** Simple mock function creator for Bun 1.2.23 compatibility */
+function createMock<T extends (...args: any[]) => any>(fn: T): any {
+	return mock(fn);
+}
+
 /** Helper: returns spawnSync mock that returns success */
 function successfulSpawn() {
-	return mock((..._: any[]) => ({
+	return createMock((..._: any[]) => ({
 		status: 0,
 		stdout: Buffer.from(""),
 		stderr: Buffer.from(""),
@@ -29,7 +34,7 @@ function successfulSpawn() {
 
 /** Helper: returns spawnSync mock that throws */
 function throwingSpawn(errorMsg = "command not found") {
-	return mock((..._: any[]) => {
+	return createMock((..._: any[]) => {
 		throw new Error(errorMsg);
 	}) as unknown as typeof import("node:child_process").spawnSync;
 }
