@@ -268,7 +268,7 @@ export async function handleModelCommand(agent: AgentHandle, args: string[]): Pr
 		agent.ui.log(
 			"info",
 			"airgent",
-			"Usage: /model <role> | all — roles: " + ROLE_CONFIGS.map((r) => r.key).join(", "),
+			`Usage: /model <role> | all — roles: ${ROLE_CONFIGS.map((r) => r.key).join(", ")}`,
 		);
 	}
 }

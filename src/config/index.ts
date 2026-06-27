@@ -262,13 +262,13 @@ export class ConfigManager {
 
 	private extractFrontmatter(content: string, key: string): string | null {
 		const match = content.match(new RegExp(`^${key}:\\s*(.+)$`, "m"));
-		return match && match[1] ? match[1].trim() : null;
+		return match?.[1] ? match[1].trim() : null;
 	}
 
 	private extractList(content: string, section: string): string[] {
 		const regex = new RegExp(`#\\s*${section}\\s*\\n([\\s\\S]*?)(?:\\n#\\s|$)`);
 		const match = content.match(regex);
-		if (!match || !match[1]) return [];
+		if (!match?.[1]) return [];
 		return match[1]
 			.split("\n")
 			.map((l) => l.replace(/^-\s*/, "").trim())

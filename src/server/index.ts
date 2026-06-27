@@ -78,7 +78,7 @@ export async function ensureOpenCodeServer(agent: ServerHandle): Promise<void> {
 		agent.ui.log(
 			"info",
 			"airgent",
-			"OpenCode server connected" + (health.version ? ` v${health.version}` : ""),
+			`OpenCode server connected${health.version ? ` v${health.version}` : ""}`,
 		);
 	} else {
 		agent.ui.log(
