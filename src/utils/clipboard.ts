@@ -16,6 +16,7 @@ export interface CopyResult {
 export interface CopyOverrides {
 	spawnSync?: typeof _spawnSync;
 	writeFileSync?: typeof _writeFileSync;
+	platform?: string;
 }
 
 export function copyToClipboard(
@@ -25,6 +26,7 @@ export function copyToClipboard(
 ): CopyResult {
 	const spawnSync = overrides?.spawnSync ?? _spawnSync;
 	const writeFileSync = overrides?.writeFileSync ?? _writeFileSync;
+	const platform = overrides?.platform ?? process.platform;
 	// 1. OSC52 (TUI内選択コピー)
 	if (osc52Copy) {
 		try {
@@ -36,7 +38,7 @@ export function copyToClipboard(
 	}
 
 	// 2. システムクリップボードCLI
-	if (process.platform === "darwin") {
+	if (platform === "darwin") {
 		try {
 			const proc = spawnSync("pbcopy", [], { input: text, encoding: "utf-8" });
 			if (proc.status === 0) return { success: true, method: "pbcopy" };
@@ -45,7 +47,7 @@ export function copyToClipboard(
 		}
 	}
 
-	if (process.platform === "linux") {
+	if (platform === "linux") {
 		// Wayland
 		if (process.env.WAYLAND_DISPLAY) {
 			try {

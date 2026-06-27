@@ -1,10 +1,13 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { join, resolve, dirname } from "node:path";
 import { getAllowedDirs, resolveSafePath } from "../smart-cat";
 
 describe("resolveSafePath", () => {
 	const tmpDir = join(import.meta.dir, "..", "__test_tmp__");
+	// Create a temp dir outside allowed dirs for testing access denied
+	// Use /tmp to ensure it's outside the project
+	const outsideTmpDir = join("/tmp", `airgent-test-outside-${process.pid}`);
 
 	beforeAll(() => {
 		mkdirSync(tmpDir, { recursive: true });
@@ -12,10 +15,15 @@ describe("resolveSafePath", () => {
 		writeFileSync(join(tmpDir, "sub_file.txt"), "sub content");
 		mkdirSync(join(tmpDir, "subdir"), { recursive: true });
 		writeFileSync(join(tmpDir, "subdir", "nested.txt"), "nested");
+
+		// Create temp dir outside allowed dirs with a test file
+		mkdirSync(outsideTmpDir, { recursive: true });
+		writeFileSync(join(outsideTmpDir, "outside.txt"), "outside content");
 	});
 
 	afterAll(() => {
 		rmSync(tmpDir, { recursive: true, force: true });
+		rmSync(outsideTmpDir, { recursive: true, force: true });
 	});
 
 	test("resolves existing file within allowed dir", () => {
@@ -43,7 +51,7 @@ describe("resolveSafePath", () => {
 	});
 
 	test("throws on absolute path pointing outside allowed dirs", () => {
-		expect(() => resolveSafePath("/etc/hostname")).toThrow("Access denied");
+		expect(() => resolveSafePath(join(outsideTmpDir, "outside.txt"))).toThrow("Access denied");
 	});
 
 	test("resolves file within HOME directory", () => {
@@ -89,7 +97,7 @@ describe("resolveSafePath", () => {
 	});
 
 	test("throws on symlink pointing outside allowed dirs", () => {
-		expect(() => resolveSafePath("/proc/1/environ")).toThrow("Access denied");
+		expect(() => resolveSafePath(join(outsideTmpDir, "outside.txt"))).toThrow("Access denied");
 	});
 
 	test("whitespace path throws (resolve adds to CWD, no such file)", () => {
@@ -133,8 +141,8 @@ describe("resolveSafePath", () => {
 	});
 
 	test("rejects existing file outside allowed dirs", () => {
-		// /etc/hostname should exist and be outside allowed dirs
-		expect(() => resolveSafePath("/etc/hostname")).toThrow("Access denied");
+		// File in outsideTmpDir should exist and be outside allowed dirs
+		expect(() => resolveSafePath(join(outsideTmpDir, "outside.txt"))).toThrow("Access denied");
 	});
 
 	test("getAllowedDirs reflects current process.cwd() (not stale)", () => {

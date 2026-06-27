@@ -35,7 +35,6 @@ function throwingSpawn(errorMsg = "command not found") {
 }
 
 describe("copyToClipboard", () => {
-	let originalPlatform: string;
 	let originalWaylandDisplay: string | undefined;
 	// Store a reference to copyToClipboard loaded via dynamic import
 	let copyToClipboard: (
@@ -45,18 +44,12 @@ describe("copyToClipboard", () => {
 	) => CopyResult;
 
 	beforeAll(async () => {
-		originalPlatform = process.platform;
 		originalWaylandDisplay = process.env.WAYLAND_DISPLAY;
 		const mod = await import("../clipboard");
 		copyToClipboard = mod.copyToClipboard;
 	});
 
 	afterAll(() => {
-		// Restore process.platform
-		Object.defineProperty(process, "platform", {
-			value: originalPlatform,
-			configurable: true,
-		});
 		// Restore WAYLAND_DISPLAY
 		if (originalWaylandDisplay !== undefined) {
 			process.env.WAYLAND_DISPLAY = originalWaylandDisplay;
@@ -84,13 +77,10 @@ describe("copyToClipboard", () => {
 
 	test("OSC52 mode falls through when callback returns false", () => {
 		const osc52Fn = mock(() => false);
-		Object.defineProperty(process, "platform", {
-			value: "win32",
-			configurable: true,
-		});
 
 		const result = copyToClipboard("hello", osc52Fn, {
 			spawnSync: successfulSpawn(),
+			platform: "win32",
 		});
 		expect(result.method).toBe("file");
 		if (result.filePath) tempFiles.push(result.filePath);
@@ -100,26 +90,18 @@ describe("copyToClipboard", () => {
 		const osc52Fn = mock(() => {
 			throw new Error("osc52 failed");
 		});
-		Object.defineProperty(process, "platform", {
-			value: "win32",
-			configurable: true,
-		});
 
 		const result = copyToClipboard("text", osc52Fn, {
 			spawnSync: successfulSpawn(),
+			platform: "win32",
 		});
 		expect(result.method).toBe("file");
 		if (result.filePath) tempFiles.push(result.filePath);
 	});
 
 	test("pbcopy on macOS returns success with method pbcopy", () => {
-		Object.defineProperty(process, "platform", {
-			value: "darwin",
-			configurable: true,
-		});
-
 		const sp = successfulSpawn();
-		const result = copyToClipboard("hello mac", undefined, { spawnSync: sp });
+		const result = copyToClipboard("hello mac", undefined, { spawnSync: sp, platform: "darwin" });
 		expect(result.success).toBe(true);
 		expect(result.method).toBe("pbcopy");
 		expect(sp).toHaveBeenCalledWith("pbcopy", [], {
@@ -129,24 +111,15 @@ describe("copyToClipboard", () => {
 	});
 
 	test("pbcopy fall through when spawnSync throws on macOS", () => {
-		Object.defineProperty(process, "platform", {
-			value: "darwin",
-			configurable: true,
-		});
-
 		const result = copyToClipboard("fallback text", undefined, {
 			spawnSync: throwingSpawn(),
+			platform: "darwin",
 		});
 		expect(result.method).toBe("file");
 		if (result.filePath) tempFiles.push(result.filePath);
 	});
 
 	test("pbcopy fall through when status is non-zero on macOS", () => {
-		Object.defineProperty(process, "platform", {
-			value: "darwin",
-			configurable: true,
-		});
-
 		const result = copyToClipboard("fallback text", undefined, {
 			spawnSync: mock((..._: any[]) => ({
 				status: 1,
@@ -156,21 +129,19 @@ describe("copyToClipboard", () => {
 				output: [],
 				signal: null,
 			})) as unknown as typeof import("node:child_process").spawnSync,
+			platform: "darwin",
 		});
 		expect(result.method).toBe("file");
 		if (result.filePath) tempFiles.push(result.filePath);
 	});
 
 	test("wl-copy on Linux Wayland returns success", () => {
-		Object.defineProperty(process, "platform", {
-			value: "linux",
-			configurable: true,
-		});
 		process.env.WAYLAND_DISPLAY = "wayland-0";
 
 		const sp = successfulSpawn();
 		const result = copyToClipboard("wayland text", undefined, {
 			spawnSync: sp,
+			platform: "linux",
 		});
 		expect(result.success).toBe(true);
 		expect(result.method).toBe("wl-copy");
@@ -181,10 +152,6 @@ describe("copyToClipboard", () => {
 	});
 
 	test("wl-copy fall through on Wayland when spawnSync throws", () => {
-		Object.defineProperty(process, "platform", {
-			value: "linux",
-			configurable: true,
-		});
 		process.env.WAYLAND_DISPLAY = "wayland-0";
 
 		let callCount = 0;
@@ -201,20 +168,17 @@ describe("copyToClipboard", () => {
 					signal: null,
 				};
 			}) as unknown as typeof import("node:child_process").spawnSync,
+			platform: "linux",
 		});
 		expect(result.success).toBe(true);
 		expect(result.method).toBe("xclip");
 	});
 
 	test("xclip on Linux X11 returns success", () => {
-		Object.defineProperty(process, "platform", {
-			value: "linux",
-			configurable: true,
-		});
 		delete process.env.WAYLAND_DISPLAY;
 
 		const sp = successfulSpawn();
-		const result = copyToClipboard("xclip text", undefined, { spawnSync: sp });
+		const result = copyToClipboard("xclip text", undefined, { spawnSync: sp, platform: "linux" });
 		expect(result.success).toBe(true);
 		expect(result.method).toBe("xclip");
 		expect(sp).toHaveBeenCalledWith("xclip", ["-selection", "clipboard"], {
@@ -224,10 +188,6 @@ describe("copyToClipboard", () => {
 	});
 
 	test("xclip fall through to xsel when xclip spawnSync throws", () => {
-		Object.defineProperty(process, "platform", {
-			value: "linux",
-			configurable: true,
-		});
 		delete process.env.WAYLAND_DISPLAY;
 
 		let callCount = 0;
@@ -244,16 +204,13 @@ describe("copyToClipboard", () => {
 					signal: null,
 				};
 			}) as unknown as typeof import("node:child_process").spawnSync,
+			platform: "linux",
 		});
 		expect(result.success).toBe(true);
 		expect(result.method).toBe("xsel");
 	});
 
 	test("xsel on Linux X11 returns success", () => {
-		Object.defineProperty(process, "platform", {
-			value: "linux",
-			configurable: true,
-		});
 		delete process.env.WAYLAND_DISPLAY;
 
 		let callCount = 0;
@@ -270,6 +227,7 @@ describe("copyToClipboard", () => {
 					signal: null,
 				};
 			}) as unknown as typeof import("node:child_process").spawnSync,
+			platform: "linux",
 		});
 		expect(result.success).toBe(true);
 		expect(result.method).toBe("xsel");
@@ -277,10 +235,6 @@ describe("copyToClipboard", () => {
 	});
 
 	test("xclip non-zero status falls through to xsel", () => {
-		Object.defineProperty(process, "platform", {
-			value: "linux",
-			configurable: true,
-		});
 		delete process.env.WAYLAND_DISPLAY;
 
 		let callCount = 0;
@@ -305,19 +259,16 @@ describe("copyToClipboard", () => {
 					signal: null,
 				};
 			}) as unknown as typeof import("node:child_process").spawnSync,
+			platform: "linux",
 		});
 		expect(result.success).toBe(true);
 		expect(result.method).toBe("xsel");
 	});
 
 	test("fallback to temp file when all CLI methods fail", () => {
-		Object.defineProperty(process, "platform", {
-			value: "win32",
-			configurable: true,
-		});
 		// No spawnSync override -> no CLI methods -> file fallback with real fs
 
-		const result = copyToClipboard("final fallback");
+		const result = copyToClipboard("final fallback", undefined, { platform: "win32" });
 		expect(result.success).toBe(true);
 		expect(result.method).toBe("file");
 		expect(result.filePath).toBeDefined();
@@ -330,16 +281,12 @@ describe("copyToClipboard", () => {
 	});
 
 	test("file fallback reports error when writeFileSync throws", () => {
-		Object.defineProperty(process, "platform", {
-			value: "win32",
-			configurable: true,
-		});
-
 		const result = copyToClipboard("failing write", undefined, {
 			spawnSync: throwingSpawn(),
 			writeFileSync: mock((..._: any[]) => {
 				throw new Error("disk full");
 			}) as any,
+			platform: "win32",
 		});
 		expect(result.success).toBe(false);
 		expect(result.method).toBe("file");
@@ -348,14 +295,11 @@ describe("copyToClipboard", () => {
 	});
 
 	test("empty string is copied successfully", () => {
-		Object.defineProperty(process, "platform", {
-			value: "linux",
-			configurable: true,
-		});
 		delete process.env.WAYLAND_DISPLAY;
 
 		const result = copyToClipboard("", undefined, {
 			spawnSync: successfulSpawn(),
+			platform: "linux",
 		});
 		expect(result.success).toBe(true);
 		expect(result.method).toBe("xclip");
@@ -363,13 +307,9 @@ describe("copyToClipboard", () => {
 
 	test("very long string is copied successfully", () => {
 		const longText = "x".repeat(100_000);
-		Object.defineProperty(process, "platform", {
-			value: "darwin",
-			configurable: true,
-		});
 
 		const sp = successfulSpawn();
-		const result = copyToClipboard(longText, undefined, { spawnSync: sp });
+		const result = copyToClipboard(longText, undefined, { spawnSync: sp, platform: "darwin" });
 		expect(result.success).toBe(true);
 		expect(result.method).toBe("pbcopy");
 		expect(sp).toHaveBeenCalledWith("pbcopy", [], {
@@ -379,17 +319,12 @@ describe("copyToClipboard", () => {
 	});
 
 	test("all methods fail returns false with method file", () => {
-		Object.defineProperty(process, "platform", {
-			value: "linux",
-			configurable: true,
-		});
-		delete process.env.WAYLAND_DISPLAY;
-
 		const result = copyToClipboard("fail all", undefined, {
 			spawnSync: throwingSpawn(),
 			writeFileSync: mock((..._: any[]) => {
 				throw new Error("permission denied");
 			}) as any,
+			platform: "linux",
 		});
 		expect(result.success).toBe(false);
 		expect(result.method).toBe("file");
@@ -397,10 +332,6 @@ describe("copyToClipboard", () => {
 	});
 
 	test("Wayland wl-copy non-zero status falls through to xclip", () => {
-		Object.defineProperty(process, "platform", {
-			value: "linux",
-			configurable: true,
-		});
 		process.env.WAYLAND_DISPLAY = "wayland-0";
 
 		let callCount = 0;
@@ -425,6 +356,7 @@ describe("copyToClipboard", () => {
 					signal: null,
 				};
 			}) as unknown as typeof import("node:child_process").spawnSync,
+			platform: "linux",
 		});
 		expect(result.success).toBe(true);
 		expect(result.method).toBe("xclip");
@@ -439,26 +371,17 @@ describe("copyToClipboard", () => {
 	});
 
 	test("no OSC52 callback skips OSC52 path", () => {
-		Object.defineProperty(process, "platform", {
-			value: "darwin",
-			configurable: true,
-		});
-
 		// When no osc52Copy is passed, it goes straight to system clipboard
 		const result = copyToClipboard("no osc52", undefined, {
 			spawnSync: successfulSpawn(),
+			platform: "darwin",
 		});
 		expect(result.success).toBe(true);
 		expect(result.method).toBe("pbcopy");
 	});
 
 	test("file fallback method includes filePath in result", () => {
-		Object.defineProperty(process, "platform", {
-			value: "win32",
-			configurable: true,
-		});
-
-		const result = copyToClipboard("temp file test");
+		const result = copyToClipboard("temp file test", undefined, { platform: "win32" });
 		expect(result.success).toBe(true);
 		expect(result.method).toBe("file");
 		expect(result.filePath).toMatch(/airgent-copy-\d+\.txt$/);
@@ -470,15 +393,10 @@ describe("copyToClipboard", () => {
 	});
 
 	test("multiple consecutive calls work", () => {
-		Object.defineProperty(process, "platform", {
-			value: "darwin",
-			configurable: true,
-		});
-
 		const sp = successfulSpawn();
-		const r1 = copyToClipboard("first", undefined, { spawnSync: sp });
-		const r2 = copyToClipboard("second", undefined, { spawnSync: sp });
-		const r3 = copyToClipboard("third", undefined, { spawnSync: sp });
+		const r1 = copyToClipboard("first", undefined, { spawnSync: sp, platform: "darwin" });
+		const r2 = copyToClipboard("second", undefined, { spawnSync: sp, platform: "darwin" });
+		const r3 = copyToClipboard("third", undefined, { spawnSync: sp, platform: "darwin" });
 
 		expect(r1.success).toBe(true);
 		expect(r2.success).toBe(true);
