@@ -8,8 +8,16 @@ Airgent is a local-first AI agent framework that connects to an [OpenCode](https
 
 ## Requirements
 
-- **Bun** v1.x (runtime)
+- **Bun** latest (runtime) — v1.2.x has a call tracking bug on macOS aarch64
 - **OpenCode Server** running locally (`opencode serve`)
+
+## Platform Support
+
+| Platform | Status |
+|---|---|
+| Linux | Fully Supported |
+| macOS | Experimental |
+| Windows | Not Supported |
 
 ## Installation
 
@@ -69,13 +77,16 @@ Run `/model` in the TUI to configure models interactively.
 
 ```bash
 # Run tests
-bun test
+bun run test
 
 # Type check
-bunx tsc --noEmit
+bun run typecheck
+
+# Lint
+bun run lint
 
 # Build (outputs to dist/)
-bun build index.ts --outdir dist --target bun
+bun run build
 ```
 
 ## License

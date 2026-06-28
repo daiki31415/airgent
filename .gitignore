@@ -39,3 +39,4 @@ data/
 
 # Finder (MacOS) folder config
 .DS_Store
+bun-*.zip\nbun-*-dir/\nfailed_run_log.txt
