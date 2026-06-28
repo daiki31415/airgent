@@ -10,7 +10,7 @@
 		"dev": "bun --watch run index.ts",
 		"lint": "bunx @biomejs/biome check .",
 		"typecheck": "bunx tsc --noEmit",
-		"test": "bun test"
+		"test": "bun test --isolate"
 	},
 	"engines": {
 		"bun": ">=1.2.0"

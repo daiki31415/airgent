@@ -11,6 +11,10 @@
  * Note: static import is used (not dynamic import in beforeAll) to avoid
  * a Bun 1.2.x/aarch64 race where tests run before beforeAll resolves,
  * causing mock() call tracking to silently fail.
+ *
+ * TrackedMock replaces Bun's mock() call tracking, which silently fails on
+ * Bun 1.2.x/aarch64. All toHaveBeenCalledWith / toHaveBeenCalledTimes checks
+ * are called as methods on the mock itself instead of via expect().
  */
 
 import { afterAll, beforeAll, describe, expect, mock, test } from "bun:test";
@@ -20,9 +24,30 @@ import { copyToClipboard } from "../clipboard";
 /** Track temp files created during file-fallback tests for cleanup */
 const tempFiles: string[] = [];
 
-/** Simple mock function creator for Bun 1.2.23 compatibility */
-function createMock<T extends (...args: any[]) => any>(fn: T): any {
-	return mock(fn);
+type TrackedMock<T extends (...args: any[]) => any> = T & {
+	calls: Parameters<T>[];
+	toHaveBeenCalledWith: (...expected: any[]) => void;
+	toHaveBeenCalledTimes: (n: number) => void;
+};
+
+/** Simple mock function creator for Bun 1.2.23/aarch64 compatibility.
+ *  Bun's built-in mock() call tracking silently fails on that platform,
+ *  so we maintain our own `calls` array and expose assertion helpers. */
+function createMock<T extends (...args: any[]) => any>(fn: T): TrackedMock<T> {
+	const calls: Parameters<T>[] = [];
+	const wrapped = ((...args: Parameters<T>) => {
+		calls.push(args);
+		return fn(...args);
+	}) as TrackedMock<T>;
+	wrapped.calls = calls;
+	wrapped.toHaveBeenCalledWith = (...expected: any[]) => {
+		const found = calls.some((c) => JSON.stringify(c) === JSON.stringify(expected));
+		expect(found).toBe(true);
+	};
+	wrapped.toHaveBeenCalledTimes = (n: number) => {
+		expect(calls.length).toBe(n);
+	};
+	return wrapped;
 }
 
 /** Helper: returns spawnSync mock that returns success */
@@ -34,14 +59,14 @@ function successfulSpawn() {
 		pid: 0,
 		output: [],
 		signal: null,
-	})) as unknown as typeof import("node:child_process").spawnSync;
+	})) as unknown as TrackedMock<typeof import("node:child_process").spawnSync>;
 }
 
 /** Helper: returns spawnSync mock that throws */
 function throwingSpawn(errorMsg = "command not found") {
 	return createMock((..._: any[]) => {
 		throw new Error(errorMsg);
-	}) as unknown as typeof import("node:child_process").spawnSync;
+	}) as unknown as TrackedMock<typeof import("node:child_process").spawnSync>;
 }
 
 describe("copyToClipboard", () => {
@@ -70,17 +95,17 @@ describe("copyToClipboard", () => {
 	});
 
 	test("OSC52 mode returns success when callback returns true", () => {
-		const osc52Fn = mock(() => true);
-		const result = copyToClipboard("hello", osc52Fn);
+		const osc52Fn = createMock((..._: any[]) => true);
+		const result = copyToClipboard("hello", osc52Fn as any);
 		expect(result.success).toBe(true);
 		expect(result.method).toBe("osc52");
-		expect(osc52Fn).toHaveBeenCalledWith("hello");
+		osc52Fn.toHaveBeenCalledWith("hello");
 	});
 
 	test("OSC52 mode falls through when callback returns false", () => {
-		const osc52Fn = mock(() => false);
+		const osc52Fn = createMock((..._: any[]) => false);
 
-		const result = copyToClipboard("hello", osc52Fn, {
+		const result = copyToClipboard("hello", osc52Fn as any, {
 			spawnSync: successfulSpawn(),
 			platform: "win32",
 		});
@@ -89,11 +114,11 @@ describe("copyToClipboard", () => {
 	});
 
 	test("OSC52 mode falls through when callback throws", () => {
-		const osc52Fn = mock(() => {
+		const osc52Fn = createMock((..._: any[]) => {
 			throw new Error("osc52 failed");
 		});
 
-		const result = copyToClipboard("text", osc52Fn, {
+		const result = copyToClipboard("text", osc52Fn as any, {
 			spawnSync: successfulSpawn(),
 			platform: "win32",
 		});
@@ -106,7 +131,7 @@ describe("copyToClipboard", () => {
 		const result = copyToClipboard("hello mac", undefined, { spawnSync: sp, platform: "darwin" });
 		expect(result.success).toBe(true);
 		expect(result.method).toBe("pbcopy");
-		expect(sp).toHaveBeenCalledWith("pbcopy", [], {
+		sp.toHaveBeenCalledWith("pbcopy", [], {
 			input: "hello mac",
 			encoding: "utf-8",
 		});
@@ -123,7 +148,7 @@ describe("copyToClipboard", () => {
 
 	test("pbcopy fall through when status is non-zero on macOS", () => {
 		const result = copyToClipboard("fallback text", undefined, {
-			spawnSync: mock((..._: any[]) => ({
+			spawnSync: createMock((..._: any[]) => ({
 				status: 1,
 				stdout: Buffer.from(""),
 				stderr: Buffer.from("error"),
@@ -147,7 +172,7 @@ describe("copyToClipboard", () => {
 		});
 		expect(result.success).toBe(true);
 		expect(result.method).toBe("wl-copy");
-		expect(sp).toHaveBeenCalledWith("wl-copy", [], {
+		sp.toHaveBeenCalledWith("wl-copy", [], {
 			input: "wayland text",
 			encoding: "utf-8",
 		});
@@ -158,7 +183,7 @@ describe("copyToClipboard", () => {
 
 		let callCount = 0;
 		const result = copyToClipboard("xclip fallback", undefined, {
-			spawnSync: mock((..._: any[]) => {
+			spawnSync: createMock((..._: any[]) => {
 				callCount++;
 				if (callCount === 1) throw new Error("no wl-copy");
 				return {
@@ -183,7 +208,7 @@ describe("copyToClipboard", () => {
 		const result = copyToClipboard("xclip text", undefined, { spawnSync: sp, platform: "linux" });
 		expect(result.success).toBe(true);
 		expect(result.method).toBe("xclip");
-		expect(sp).toHaveBeenCalledWith("xclip", ["-selection", "clipboard"], {
+		sp.toHaveBeenCalledWith("xclip", ["-selection", "clipboard"], {
 			input: "xclip text",
 			encoding: "utf-8",
 		});
@@ -194,7 +219,7 @@ describe("copyToClipboard", () => {
 
 		let callCount = 0;
 		const result = copyToClipboard("xsel text", undefined, {
-			spawnSync: mock((..._: any[]) => {
+			spawnSync: createMock((..._: any[]) => {
 				callCount++;
 				if (callCount === 1) throw new Error("no xclip");
 				return {
@@ -217,7 +242,7 @@ describe("copyToClipboard", () => {
 
 		let callCount = 0;
 		const result = copyToClipboard("xsel works", undefined, {
-			spawnSync: mock((..._: any[]) => {
+			spawnSync: createMock((..._: any[]) => {
 				callCount++;
 				if (callCount === 1) throw new Error("no xclip");
 				return {
@@ -241,7 +266,7 @@ describe("copyToClipboard", () => {
 
 		let callCount = 0;
 		const result = copyToClipboard("xsel fallback", undefined, {
-			spawnSync: mock((..._: any[]) => {
+			spawnSync: createMock((..._: any[]) => {
 				callCount++;
 				if (callCount === 1)
 					return {
@@ -285,7 +310,7 @@ describe("copyToClipboard", () => {
 	test("file fallback reports error when writeFileSync throws", () => {
 		const result = copyToClipboard("failing write", undefined, {
 			spawnSync: throwingSpawn(),
-			writeFileSync: mock((..._: any[]) => {
+			writeFileSync: createMock((..._: any[]) => {
 				throw new Error("disk full");
 			}) as any,
 			platform: "win32",
@@ -314,7 +339,7 @@ describe("copyToClipboard", () => {
 		const result = copyToClipboard(longText, undefined, { spawnSync: sp, platform: "darwin" });
 		expect(result.success).toBe(true);
 		expect(result.method).toBe("pbcopy");
-		expect(sp).toHaveBeenCalledWith("pbcopy", [], {
+		sp.toHaveBeenCalledWith("pbcopy", [], {
 			input: longText,
 			encoding: "utf-8",
 		});
@@ -323,7 +348,7 @@ describe("copyToClipboard", () => {
 	test("all methods fail returns false with method file", () => {
 		const result = copyToClipboard("fail all", undefined, {
 			spawnSync: throwingSpawn(),
-			writeFileSync: mock((..._: any[]) => {
+			writeFileSync: createMock((..._: any[]) => {
 				throw new Error("permission denied");
 			}) as any,
 			platform: "linux",
@@ -338,7 +363,7 @@ describe("copyToClipboard", () => {
 
 		let callCount = 0;
 		const result = copyToClipboard("wl-copy to xclip", undefined, {
-			spawnSync: mock((..._: any[]) => {
+			spawnSync: createMock((..._: any[]) => {
 				callCount++;
 				if (callCount === 1)
 					return {
@@ -365,9 +390,9 @@ describe("copyToClipboard", () => {
 	});
 
 	test("OSC52 with empty text returns success", () => {
-		const osc52Fn = mock(() => true);
+		const osc52Fn = createMock((..._: any[]) => true);
 
-		const result = copyToClipboard("", osc52Fn);
+		const result = copyToClipboard("", osc52Fn as any);
 		expect(result.success).toBe(true);
 		expect(result.method).toBe("osc52");
 	});
@@ -403,6 +428,6 @@ describe("copyToClipboard", () => {
 		expect(r1.success).toBe(true);
 		expect(r2.success).toBe(true);
 		expect(r3.success).toBe(true);
-		expect(sp).toHaveBeenCalledTimes(3);
+		sp.toHaveBeenCalledTimes(3);
 	});
 });
