@@ -24,27 +24,15 @@ import { copyToClipboard } from "../clipboard";
 /** Track temp files created during file-fallback tests for cleanup */
 const tempFiles: string[] = [];
 
-<<<<<<< Updated upstream
-=======
-/** Tracked mock function type */
->>>>>>> Stashed changes
 type TrackedMock<T extends (...args: any[]) => any> = T & {
 	calls: Parameters<T>[];
 	toHaveBeenCalledWith: (...expected: any[]) => void;
 	toHaveBeenCalledTimes: (n: number) => void;
 };
 
-<<<<<<< Updated upstream
 /** Simple mock function creator for Bun 1.2.23/aarch64 compatibility.
  *  Bun's built-in mock() call tracking silently fails on that platform,
  *  so we maintain our own `calls` array and expose assertion helpers. */
-=======
-/**
- * Self-contained call tracking mock for Bun 1.2.x/aarch64 compatibility.
- * Bun's built-in mock() call tracking (toHaveBeenCalledWith etc.) silently
- * fails on macOS aarch64, so we implement our own.
- */
->>>>>>> Stashed changes
 function createMock<T extends (...args: any[]) => any>(fn: T): TrackedMock<T> {
 	const calls: Parameters<T>[] = [];
 	const wrapped = ((...args: Parameters<T>) => {
@@ -53,13 +41,7 @@ function createMock<T extends (...args: any[]) => any>(fn: T): TrackedMock<T> {
 	}) as TrackedMock<T>;
 	wrapped.calls = calls;
 	wrapped.toHaveBeenCalledWith = (...expected: any[]) => {
-<<<<<<< Updated upstream
 		const found = calls.some((c) => JSON.stringify(c) === JSON.stringify(expected));
-=======
-		const found = calls.some(
-			(c) => JSON.stringify(c) === JSON.stringify(expected),
-		);
->>>>>>> Stashed changes
 		expect(found).toBe(true);
 	};
 	wrapped.toHaveBeenCalledTimes = (n: number) => {
@@ -113,24 +95,15 @@ describe("copyToClipboard", () => {
 	});
 
 	test("OSC52 mode returns success when callback returns true", () => {
-<<<<<<< Updated upstream
 		const osc52Fn = createMock((..._: any[]) => true);
 		const result = copyToClipboard("hello", osc52Fn as any);
-=======
-		const osc52Fn = createMock(() => true);
-		const result = copyToClipboard("hello", osc52Fn);
->>>>>>> Stashed changes
 		expect(result.success).toBe(true);
 		expect(result.method).toBe("osc52");
 		osc52Fn.toHaveBeenCalledWith("hello");
 	});
 
 	test("OSC52 mode falls through when callback returns false", () => {
-<<<<<<< Updated upstream
 		const osc52Fn = createMock((..._: any[]) => false);
-=======
-		const osc52Fn = createMock(() => false);
->>>>>>> Stashed changes
 
 		const result = copyToClipboard("hello", osc52Fn as any, {
 			spawnSync: successfulSpawn(),
@@ -141,11 +114,7 @@ describe("copyToClipboard", () => {
 	});
 
 	test("OSC52 mode falls through when callback throws", () => {
-<<<<<<< Updated upstream
 		const osc52Fn = createMock((..._: any[]) => {
-=======
-		const osc52Fn = createMock(() => {
->>>>>>> Stashed changes
 			throw new Error("osc52 failed");
 		});
 
@@ -421,11 +390,7 @@ describe("copyToClipboard", () => {
 	});
 
 	test("OSC52 with empty text returns success", () => {
-<<<<<<< Updated upstream
 		const osc52Fn = createMock((..._: any[]) => true);
-=======
-		const osc52Fn = createMock(() => true);
->>>>>>> Stashed changes
 
 		const result = copyToClipboard("", osc52Fn as any);
 		expect(result.success).toBe(true);
