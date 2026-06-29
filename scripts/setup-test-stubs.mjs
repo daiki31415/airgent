@@ -47,14 +47,21 @@ if (existsSync(chunkPath)) {
   const old = "var nativePackage = await import(`@opentui/core-${process.platform}-${process.arch}`);\nvar targetLibPath = nativePackage.default;";
 
   // Preserve the dynamic import on linux-x64; fall back to /dev/null elsewhere.
+  // Use if-statement instead of ternary to avoid 'await in conditional expression'
+  // issues in some bundler/runtime combinations.
   const patched =
-    'var nativePackage = (process.platform === "linux" && process.arch === "x64")\n' +
-    '  ? await import(`@opentui/core-${process.platform}-${process.arch}`)\n' +
-    '  : { default: "/dev/null" };\n' +
+    'var nativePackage;\n' +
+    'if (process.platform === "linux" && process.arch === "x64") {\n' +
+    '  nativePackage = await import(`@opentui/core-${process.platform}-${process.arch}`);\n' +
+    '} else {\n' +
+    '  nativePackage = { default: "/dev/null" };\n' +
+    '}\n' +
     'var targetLibPath = nativePackage.default;';
 
   // Pattern left by the old (broken) patch that hardcoded /dev/null for all platforms.
   const brokenPatch = 'var nativePackage = { default: "/dev/null" };\nvar targetLibPath = "/dev/null";';
+  // Pattern left by the ternary-based patch (also broken on some runtimes).
+  const ternaryPatch = 'var nativePackage = (process.platform === "linux" && process.arch === "x64")';
 
   if (content.includes(old)) {
     content = content.replace(old, patched);
@@ -63,10 +70,19 @@ if (existsSync(chunkPath)) {
   } else if (content.includes(patched)) {
     console.log("[setup-test-stubs] @opentui/core chunk already patched");
   } else if (content.includes(brokenPatch)) {
-    // Upgrade the old broken patch to the correct platform-conditional one.
     content = content.replace(brokenPatch, patched);
     writeFileSync(chunkPath, content, "utf8");
     console.log("[setup-test-stubs] re-patched @opentui/core chunk (replaced broken all-platform stub)");
+  } else if (content.includes(ternaryPatch)) {
+    // Replace the entire ternary block (3 lines) with the if-statement version.
+    const ternaryBlock =
+      'var nativePackage = (process.platform === "linux" && process.arch === "x64")\n' +
+      '  ? await import(`@opentui/core-${process.platform}-${process.arch}`)\n' +
+      '  : { default: "/dev/null" };\n' +
+      'var targetLibPath = nativePackage.default;';
+    content = content.replace(ternaryBlock, patched);
+    writeFileSync(chunkPath, content, "utf8");
+    console.log("[setup-test-stubs] re-patched @opentui/core chunk (replaced ternary with if-statement)");
   } else {
     console.warn("[setup-test-stubs] WARNING: patch pattern not found in chunk — @opentui version may have changed");
   }
