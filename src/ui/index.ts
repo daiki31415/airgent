@@ -14,6 +14,7 @@ import {
 	ScrollBox,
 	Select,
 	SelectRenderableEvents,
+	setRenderLibPath,
 	Text,
 } from "@opentui/core";
 import type { Question } from "../types";
@@ -93,6 +94,16 @@ export class UIManager {
 
 		if (this.isTTY) {
 			try {
+				// setup-test-stubs.mjs patches the opentui bundle to stub the
+				// native library path for CI. On linux-x64 at runtime we
+				// restore the real path here before createCliRenderer is called.
+				if (process.platform === "linux" && process.arch === "x64") {
+					const libPath = new URL(
+						"../../node_modules/@opentui/core-linux-x64/libopentui.so",
+						import.meta.url,
+					).pathname;
+					setRenderLibPath(libPath);
+				}
 				const renderer =
 					this.options.renderer ||
 					(await createCliRenderer({

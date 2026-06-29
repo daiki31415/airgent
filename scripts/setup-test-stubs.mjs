@@ -46,17 +46,12 @@ if (existsSync(chunkPath)) {
 
   const old = "var nativePackage = await import(`@opentui/core-${process.platform}-${process.arch}`);\nvar targetLibPath = nativePackage.default;";
 
-  // Preserve the dynamic import on linux-x64; fall back to /dev/null elsewhere.
-  // Use if-statement instead of ternary to avoid 'await in conditional expression'
-  // issues in some bundler/runtime combinations.
+  // Always stub the native package import to avoid top-level await issues
+  // in bun test --isolate. The actual library path is set via setRenderLibPath()
+  // at runtime in src/ui/index.ts for linux-x64.
   const patched =
-    'var nativePackage;\n' +
-    'if (process.platform === "linux" && process.arch === "x64") {\n' +
-    '  nativePackage = await import(`@opentui/core-${process.platform}-${process.arch}`);\n' +
-    '} else {\n' +
-    '  nativePackage = { default: "/dev/null" };\n' +
-    '}\n' +
-    'var targetLibPath = nativePackage.default;';
+    'var nativePackage = { default: "/dev/null" };\n' +
+    'var targetLibPath = "/dev/null";';
 
   // Pattern left by the old (broken) patch that hardcoded /dev/null for all platforms.
   const brokenPatch = 'var nativePackage = { default: "/dev/null" };\nvar targetLibPath = "/dev/null";';
