@@ -49,4 +49,4 @@ jobs:
         run: node scripts/setup-test-stubs.mjs
 
       - name: Run tests
-        run: bun test --isolate --reporter=verbose
+        run: bun test --isolate 2>&1 || (bun test --isolate --reporter=junit > /tmp/results.xml 2>&1; cat /tmp/results.xml; exit 1)
