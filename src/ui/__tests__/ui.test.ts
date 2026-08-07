@@ -160,6 +160,7 @@ const mockBoxCtor = mock((opts?: any) => {
 const mockSelectCtor = mock((_opts?: any) => makeSelectMock());
 
 mock.module("@opentui/core", () => ({
+	setRenderLibPath: mock(),
 	createCliRenderer: mock(() => Promise.resolve(mockRenderer)),
 	InputRenderableEvents: { ENTER: "ENTER" },
 	SelectRenderableEvents: { ITEM_SELECTED: "ITEM_SELECTED" },
