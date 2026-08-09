@@ -5,10 +5,11 @@
  * that exposes protected methods for testing.
  */
 
-import { describe, expect, mock, test } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import { OpenCodeAPI } from "../../api/opencode";
 import type { AgentContext, AgentRole, ModelEntry, OpenCodeResponse } from "../../types";
 import { BaseAgent } from "../base";
+import { callCount, spy } from "../../__tests__/spy-utils";
 
 // ---------------------------------------------------------------------------
 // TestAgent — concrete subclass that exposes protected members
@@ -55,7 +56,7 @@ function mockModel(): ModelEntry {
 
 function mockApi(): OpenCodeAPI {
 	const api = new (class extends OpenCodeAPI {
-		override chat = mock(
+		override chat = spy(
 			async (
 				_model: ModelEntry,
 				_messages: Array<{ role: string; content: string }>,
@@ -69,7 +70,7 @@ function mockApi(): OpenCodeAPI {
 			},
 		);
 
-		override streamChat = mock(async function* (
+		override streamChat = spy(async function* (
 			_model: ModelEntry,
 			_messages: Array<{ role: string; content: string }>,
 		): AsyncGenerator<string> {
@@ -171,9 +172,9 @@ describe("BaseAgent.think", () => {
 
 		const result = await agent.callThink("user prompt");
 
-		expect(api.chat).toHaveBeenCalledTimes(1);
-		// biome-ignore lint/suspicious/noExplicitAny: accessing mock internals from bun:test
-		const callArgs = (api.chat as any).mock.calls[0];
+		expect(callCount(api.chat)).toBe(1);
+		// biome-ignore lint/suspicious/noExplicitAny: accessing hand-rolled spy's .calls array
+		const callArgs = (api.chat as any).calls[0];
 		expect(callArgs[0]).toEqual(mockModel());
 		expect(callArgs[1]).toEqual([
 			{ role: "system", content: "You are a helpful assistant." },
@@ -184,7 +185,7 @@ describe("BaseAgent.think", () => {
 
 	test("returns response content from api.chat", async () => {
 		const api = mockApi();
-		api.chat = mock(async () => ({
+		api.chat = spy(async () => ({
 			id: "resp-1",
 			content: "Hello, world!",
 			model: "test/model",
@@ -199,7 +200,7 @@ describe("BaseAgent.think", () => {
 
 	test("works with empty system prompt", async () => {
 		const api = mockApi();
-		api.chat = mock(async () => ({
+		api.chat = spy(async () => ({
 			id: "id",
 			content: "ok",
 			model: "m",
@@ -210,14 +211,14 @@ describe("BaseAgent.think", () => {
 
 		const result = await agent.callThink("prompt");
 		expect(result).toBe("ok");
-		// biome-ignore lint/suspicious/noExplicitAny: accessing mock internals from bun:test
-		const callArgs = (api.chat as any).mock.calls[0];
+		// biome-ignore lint/suspicious/noExplicitAny: accessing hand-rolled spy's .calls array
+		const callArgs = (api.chat as any).calls[0];
 		expect(callArgs[1][0].content).toBe("");
 	});
 
 	test("works with empty user prompt", async () => {
 		const api = mockApi();
-		api.chat = mock(async () => ({
+		api.chat = spy(async () => ({
 			id: "id",
 			content: "response to empty",
 			model: "m",
@@ -237,7 +238,7 @@ describe("BaseAgent.think", () => {
 
 	test("error propagates when api.chat throws", async () => {
 		const api = mockApi();
-		api.chat = mock(async () => {
+		api.chat = spy(async () => {
 			throw new Error("API failure");
 		});
 		const agent = new TestAgent("worker", mockModel(), api);
@@ -248,7 +249,7 @@ describe("BaseAgent.think", () => {
 
 	test("error propagates when api.chat rejects with non-Error", async () => {
 		const api = mockApi();
-		api.chat = mock(async () => {
+		api.chat = spy(async () => {
 			throw "string error";
 		});
 		const agent = new TestAgent("worker", mockModel(), api);
@@ -267,8 +268,8 @@ describe("BaseAgent.think", () => {
 		agent.init(sampleContext());
 
 		await agent.callThink("prompt");
-		// biome-ignore lint/suspicious/noExplicitAny: accessing mock internals from bun:test
-		const callArgs = (api.chat as any).mock.calls[0];
+		// biome-ignore lint/suspicious/noExplicitAny: accessing hand-rolled spy's .calls array
+		const callArgs = (api.chat as any).calls[0];
 		expect(callArgs[0]).toEqual(customModel);
 	});
 });
@@ -297,9 +298,9 @@ describe("BaseAgent.thinkStream", () => {
 			_chunks.push(chunk);
 		}
 
-		expect(api.streamChat).toHaveBeenCalledTimes(1);
-		// biome-ignore lint/suspicious/noExplicitAny: accessing mock internals from bun:test
-		const callArgs = (api.streamChat as any).mock.calls[0];
+		expect(callCount(api.streamChat)).toBe(1);
+		// biome-ignore lint/suspicious/noExplicitAny: accessing hand-rolled spy's .calls array
+		const callArgs = (api.streamChat as any).calls[0];
 		expect(callArgs[1]).toEqual([
 			{ role: "system", content: "You are a helpful assistant." },
 			{ role: "user", content: "stream prompt" },
@@ -322,7 +323,7 @@ describe("BaseAgent.thinkStream", () => {
 
 	test("handles empty stream from api.streamChat", async () => {
 		const api = mockApi();
-		api.streamChat = mock(async function* (): AsyncGenerator<string> {
+		api.streamChat = spy(async function* (): AsyncGenerator<string> {
 			// yields nothing
 		});
 		const agent = new TestAgent("worker", mockModel(), api);
@@ -337,7 +338,7 @@ describe("BaseAgent.thinkStream", () => {
 
 	test("works with single chunk", async () => {
 		const api = mockApi();
-		api.streamChat = mock(async function* (): AsyncGenerator<string> {
+		api.streamChat = spy(async function* (): AsyncGenerator<string> {
 			yield "only chunk";
 		});
 		const agent = new TestAgent("worker", mockModel(), api);
@@ -353,7 +354,7 @@ describe("BaseAgent.thinkStream", () => {
 	test("stream yields same content as chat for same input", async () => {
 		const api = mockApi();
 		// Make streamChat return the same words but split
-		api.streamChat = mock(async function* (): AsyncGenerator<string> {
+		api.streamChat = spy(async function* (): AsyncGenerator<string> {
 			yield "hello world";
 		});
 		const agent = new TestAgent("worker", mockModel(), api);
@@ -376,8 +377,8 @@ describe("BaseAgent.thinkStream", () => {
 			/* consume */
 		}
 
-		// biome-ignore lint/suspicious/noExplicitAny: accessing mock internals from bun:test
-		const callArgs = (api.streamChat as any).mock.calls[0];
+		// biome-ignore lint/suspicious/noExplicitAny: accessing hand-rolled spy's .calls array
+		const callArgs = (api.streamChat as any).calls[0];
 		expect(callArgs[0]).toEqual(customModel);
 	});
 
@@ -390,8 +391,8 @@ describe("BaseAgent.thinkStream", () => {
 			/* consume */
 		}
 
-		// biome-ignore lint/suspicious/noExplicitAny: accessing mock internals from bun:test
-		const callArgs = (api.streamChat as any).mock.calls[0];
+		// biome-ignore lint/suspicious/noExplicitAny: accessing hand-rolled spy's .calls array
+		const callArgs = (api.streamChat as any).calls[0];
 		expect(callArgs[1][0].content).toBe("Custom system prompt.");
 	});
 });

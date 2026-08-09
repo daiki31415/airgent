@@ -14,88 +14,16 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 import type { AgentContext, ModelEntry, StructuredMemory } from "../types";
 import { Airgent as AirgentClass } from "../Airgent";
-
-// ============================================================
-// Hand-rolled spy factory
-// ============================================================
-
-interface Spy {
-	calls: unknown[][];
-	(...args: unknown[]): unknown;
-}
-
-function spy(impl?: (...args: any[]) => any): Spy & ((...args: any[]) => any) {
-	const calls: unknown[][] = [];
-	const fn = ((...args: any[]) => {
-		calls.push(args);
-		if (impl) return impl(...args);
-		return undefined;
-	}) as Spy & ((...args: any[]) => any);
-	fn.calls = calls;
-	return fn;
-}
-
-// ============================================================
-// Minimal matcher engine (hand-rolled, asymmetric-matcher friendly)
-//   - `strContaining(s)`    argument is a string containing `s`
-//   - `anyStr()`            argument is a string
-//   - `anyNum()`            argument is a number
-//   - `anyArr()`            argument is an array
-//   - `objContaining(o)`    argument is an object with every k/v in o matched
-// ============================================================
-
-function matcher(test: (v: any) => boolean): any {
-	return { __: test };
-}
-function isMatcher(x: any): x is { __: (v: any) => boolean } {
-	return typeof x === "object" && x !== null && typeof x.__ === "function";
-}
-
-const strContaining = (s: string) => matcher((v) => typeof v === "string" && v.includes(s));
-const anyStr = () => matcher((v) => typeof v === "string");
-const anyNum = () => matcher((v) => typeof v === "number");
-const anyArr = () => matcher((v) => Array.isArray(v));
-const objContaining = (o: Record<string, any>) =>
-	matcher(
-		(v) =>
-			typeof v === "object" &&
-			v !== null &&
-			Object.keys(o).every(
-				(k) => Object.prototype.hasOwnProperty.call(v, k) && deepEq(o[k], v[k]),
-			),
-	);
-
-function deepEq(a: any, b: any): boolean {
-	if (isMatcher(a)) return a.__(b);
-	if (a === b) return true;
-	if (a instanceof Date && b instanceof Date) return a.getTime() === b.getTime();
-	if (Array.isArray(a)) {
-		if (!Array.isArray(b) || a.length !== b.length) return false;
-		return a.every((x, i) => deepEq(x, b[i]));
-	}
-	if (a && b && typeof a === "object" && typeof b === "object") {
-		const keys = Object.keys(a);
-		return keys.every(
-			(k) => Object.prototype.hasOwnProperty.call(b, k) && deepEq(a[k], b[k]),
-		);
-	}
-	return false;
-}
-
-function wasCalled(fn: any): boolean {
-	return Array.isArray(fn?.calls) && fn.calls.length > 0;
-}
-
-function callCount(fn: any): number {
-	return Array.isArray(fn?.calls) ? fn.calls.length : 0;
-}
-
-function calledWith(fn: any, ...expected: any[]): boolean {
-	return (fn?.calls ?? []).some((c: unknown[]) => {
-		if (c.length !== expected.length) return false;
-		return expected.every((e, i) => deepEq(e, c[i]));
-	});
-}
+import {
+	anyArr,
+	anyStr,
+	calledWith,
+	callCount,
+	objContaining,
+	spy,
+	strContaining,
+	wasCalled,
+} from "./spy-utils";
 
 // ============================================================
 // Base config / models
