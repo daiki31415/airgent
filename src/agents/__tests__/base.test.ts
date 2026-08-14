@@ -6,10 +6,10 @@
  */
 
 import { describe, expect, test } from "bun:test";
+import { callCount, spy } from "../../__tests__/spy-utils";
 import { OpenCodeAPI } from "../../api/opencode";
 import type { AgentContext, AgentRole, ModelEntry, OpenCodeResponse } from "../../types";
 import { BaseAgent } from "../base";
-import { callCount, spy } from "../../__tests__/spy-utils";
 
 // ---------------------------------------------------------------------------
 // TestAgent — concrete subclass that exposes protected members

@@ -136,8 +136,7 @@ export class Airgent {
 			deps?.validation ?? new ValidationAgent(this.config.models.validation, this.api, this.memory);
 		this.watchdog = deps?.watchdog ?? new WatchdogAgent(this.config.models.watchdog, this.api);
 		this.contextInspector =
-			deps?.contextInspector ??
-			new ContextInspectorAgent(this.config.models.validation, this.api);
+			deps?.contextInspector ?? new ContextInspectorAgent(this.config.models.validation, this.api);
 		this.deviceSync = deps?.deviceSync ?? new DeviceSync(this.storage);
 
 		rootLogger.setDebug(this.config.settings.debug);

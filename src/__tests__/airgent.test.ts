@@ -12,13 +12,13 @@
  */
 
 import { beforeEach, describe, expect, test } from "bun:test";
-import type { AgentContext, ModelEntry, StructuredMemory } from "../types";
 import { Airgent as AirgentClass } from "../Airgent";
+import type { AgentContext, ModelEntry, StructuredMemory } from "../types";
 import {
 	anyArr,
 	anyStr,
-	calledWith,
 	callCount,
+	calledWith,
 	objContaining,
 	spy,
 	strContaining,
@@ -426,9 +426,9 @@ describe("Airgent — Command Handling", () => {
 	test("/copy warns when nothing to copy", async () => {
 		agent.pipelineData = {};
 		await sendInput("/copy");
-		expect(
-			calledWith(mocks.ui.log, "warn", "airgent", strContaining("Nothing to copy")),
-		).toBe(true);
+		expect(calledWith(mocks.ui.log, "warn", "airgent", strContaining("Nothing to copy"))).toBe(
+			true,
+		);
 	});
 
 	test("/copy uses pipelineData as fallback", async () => {
@@ -444,9 +444,7 @@ describe("Airgent — Command Handling", () => {
 			error: "failed",
 		}));
 		await sendInput("/copy text");
-		expect(
-			calledWith(mocks.ui.log, "error", "airgent", strContaining("Copy failed")),
-		).toBe(true);
+		expect(calledWith(mocks.ui.log, "error", "airgent", strContaining("Copy failed"))).toBe(true);
 	});
 
 	test("/setting opens settings menu", async () => {
@@ -462,9 +460,7 @@ describe("Airgent — Command Handling", () => {
 
 	test("/providers lists providers", async () => {
 		await sendInput("/providers");
-		expect(
-			calledWith(mocks.ui.log, "info", "providers", strContaining("Connected")),
-		).toBe(true);
+		expect(calledWith(mocks.ui.log, "info", "providers", strContaining("Connected"))).toBe(true);
 	});
 
 	test("/providers handles API error", async () => {
@@ -554,9 +550,7 @@ describe("Airgent — Command Handling", () => {
 			{ name: "dup", type: "local", command: ["node", "x.js"], enabled: true },
 		]);
 		await sendInput("/mcp add dup local node x.js");
-		expect(
-			calledWith(mocks.ui.log, "warn", "mcp", strContaining("already exists")),
-		).toBe(true);
+		expect(calledWith(mocks.ui.log, "warn", "mcp", strContaining("already exists"))).toBe(true);
 	});
 
 	test("/mcp add with missing args shows usage", async () => {
@@ -611,9 +605,7 @@ describe("Airgent — Command Handling", () => {
 
 	test("/mcp unknown subcommand warns", async () => {
 		await sendInput("/mcp badcmd");
-		expect(
-			calledWith(mocks.ui.log, "warn", "mcp", strContaining("Unknown subcommand")),
-		).toBe(true);
+		expect(calledWith(mocks.ui.log, "warn", "mcp", strContaining("Unknown subcommand"))).toBe(true);
 	});
 
 	test("/model lists current models", async () => {
@@ -631,9 +623,7 @@ describe("Airgent — Command Handling", () => {
 	test("rate limited input returns early", async () => {
 		agent.rateLimiter.tryConsume = spy(() => false);
 		await sendInput("/help");
-		expect(
-			calledWith(mocks.ui.log, "warn", "airgent", strContaining("Rate limit")),
-		).toBe(true);
+		expect(calledWith(mocks.ui.log, "warn", "airgent", strContaining("Rate limit"))).toBe(true);
 	});
 });
 
@@ -702,9 +692,7 @@ describe("Airgent — processTask flow", () => {
 			score: 0.8,
 		})) as any;
 		await agent.processTask("test");
-		expect(
-			calledWith(mocks.ui.log, "warn", "inspector", strContaining("Corruption")),
-		).toBe(true);
+		expect(calledWith(mocks.ui.log, "warn", "inspector", strContaining("Corruption"))).toBe(true);
 	});
 
 	test("processTask does not warn on low corruption", async () => {
@@ -741,9 +729,7 @@ describe("Airgent — processTask flow", () => {
 		expect(calledWith(mocks.ui.updateStatus, { status: "running" })).toBe(true);
 		expect(calledWith(mocks.ui.updateStatus, { pipelineNode: "plan" })).toBe(true);
 		expect(calledWith(mocks.ui.updateStatus, { pipelineNode: "execute" })).toBe(true);
-		expect(
-			calledWith(mocks.ui.updateStatus, { status: "completed", pipelineNode: "" }),
-		).toBe(true);
+		expect(calledWith(mocks.ui.updateStatus, { status: "completed", pipelineNode: "" })).toBe(true);
 	});
 
 	test("processTask handles errors gracefully", async () => {
@@ -751,9 +737,7 @@ describe("Airgent — processTask flow", () => {
 			throw new Error("plan failed");
 		}) as any;
 		await agent.processTask("test");
-		expect(
-			calledWith(mocks.ui.log, "error", "airgent", strContaining("plan failed")),
-		).toBe(true);
+		expect(calledWith(mocks.ui.log, "error", "airgent", strContaining("plan failed"))).toBe(true);
 	});
 
 	test("processTask sets error status on failure", async () => {
@@ -1029,9 +1013,7 @@ describe("Airgent — Pipeline Handlers", () => {
 		})) as any;
 		const h = handlers.get("validate")!;
 		await h(new Map());
-		expect(
-			calledWith(mocks.ui.log, "warn", "validation", strContaining("Health")),
-		).toBe(true);
+		expect(calledWith(mocks.ui.log, "warn", "validation", strContaining("Health"))).toBe(true);
 	});
 
 	test("report handler organizes and compresses", async () => {

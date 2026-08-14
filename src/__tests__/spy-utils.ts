@@ -7,18 +7,20 @@
  * `.calls` array — no reliance on Bun internals.
  */
 
-interface Spy {
-	calls: unknown[][];
-	(...args: unknown[]): unknown;
+interface Spy<Args extends unknown[] = unknown[], Ret = unknown> {
+	calls: Args[];
+	(...args: Args): Ret;
 }
 
-export function spy(impl?: (...args: any[]) => any): Spy & ((...args: any[]) => any) {
-	const calls: unknown[][] = [];
-	const fn = ((...args: any[]) => {
+export function spy<Args extends unknown[] = unknown[], Ret = unknown>(
+	impl?: (...args: Args) => Ret,
+): Spy<Args, Ret> {
+	const calls: Args[] = [];
+	const fn = ((...args: Args) => {
 		calls.push(args);
 		if (impl) return impl(...args);
-		return undefined;
-	}) as Spy & ((...args: any[]) => any);
+		return undefined as Ret;
+	}) as Spy<Args, Ret>;
 	fn.calls = calls;
 	return fn;
 }
@@ -27,29 +29,32 @@ export function spy(impl?: (...args: any[]) => any): Spy & ((...args: any[]) => 
 // Minimal matcher engine (hand-rolled, asymmetric-matcher friendly)
 // ============================================================
 
-function matcher(test: (v: any) => boolean): any {
-	return { __: test };
-}
-function isMatcher(x: any): x is { __: (v: any) => boolean } {
-	return typeof x === "object" && x !== null && typeof x.__ === "function";
+interface Matcher {
+	__: (v: unknown) => boolean;
 }
 
-export const strContaining = (s: string) =>
-	matcher((v) => typeof v === "string" && v.includes(s));
+function matcher(test: (v: unknown) => boolean): Matcher {
+	return { __: test };
+}
+function isMatcher(x: unknown): x is Matcher {
+	return typeof x === "object" && x !== null && typeof (x as Matcher).__ === "function";
+}
+
+export const strContaining = (s: string) => matcher((v) => typeof v === "string" && v.includes(s));
 export const anyStr = () => matcher((v) => typeof v === "string");
 export const anyNum = () => matcher((v) => typeof v === "number");
 export const anyArr = () => matcher((v) => Array.isArray(v));
-export const objContaining = (o: Record<string, any>) =>
+export const objContaining = (o: Record<string, unknown>) =>
 	matcher(
 		(v) =>
 			typeof v === "object" &&
 			v !== null &&
 			Object.keys(o).every(
-				(k) => Object.prototype.hasOwnProperty.call(v, k) && deepEq(o[k], v[k]),
+				(k) => Object.hasOwn(v, k) && deepEq(o[k], (v as Record<string, unknown>)[k]),
 			),
 	);
 
-export function deepEq(a: any, b: any): boolean {
+export function deepEq(a: unknown, b: unknown): boolean {
 	if (isMatcher(a)) return a.__(b);
 	if (a === b) return true;
 	if (a instanceof Date && b instanceof Date) return a.getTime() === b.getTime();
@@ -60,22 +65,27 @@ export function deepEq(a: any, b: any): boolean {
 	if (a && b && typeof a === "object" && typeof b === "object") {
 		const keys = Object.keys(a);
 		return keys.every(
-			(k) => Object.prototype.hasOwnProperty.call(b, k) && deepEq(a[k], b[k]),
+			(k) =>
+				Object.hasOwn(b, k) &&
+				deepEq((a as Record<string, unknown>)[k], (b as Record<string, unknown>)[k]),
 		);
 	}
 	return false;
 }
 
-export function wasCalled(fn: any): boolean {
-	return Array.isArray(fn?.calls) && fn.calls.length > 0;
+export function wasCalled(fn: unknown): boolean {
+	const calls = (fn as { calls?: unknown[] })?.calls;
+	return Array.isArray(calls) && calls.length > 0;
 }
 
-export function callCount(fn: any): number {
-	return Array.isArray(fn?.calls) ? fn.calls.length : 0;
+export function callCount(fn: unknown): number {
+	const calls = (fn as { calls?: unknown[] })?.calls;
+	return Array.isArray(calls) ? calls.length : 0;
 }
 
-export function calledWith(fn: any, ...expected: any[]): boolean {
-	return (fn?.calls ?? []).some((c: unknown[]) => {
+export function calledWith(fn: unknown, ...expected: unknown[]): boolean {
+	const calls = (fn as { calls?: unknown[][] })?.calls ?? [];
+	return calls.some((c) => {
 		if (c.length !== expected.length) return false;
 		return expected.every((e, i) => deepEq(e, c[i]));
 	});
