@@ -305,7 +305,9 @@ export class UIManager {
 					? `Copied to ${result.filePath}`
 					: "Copied!"
 				: "Copy failed";
-			toast.add(this.deps.renderable.Text({ content: msg, fg: result.success ? "#9ece6a" : "#f7768e" }));
+			toast.add(
+				this.deps.renderable.Text({ content: msg, fg: result.success ? "#9ece6a" : "#f7768e" }),
+			);
 		}
 		this.renderer.requestRender();
 		if (this.input) this.renderer.focusRenderable(this.input);
