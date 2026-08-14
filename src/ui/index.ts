@@ -53,6 +53,34 @@ export interface UIOptions {
 	renderer?: any;
 }
 
+/**
+ * External module dependencies for UIManager.
+ * Injectable for testing so tests don't need mock.module() to
+ * intercept @opentui/core, node:readline, clipboard, or logger.
+ */
+export interface UIDeps {
+	readline: Pick<typeof readline, "createInterface">;
+	renderable: {
+		Box: typeof Box;
+		Text: typeof Text;
+		ScrollBox: typeof ScrollBox;
+		Input: typeof Input;
+		Select: typeof Select;
+		createCliRenderer: typeof createCliRenderer;
+	};
+	copyToClipboard: typeof copyToClipboard;
+	logger: typeof logger;
+}
+
+function defaultUIDeps(): UIDeps {
+	return {
+		readline,
+		renderable: { Box, Text, ScrollBox, Input, Select, createCliRenderer },
+		copyToClipboard,
+		logger,
+	};
+}
+
 const GOLDEN = 1.618;
 
 export class UIManager {
@@ -80,9 +108,11 @@ export class UIManager {
 	private _copyToastTimer: ReturnType<typeof setTimeout> | null = null;
 	private _sigintCount = 0;
 	private _sigintTimer: ReturnType<typeof setTimeout> | null = null;
+	private deps: UIDeps;
 
-	constructor(options: UIOptions) {
+	constructor(options: UIOptions, deps?: Partial<UIDeps>) {
 		this.options = options;
+		this.deps = { ...defaultUIDeps(), ...deps };
 		this.isTTY = process.stdout.isTTY && process.stdin.isTTY;
 	}
 
@@ -93,16 +123,27 @@ export class UIManager {
 
 		if (this.isTTY) {
 			try {
+				// setup-test-stubs.mjs patches the opentui bundle to stub the
+				// native library path for CI. On linux-x64 at runtime we
+				// restore the real path here before createCliRenderer is called.
+				if (process.platform === "linux" && process.arch === "x64") {
+					const { setRenderLibPath } = await import("@opentui/core");
+					const libPath = new URL(
+						"../../node_modules/@opentui/core-linux-x64/libopentui.so",
+						import.meta.url,
+					).pathname;
+					setRenderLibPath(libPath);
+				}
 				const renderer =
 					this.options.renderer ||
-					(await createCliRenderer({
+					(await this.deps.renderable.createCliRenderer({
 						exitOnCtrlC: false,
 						backgroundColor: "#1a1b26",
 					}));
 				this.renderer = renderer;
 				renderer.root.flexDirection = "column";
 
-				const headerVNode = Box({
+				const headerVNode = this.deps.renderable.Box({
 					id: "header",
 					width: "100%",
 					height: 3,
@@ -115,21 +156,21 @@ export class UIManager {
 				renderer.root.add(headerVNode);
 				this.headerBox = renderer.root.findDescendantById("header");
 
-				const titleText = Text({
+				const titleText = this.deps.renderable.Text({
 					id: "header-title",
 					content: " Airgent ",
 					fg: "#7aa2f7",
 				});
 				this.headerBox.add(titleText);
 
-				const statusText = Text({
+				const statusText = this.deps.renderable.Text({
 					id: "header-status",
 					content: "● idle",
 					fg: "#565f89",
 				});
 				this.headerBox.add(statusText);
 
-				const scrollboxVNode = ScrollBox({
+				const scrollboxVNode = this.deps.renderable.ScrollBox({
 					id: "log-area",
 					flexGrow: GOLDEN,
 					width: "100%",
@@ -143,7 +184,7 @@ export class UIManager {
 				renderer.root.add(scrollboxVNode);
 				this.scrollbox = renderer.root.findDescendantById("log-area") as ScrollBoxRenderable | null;
 
-				const inputVNode = Input({
+				const inputVNode = this.deps.renderable.Input({
 					id: "input-line",
 					width: "100%",
 					backgroundColor: "#24283b",
@@ -170,7 +211,7 @@ export class UIManager {
 				renderer.root.add(inputVNode);
 				this.input = renderer.root.findDescendantById("input-line") as InputRenderable | null;
 
-				const footerVNode = Box({
+				const footerVNode = this.deps.renderable.Box({
 					id: "footer",
 					width: "100%",
 					height: 3,
@@ -183,7 +224,7 @@ export class UIManager {
 				renderer.root.add(footerVNode);
 				this.statusBar = renderer.root.findDescendantById("footer");
 
-				const footerText = Text({
+				const footerText = this.deps.renderable.Text({
 					id: "footer-text",
 					content: " ready",
 					fg: "#565f89",
@@ -203,11 +244,11 @@ export class UIManager {
 
 				if (this.input) renderer.focusRenderable(this.input);
 			} catch (err) {
-				logger.warn("opentui init failed", err);
+				this.deps.logger.warn("opentui init failed", err);
 			}
 		}
 
-		logger.info("UI started");
+		this.deps.logger.info("UI started");
 	}
 
 	private handleSelection(sel: Selection, renderer: CliRenderer): void {
@@ -216,7 +257,7 @@ export class UIManager {
 			this._copyInProgress = true;
 			const text = sel.getSelectedText();
 			if (text && /\S/.test(text)) {
-				const result = copyToClipboard(text, (t) => renderer.copyToClipboardOSC52(t));
+				const result = this.deps.copyToClipboard(text, (t) => renderer.copyToClipboardOSC52(t));
 				this.showCopyToast(result);
 			}
 		} catch {
@@ -227,7 +268,7 @@ export class UIManager {
 	}
 
 	copy(text: string): CopyResult {
-		const result = copyToClipboard(
+		const result = this.deps.copyToClipboard(
 			text,
 			this.renderer ? (t) => this.renderer?.copyToClipboardOSC52(t) ?? false : undefined,
 		);
@@ -243,7 +284,7 @@ export class UIManager {
 		const existing = this.renderer.root.findDescendantById("toast-copy");
 		if (existing) this.renderer.root.remove("toast-copy");
 
-		const toastVNode = Box({
+		const toastVNode = this.deps.renderable.Box({
 			id: "toast-copy",
 			focusable: false,
 			position: "absolute",
@@ -264,7 +305,9 @@ export class UIManager {
 					? `Copied to ${result.filePath}`
 					: "Copied!"
 				: "Copy failed";
-			toast.add(Text({ content: msg, fg: result.success ? "#9ece6a" : "#f7768e" }));
+			toast.add(
+				this.deps.renderable.Text({ content: msg, fg: result.success ? "#9ece6a" : "#f7768e" }),
+			);
 		}
 		this.renderer.requestRender();
 		if (this.input) this.renderer.focusRenderable(this.input);
@@ -307,13 +350,13 @@ export class UIManager {
 		this.renderer = null;
 		this.scrollbox = null;
 		this.input = null;
-		logger.info("UI stopped");
+		this.deps.logger.info("UI stopped");
 	}
 
 	private addLine(line: string, source = "info"): void {
 		if (this.scrollbox) {
 			const fg = sourceColor(source);
-			this.scrollbox.add(Text({ content: line, width: "100%", fg }));
+			this.scrollbox.add(this.deps.renderable.Text({ content: line, width: "100%", fg }));
 		} else if (!this.isTTY) {
 			console.log(line);
 		}
@@ -368,7 +411,7 @@ export class UIManager {
 	}
 
 	async prompt(question: string): Promise<string> {
-		const rl = readline.createInterface({
+		const rl = this.deps.readline.createInterface({
 			input: process.stdin,
 			output: process.stdout,
 		});
@@ -422,7 +465,7 @@ export class UIManager {
 			const root = this.renderer?.root;
 			if (!root) return resolve(null);
 
-			const overlayVNode = Box({
+			const overlayVNode = this.deps.renderable.Box({
 				id,
 				position: "absolute",
 				top: 0,
@@ -439,14 +482,14 @@ export class UIManager {
 			const overlay = root.findDescendantById(id)!;
 
 			overlay.add(
-				Text({
+				this.deps.renderable.Text({
 					content: `  ${title}  (↑↓ Enter)`,
 					width: "100%",
 					fg: "#7aa2f7",
 				}),
 			);
 
-			const selectVNode = Select({
+			const selectVNode = this.deps.renderable.Select({
 				id: selectId,
 				width: "100%",
 				flexGrow: 1,
@@ -493,7 +536,7 @@ export class UIManager {
 			const opt = options[i];
 			if (opt) console.log(`  ${i + 1}) ${opt.name}  ${opt.description}`);
 		}
-		const rl = readline.createInterface({
+		const rl = this.deps.readline.createInterface({
 			input: process.stdin,
 			output: process.stdout,
 		});

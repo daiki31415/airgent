@@ -30,52 +30,58 @@ import { ensureOpenCodeServer } from "./server/index";
 import { SkillsManager } from "./skills/index";
 import { Storage } from "./storage/index";
 import { DeviceSync } from "./sync/index";
-import type { AgentContext, ModelEntry, ModelRole } from "./types";
+import type { AgentContext, AirgentConfig, ModelEntry, ModelRole } from "./types";
 import type { StatusInfo } from "./ui/index";
 import { UIManager } from "./ui/index";
 import { rootLogger, sanitizeError } from "./utils/logger";
 import { RateLimiter } from "./utils/rate-limiter";
 
-export class Airgent {
-	configManager = new ConfigManager();
-	config = this.configManager.load();
-	storage = new Storage();
-	api = new OpenCodeAPI();
-	skills = new SkillsManager();
-	promptManager = new PromptManager(this.config, this.skills);
-	memory = new MemorySystem(this.storage);
-	compressionManager = new CompressionManager(this.memory, this.storage);
-	pipeline = new PipelineEngine();
-	ui = new UIManager({
-		refreshIntervalMs: this.config.settings.uiRefreshIntervalMs,
-		onInput: (line) => this.handleInput(line),
-		onShutdown: () => this.stop(),
-	});
+export interface AirgentDeps {
+	storage: Storage;
+	api: OpenCodeAPI;
+	ui: UIManager;
+	skills: SkillsManager;
+	promptManager: PromptManager;
+	memory: MemorySystem;
+	compressionManager: CompressionManager;
+	pipeline: PipelineEngine;
+	planner: PlannerAgent;
+	worker: WorkerAgent;
+	memoryOrganizer: MemoryOrganizerAgent;
+	compression: CompressionAgent;
+	validation: ValidationAgent;
+	watchdog: WatchdogAgent;
+	contextInspector: ContextInspectorAgent;
+	deviceSync: DeviceSync;
+	configManager: ConfigManager;
+	config: AirgentConfig;
+}
 
-	planner = new PlannerAgent(this.config.models.planner, this.api);
-	worker = new WorkerAgent(
-		this.config.models.generate,
-		this.api,
-		this.compressionManager,
-		this.skills,
-		this.memory,
-	);
-	memoryOrganizer = new MemoryOrganizerAgent(this.config.models.validation, this.api, this.memory);
-	compression = new CompressionAgent(
-		this.config.models.compression,
-		this.api,
-		this.compressionManager,
-		this.memory,
-	);
-	validation = new ValidationAgent(this.config.models.validation, this.api, this.memory);
-	watchdog = new WatchdogAgent(this.config.models.watchdog, this.api);
-	contextInspector = new ContextInspectorAgent(this.config.models.validation, this.api);
+export class Airgent {
+	configManager!: ConfigManager;
+	config!: AirgentConfig;
+
+	storage!: Storage;
+	api!: OpenCodeAPI;
+	skills!: SkillsManager;
+	promptManager!: PromptManager;
+	memory!: MemorySystem;
+	compressionManager!: CompressionManager;
+	pipeline!: PipelineEngine;
+	ui!: UIManager;
+	planner!: PlannerAgent;
+	worker!: WorkerAgent;
+	memoryOrganizer!: MemoryOrganizerAgent;
+	compression!: CompressionAgent;
+	validation!: ValidationAgent;
+	watchdog!: WatchdogAgent;
+	contextInspector!: ContextInspectorAgent;
+	deviceSync!: DeviceSync;
 
 	sessionId: string | null = null;
 	running = false;
 	_startTime = Date.now();
 	currentTask = "";
-	deviceSync = new DeviceSync(this.storage);
 	opencodeProcess: import("bun").Subprocess | null = null;
 	rateLimiter = new RateLimiter(100, 1000, 100);
 	private logger = rootLogger.child("airgent");
@@ -86,7 +92,53 @@ export class Airgent {
 		testResult?: string;
 	} = {};
 
-	constructor() {
+	constructor(deps?: Partial<AirgentDeps>) {
+		this.configManager = deps?.configManager ?? new ConfigManager();
+		this.config = deps?.config ?? this.configManager.load();
+
+		this.storage = deps?.storage ?? new Storage();
+		this.api = deps?.api ?? new OpenCodeAPI();
+		this.skills = deps?.skills ?? new SkillsManager();
+		this.promptManager = deps?.promptManager ?? new PromptManager(this.config, this.skills);
+		this.memory = deps?.memory ?? new MemorySystem(this.storage);
+		this.compressionManager =
+			deps?.compressionManager ?? new CompressionManager(this.memory, this.storage);
+		this.pipeline = deps?.pipeline ?? new PipelineEngine();
+		this.ui =
+			deps?.ui ??
+			new UIManager({
+				refreshIntervalMs: this.config.settings.uiRefreshIntervalMs,
+				onInput: (line) => this.handleInput(line),
+				onShutdown: () => this.stop(),
+			});
+		this.planner = deps?.planner ?? new PlannerAgent(this.config.models.planner, this.api);
+		this.worker =
+			deps?.worker ??
+			new WorkerAgent(
+				this.config.models.generate,
+				this.api,
+				this.compressionManager,
+				this.skills,
+				this.memory,
+			);
+		this.memoryOrganizer =
+			deps?.memoryOrganizer ??
+			new MemoryOrganizerAgent(this.config.models.validation, this.api, this.memory);
+		this.compression =
+			deps?.compression ??
+			new CompressionAgent(
+				this.config.models.compression,
+				this.api,
+				this.compressionManager,
+				this.memory,
+			);
+		this.validation =
+			deps?.validation ?? new ValidationAgent(this.config.models.validation, this.api, this.memory);
+		this.watchdog = deps?.watchdog ?? new WatchdogAgent(this.config.models.watchdog, this.api);
+		this.contextInspector =
+			deps?.contextInspector ?? new ContextInspectorAgent(this.config.models.validation, this.api);
+		this.deviceSync = deps?.deviceSync ?? new DeviceSync(this.storage);
+
 		rootLogger.setDebug(this.config.settings.debug);
 		this.registerPipelineHandlers();
 		this.logger.info("Airgent initialized");

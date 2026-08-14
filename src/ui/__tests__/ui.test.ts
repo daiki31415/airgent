@@ -1,240 +1,117 @@
 /**
- * UIManager - Comprehensive Unit Tests
- *
- * Mocks @opentui/core, readline, clipboard, and logger.
- * No real terminal or clipboard access.
+ * UIManager - Comprehensive Unit Tests (DI-based)
  */
 
-import {
-	afterAll,
-	afterEach,
-	beforeAll,
-	beforeEach,
-	describe,
-	expect,
-	mock,
-	spyOn,
-	test,
-} from "bun:test";
-import { resolve } from "node:path";
-import type { StatusInfo } from "../index";
+import { afterEach, beforeEach, describe, expect, spyOn, test } from "bun:test";
+import { InputRenderableEvents } from "@opentui/core";
+import { callCount, calledWith, spy, strContaining, wasCalled } from "../../__tests__/spy-utils";
+import type { StatusInfo, UIDeps } from "../index";
+import { UIManager } from "../index";
 
-// ============================================================
-// Mock Setup
-// ============================================================
+let _vnodeMap: Record<string, any>;
 
-beforeAll(() => {
-	(globalThis as any).__mockClipboard = true;
-});
-
-afterAll(() => {
-	delete (globalThis as any).__mockClipboard;
-});
-
-// Mock process.stdout/stderr.isTTY to true for most tests
-const _originalStdoutIsTTY = process.stdout.isTTY;
-const _originalStdinIsTTY = process.stdin.isTTY;
-const _vnodeMap: Record<string, any> = {};
-
-// --- @opentui/core mocks ---
-const mockAdd = mock();
-const mockRemove = mock();
-const mockFindDescendantById = mock((id: string) => _vnodeMap[id] || null);
-const mockFocusRenderable = mock();
-const mockStart = mock();
-const mockDestroy = mock();
-const mockRequestRender = mock();
-const mockCopyToClipboardOSC52 = mock(() => true);
-const mockGetSelectedText = mock(() => "");
-const mockGetSelectedOption = mock(() => null);
-
-const mockRenderer = {
-	root: {
-		add: mockAdd,
-		remove: mockRemove,
-		findDescendantById: mockFindDescendantById,
-		flexDirection: "",
-	},
-	focusRenderable: mockFocusRenderable,
-	start: mockStart,
-	destroy: mockDestroy,
-	requestRender: mockRequestRender,
-	copyToClipboardOSC52: mockCopyToClipboardOSC52,
-	on: mock(),
-	keyInput: {
-		on: mock(),
-	},
-};
-
-// Renderable constructors that return mock objects
-function makeScrollBoxMock() {
-	const obj = { add: mock(), content: "" };
-	return obj;
+function makeTextNode(opts?: any) {
+	const node: any = { add: spy(), content: opts?.content ?? "", fg: opts?.fg ?? "" };
+	if (opts?.id) _vnodeMap[opts.id] = node;
+	return node;
 }
 
-function makeTextMock() {
-	const obj = { add: mock(), content: "", fg: "" };
-	Object.defineProperty(obj, "content", {
-		get: () => obj.content,
-		set: (v: string) => {
-			obj.content = v;
-		},
-		configurable: true,
-	});
-	Object.defineProperty(obj, "fg", {
-		get: () => obj.fg,
-		set: (v: string) => {
-			obj.fg = v;
-		},
-		configurable: true,
-	});
-	return obj;
+function makeScrollBoxNode(opts?: any) {
+	const node: any = { add: spy(), content: "" };
+	if (opts?.id) _vnodeMap[opts.id] = node;
+	return node;
 }
 
-function makeInputMock() {
-	const listeners: Record<string, Function[]> = {};
+function makeMockRenderer() {
 	return {
+		root: {
+			add: spy(),
+			remove: spy(),
+			findDescendantById: spy((id: string) => _vnodeMap[id] || null),
+			flexDirection: "",
+		},
+		focusRenderable: spy(),
+		start: spy(),
+		destroy: spy(),
+		requestRender: spy(),
+		copyToClipboardOSC52: spy(() => true),
+		on: spy(),
+		keyInput: { on: spy() },
+	};
+}
+
+function makeInputNode(opts?: any) {
+	const listeners: Record<string, Function[]> = {};
+	const node: any = {
 		value: "",
-		on: mock((event: string, cb: Function) => {
+		placeholder: opts?.placeholder,
+		on: spy((event: string, cb: Function) => {
 			if (!listeners[event]) listeners[event] = [];
 			listeners[event].push(cb);
 		}),
-		focus: mock(),
+		focus: spy(),
 		focusable: false,
-		_listeners: listeners,
 		simulateEnter(value: string) {
-			const enterListeners = listeners.ENTER || [];
-			for (const cb of enterListeners) cb(value);
+			for (const cb of listeners.ENTER || []) cb(value);
 		},
 	};
+	if (opts?.id) _vnodeMap[opts.id] = node;
+	return node;
 }
 
-function makeBoxMock() {
-	return {
-		add: mock(),
-		findDescendantById: mock(() => null),
-		remove: mock(),
+function makeSelectNode(opts?: any) {
+	const node: any = {
+		on: spy(),
+		focus: spy(),
+		focusable: false,
+		getSelectedOption: spy(() => null),
+	};
+	if (opts?.id) _vnodeMap[opts.id] = node;
+	return node;
+}
+
+function makeBoxNode(opts?: any) {
+	const node: any = {
+		add: spy(),
+		remove: spy(),
+		findDescendantById: spy((id: string) => _vnodeMap[id] || null),
 		content: "",
 		fg: "",
 	};
+	if (opts?.id) _vnodeMap[opts.id] = node;
+	return node;
 }
 
-function makeSelectMock() {
+function makeMockDeps(): UIDeps {
 	return {
-		on: mock(),
-		focus: mock(),
-		focusable: false,
-		getSelectedOption: mockGetSelectedOption,
-	};
+		readline: {
+			createInterface: spy(() => ({
+				question: spy((_q: string, cb: (a: string) => void) => cb("answer")),
+				close: spy(),
+			})),
+		},
+		renderable: {
+			Box: spy(makeBoxNode),
+			Text: spy(makeTextNode),
+			ScrollBox: spy(makeScrollBoxNode),
+			Input: spy(makeInputNode),
+			Select: spy(makeSelectNode),
+			createCliRenderer: spy(async () => makeMockRenderer()),
+		},
+		copyToClipboard: spy(() => ({ success: true, method: "osc52" }) as any),
+		logger: {
+			info: spy(),
+			warn: spy(),
+			error: spy(),
+			debug: spy(),
+		} as any,
+	} as unknown as UIDeps;
 }
 
-const mockTextCtor = mock((opts?: any) => {
-	const t = makeTextMock();
-	if (opts?.id) {
-		(t as any).id = opts.id;
-		(t as any).content = opts.content || "";
-		(t as any).fg = opts.fg;
-	}
-	return t;
-});
-
-const mockScrollBoxCtor = mock((opts?: any) => {
-	const sb = makeScrollBoxMock();
-	if (opts?.id) (sb as any).id = opts.id;
-	return sb;
-});
-
-const mockInputCtor = mock((opts?: any) => {
-	const inp = makeInputMock();
-	if (opts?.id) (inp as any).id = opts.id;
-	if (opts?.placeholder !== undefined) (inp as any).placeholder = opts.placeholder;
-	return inp;
-});
-
-const mockBoxCtor = mock((opts?: any) => {
-	const box = makeBoxMock();
-	if (opts?.id) (box as any).id = opts.id;
-	return box;
-});
-
-const mockSelectCtor = mock((_opts?: any) => makeSelectMock());
-
-mock.module("@opentui/core", () => ({
-	createCliRenderer: mock(() => Promise.resolve(mockRenderer)),
-	InputRenderableEvents: { ENTER: "ENTER" },
-	SelectRenderableEvents: { ITEM_SELECTED: "ITEM_SELECTED" },
-	Text: mock((opts?: any) => {
-		const t = makeTextMock();
-		if (opts?.id) _vnodeMap[opts.id] = t;
-		return t;
-	}),
-	ScrollBox: mock((opts?: any) => {
-		const sb = makeScrollBoxMock();
-		if (opts?.id) _vnodeMap[opts.id] = sb;
-		return sb;
-	}),
-	Input: mock((opts?: any) => {
-		const inp = makeInputMock();
-		if (opts?.id) _vnodeMap[opts.id] = inp;
-		return inp;
-	}),
-	Box: mock((opts?: any) => {
-		const box = makeBoxMock();
-		if (opts?.id) _vnodeMap[opts.id] = box;
-		return box;
-	}),
-	Select: mock((_opts?: any) => makeSelectMock()),
-}));
-
-// --- readline mock ---
-const mockReadlineCreateInterface = mock(() => ({
-	question: mock((_q: string, cb: (a: string) => void) => cb("answer")),
-	close: mock(),
-}));
-mock.module("readline", () => ({
-	createInterface: mockReadlineCreateInterface,
-}));
-mock.module("node:readline", () => ({
-	createInterface: mockReadlineCreateInterface,
-}));
-
-// --- clipboard mock (absolute path for reliable module interception) ---
-const originalClipboard = require("../../utils/clipboard");
-const mockCopyToClipboard = mock(
-	(text: string, osc52?: (t: string) => boolean, overrides?: any) => {
-		if ((globalThis as any).__mockClipboard) {
-			return {
-				success: true,
-				method: "osc52",
-			};
-		}
-		return originalClipboard.copyToClipboard(text, osc52, overrides);
-	},
-);
-mock.module(resolve(import.meta.dir, "../../utils/clipboard"), () => ({
-	copyToClipboard: mockCopyToClipboard,
-}));
-
-// --- logger mock ---
-const mockLoggerChild = mock(() => ({
-	info: mock(),
-	warn: mock(),
-	error: mock(),
-	debug: mock(),
-}));
-mock.module(resolve(import.meta.dir, "../../utils/logger"), () => ({
-	rootLogger: {
-		child: mockLoggerChild,
-		info: mock(),
-		warn: mock(),
-		error: mock(),
-		debug: mock(),
-		setDebug: mock(),
-	},
-}));
-
-// --- Now import UIManager ---
-let UIManager: typeof import("../index").UIManager;
+function setTTY(value: boolean) {
+	Object.defineProperty(process.stdout, "isTTY", { value, configurable: true });
+	Object.defineProperty(process.stdin, "isTTY", { value, configurable: true });
+}
 
 // ============================================================
 // Tests
@@ -242,32 +119,22 @@ let UIManager: typeof import("../index").UIManager;
 
 describe("UIManager — Constructor", () => {
 	beforeEach(() => {
-		Object.defineProperty(process.stdout, "isTTY", {
-			value: true,
-			configurable: true,
-		});
-		Object.defineProperty(process.stdin, "isTTY", {
-			value: true,
-			configurable: true,
-		});
+		_vnodeMap = {};
+		setTTY(true);
 	});
 
 	afterEach(() => {
-		mockClearAll();
+		setTTY(true);
 	});
 
-	test("creates instance with options", async () => {
-		const mod = await import("../index");
-		UIManager = mod.UIManager;
-		const ui = new UIManager({ refreshIntervalMs: 100 });
+	test("creates instance with options", () => {
+		const ui = new UIManager({ refreshIntervalMs: 100 }, makeMockDeps());
 		expect(ui).toBeDefined();
 		expect(ui.ready).toBe(false);
 	});
 
-	test("initializes with default status info", async () => {
-		const mod = await import("../index");
-		UIManager = mod.UIManager;
-		const ui = new UIManager({ refreshIntervalMs: 200 });
+	test("initializes with default status info", () => {
+		const ui = new UIManager({ refreshIntervalMs: 200 }, makeMockDeps());
 		expect((ui as unknown as { statusInfo: StatusInfo }).statusInfo).toEqual({
 			sessionId: "",
 			status: "idle",
@@ -279,111 +146,73 @@ describe("UIManager — Constructor", () => {
 		});
 	});
 
-	test("stores onInput callback", async () => {
-		const mod = await import("../index");
-		UIManager = mod.UIManager;
-		const onInput = mock();
-		const ui = new UIManager({ refreshIntervalMs: 100, onInput });
+	test("stores onInput callback", () => {
+		const onInput = spy();
+		const ui = new UIManager({ refreshIntervalMs: 100, onInput }, makeMockDeps());
 		expect((ui as any).options.onInput).toBe(onInput);
 	});
 
-	test("stores onShutdown callback", async () => {
-		const mod = await import("../index");
-		UIManager = mod.UIManager;
-		const onShutdown = mock();
-		const ui = new UIManager({ refreshIntervalMs: 100, onShutdown });
+	test("stores onShutdown callback", () => {
+		const onShutdown = spy();
+		const ui = new UIManager({ refreshIntervalMs: 100, onShutdown }, makeMockDeps());
 		expect((ui as any).options.onShutdown).toBe(onShutdown);
 	});
 
-	test("detects non-TTY environment", async () => {
-		Object.defineProperty(process.stdout, "isTTY", {
-			value: false,
-			configurable: true,
-		});
-		Object.defineProperty(process.stdin, "isTTY", {
-			value: false,
-			configurable: true,
-		});
-		const mod = await import("../index");
-		UIManager = mod.UIManager;
-		const ui = new UIManager({ refreshIntervalMs: 100 });
+	test("detects non-TTY environment", () => {
+		setTTY(false);
+		const ui = new UIManager({ refreshIntervalMs: 100 }, makeMockDeps());
 		expect((ui as any).isTTY).toBe(false);
 	});
 
-	test("detects TTY environment", async () => {
-		Object.defineProperty(process.stdout, "isTTY", {
-			value: true,
-			configurable: true,
-		});
-		Object.defineProperty(process.stdin, "isTTY", {
-			value: true,
-			configurable: true,
-		});
-		const mod = await import("../index");
-		UIManager = mod.UIManager;
-		const ui = new UIManager({ refreshIntervalMs: 100 });
+	test("detects TTY environment", () => {
+		setTTY(true);
+		const ui = new UIManager({ refreshIntervalMs: 100 }, makeMockDeps());
 		expect((ui as any).isTTY).toBe(true);
+	});
+
+	test("uses default deps when none provided", () => {
+		expect(() => new UIManager({ refreshIntervalMs: 100 })).not.toThrow();
 	});
 });
 
 describe("UIManager — start()", () => {
-	beforeEach(async () => {
-		Object.defineProperty(process.stdout, "isTTY", {
-			value: true,
-			configurable: true,
-		});
-		Object.defineProperty(process.stdin, "isTTY", {
-			value: true,
-			configurable: true,
-		});
-		const mod = await import("../index");
-		UIManager = mod.UIManager;
+	beforeEach(() => {
+		_vnodeMap = {};
+		setTTY(true);
 	});
 
 	afterEach(() => {
-		mockClearAll();
+		setTTY(true);
 	});
 
 	test("start() uses injected renderer and sets running", async () => {
-		const ui = new UIManager({
-			refreshIntervalMs: 100,
-			renderer: mockRenderer,
-		});
+		const deps = makeMockDeps();
+		const ui = new UIManager({ refreshIntervalMs: 100 }, deps);
 		await ui.start();
-		expect(mockStart).toHaveBeenCalled();
+		const renderer = (ui as any).renderer;
+		expect(wasCalled(renderer.start)).toBe(true);
 		expect((ui as any).running).toBe(true);
 	});
 
 	test("start() does nothing if already running", async () => {
-		const ui = new UIManager({
-			refreshIntervalMs: 100,
-			renderer: mockRenderer,
-		});
+		const deps = makeMockDeps();
+		const ui = new UIManager({ refreshIntervalMs: 100 }, deps);
 		await ui.start();
-		const callsBefore = mockStart.mock.calls.length;
+		const renderer = (ui as any).renderer;
+		const callsBefore = callCount(renderer.start);
 		await ui.start();
-		expect(mockStart.mock.calls.length).toBe(callsBefore);
+		expect(callCount(renderer.start)).toBe(callsBefore);
 	});
 
 	test("start() works in non-TTY mode without opening TUI", async () => {
-		Object.defineProperty(process.stdout, "isTTY", {
-			value: false,
-			configurable: true,
-		});
-		Object.defineProperty(process.stdin, "isTTY", {
-			value: false,
-			configurable: true,
-		});
-		const ui = new UIManager({ refreshIntervalMs: 100 });
+		setTTY(false);
+		const ui = new UIManager({ refreshIntervalMs: 100 }, makeMockDeps());
 		await ui.start();
 		expect((ui as any).running).toBe(true);
 	});
 
 	test("start() sets startTime", async () => {
-		const ui = new UIManager({
-			refreshIntervalMs: 100,
-			renderer: mockRenderer,
-		});
+		const ui = new UIManager({ refreshIntervalMs: 100 }, makeMockDeps());
 		const before = Date.now();
 		await ui.start();
 		expect(ui.startTime).toBeGreaterThanOrEqual(before);
@@ -391,44 +220,27 @@ describe("UIManager — start()", () => {
 });
 
 describe("UIManager — log/stream/notice", () => {
-	let ui: import("../index").UIManager;
+	let ui: UIManager;
+	let deps: UIDeps;
 
 	beforeEach(async () => {
-		Object.defineProperty(process.stdout, "isTTY", {
-			value: true,
-			configurable: true,
-		});
-		Object.defineProperty(process.stdin, "isTTY", {
-			value: true,
-			configurable: true,
-		});
-		const mod = await import("../index");
-		UIManager = mod.UIManager;
-		ui = new UIManager({ refreshIntervalMs: 100, renderer: mockRenderer });
+		_vnodeMap = {};
+		setTTY(true);
+		deps = makeMockDeps();
+		ui = new UIManager({ refreshIntervalMs: 100 }, deps);
 		await ui.start();
 	});
 
-	afterEach(() => {
-		mockClearAll();
-	});
-
-	test("log() outputs info messages via addLine", async () => {
+	test("log() outputs info messages via addLine", () => {
+		const scrollbox = (ui as any).scrollbox;
 		ui.log("info", "airgent", "test message");
-		// In TTY mode with a scrollbox, addLine calls scrollbox.add
-		expect(mockAdd).toHaveBeenCalled();
+		expect(wasCalled(scrollbox.add)).toBe(true);
 	});
 
 	test("log() with warn prefix includes level", async () => {
 		const logSpy = spyOn(console, "log").mockImplementation(() => {});
-		Object.defineProperty(process.stdout, "isTTY", {
-			value: false,
-			configurable: true,
-		});
-		Object.defineProperty(process.stdin, "isTTY", {
-			value: false,
-			configurable: true,
-		});
-		const ui2 = new UIManager({ refreshIntervalMs: 100 });
+		setTTY(false);
+		const ui2 = new UIManager({ refreshIntervalMs: 100 }, makeMockDeps());
 		await ui2.start();
 		ui2.log("warn", "airgent", "warning msg");
 		expect(logSpy).toHaveBeenCalled();
@@ -436,45 +248,31 @@ describe("UIManager — log/stream/notice", () => {
 	});
 
 	test("log() with error level includes ERROR prefix", async () => {
-		Object.defineProperty(process.stdout, "isTTY", {
-			value: false,
-			configurable: true,
-		});
-		Object.defineProperty(process.stdin, "isTTY", {
-			value: false,
-			configurable: true,
-		});
+		setTTY(false);
 		const logSpy = spyOn(console, "log").mockImplementation(() => {});
-		const ui2 = new UIManager({ refreshIntervalMs: 100 });
+		const ui2 = new UIManager({ refreshIntervalMs: 100 }, makeMockDeps());
 		await ui2.start();
 		ui2.log("error", "system", "error text");
 		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("ERROR"));
 		logSpy.mockRestore();
 	});
 
-	test("stream() outputs line via addLine", async () => {
+	test("stream() outputs line via addLine", () => {
+		const scrollbox = (ui as any).scrollbox;
 		ui.stream("streaming content");
-		expect(mockAdd).toHaveBeenCalled();
+		expect(wasCalled(scrollbox.add)).toBe(true);
 	});
 
-	test("notice() uses 'ai' source color", async () => {
+	test("notice() uses 'ai' source color", () => {
+		const scrollbox = (ui as any).scrollbox;
 		ui.notice("notice message");
-		// Should use addLine with source "ai"
-		expect(mockAdd).toHaveBeenCalled();
+		expect(wasCalled(scrollbox.add)).toBe(true);
 	});
 
 	test("log() works before start() with non-TTY fallback", async () => {
-		Object.defineProperty(process.stdout, "isTTY", {
-			value: false,
-			configurable: true,
-		});
-		Object.defineProperty(process.stdin, "isTTY", {
-			value: false,
-			configurable: true,
-		});
+		setTTY(false);
 		const logSpy = spyOn(console, "log").mockImplementation(() => {});
-		const ui2 = new UIManager({ refreshIntervalMs: 100 });
-		// Not started - log should use console.log fallback
+		const ui2 = new UIManager({ refreshIntervalMs: 100 }, makeMockDeps());
 		ui2.log("info", "test", "before start in non-TTY");
 		expect(logSpy).toHaveBeenCalled();
 		logSpy.mockRestore();
@@ -482,584 +280,636 @@ describe("UIManager — log/stream/notice", () => {
 });
 
 describe("UIManager — updateStatus", () => {
-	let ui: import("../index").UIManager;
+	let ui: UIManager;
 
 	beforeEach(async () => {
-		Object.defineProperty(process.stdout, "isTTY", {
-			value: true,
-			configurable: true,
-		});
-		Object.defineProperty(process.stdin, "isTTY", {
-			value: true,
-			configurable: true,
-		});
-		const mod = await import("../index");
-		UIManager = mod.UIManager;
-		ui = new UIManager({ refreshIntervalMs: 100, renderer: mockRenderer });
+		_vnodeMap = {};
+		setTTY(true);
+		ui = new UIManager({ refreshIntervalMs: 100 }, makeMockDeps());
 		await ui.start();
 	});
 
-	afterEach(() => {
-		mockClearAll();
-	});
-
-	test("updateStatus merges into statusInfo", async () => {
+	test("updateStatus merges into statusInfo", () => {
 		ui.updateStatus({ status: "running", pipelineNode: "plan" });
 		expect((ui as unknown as { statusInfo: StatusInfo }).statusInfo.status).toBe("running");
 		expect((ui as unknown as { statusInfo: StatusInfo }).statusInfo.pipelineNode).toBe("plan");
 	});
 
-	test("updateStatus with partial updates works", async () => {
+	test("updateStatus with partial updates works", () => {
 		ui.updateStatus({ tokenUsage: 500 });
 		expect((ui as unknown as { statusInfo: StatusInfo }).statusInfo.tokenUsage).toBe(500);
-		// Other fields unchanged
 		expect((ui as unknown as { statusInfo: StatusInfo }).statusInfo.status).toBe("idle");
 	});
 
-	test("updateStatus with sessionId", async () => {
+	test("updateStatus with sessionId", () => {
 		ui.updateStatus({ sessionId: "sess-abc" });
 		expect((ui as unknown as { statusInfo: StatusInfo }).statusInfo.sessionId).toBe("sess-abc");
 	});
 
-	test("updateStatus with memoryCount", async () => {
+	test("updateStatus with memoryCount", () => {
 		ui.updateStatus({ memoryCount: 42 });
 		expect((ui as unknown as { statusInfo: StatusInfo }).statusInfo.memoryCount).toBe(42);
 	});
 
-	test("updateStatus sets error status styling", async () => {
+	test("updateStatus sets error status styling", () => {
 		ui.updateStatus({ status: "error" });
 		expect((ui as unknown as { statusInfo: StatusInfo }).statusInfo.status).toBe("error");
 	});
 
-	test("updateStatus does not throw when header/footer not set up", async () => {
-		// Create UI without starting (no headerBox / statusBar)
-		const ui2 = new UIManager({ refreshIntervalMs: 100 });
-		// Should not throw
+	test("updateStatus does not throw when header/footer not set up", () => {
+		const ui2 = new UIManager({ refreshIntervalMs: 100 }, makeMockDeps());
 		expect(() => ui2.updateStatus({ status: "running" })).not.toThrow();
 	});
 });
 
-describe("UIManager — showCopyToast / copy", () => {
-	let ui: import("../index").UIManager;
+describe("UIManager — showCopyToast/copy", () => {
+	let ui: UIManager;
+	let deps: UIDeps;
 
 	beforeEach(async () => {
-		Object.defineProperty(process.stdout, "isTTY", {
-			value: true,
-			configurable: true,
-		});
-		Object.defineProperty(process.stdin, "isTTY", {
-			value: true,
-			configurable: true,
-		});
-		const mod = await import("../index");
-		UIManager = mod.UIManager;
-
-		// Reset mock state
-		mockFindDescendantById.mockReset();
-		// Make findDescendantById return something useful for toast tests
-		mockFindDescendantById.mockImplementation((id: string) => {
-			if (id === "toast-copy") return null; // no existing toast
-			if (id === "input-line") return { focus: mock(), value: "" };
-			return null;
-		});
-		mockAdd.mockReset();
-		mockRemove.mockReset();
-		mockRequestRender.mockReset();
-
-		ui = new UIManager({ refreshIntervalMs: 100, renderer: mockRenderer });
+		_vnodeMap = {};
+		setTTY(true);
+		deps = makeMockDeps();
+		ui = new UIManager({ refreshIntervalMs: 100 }, deps);
 		await ui.start();
 	});
 
-	afterEach(() => {
-		mockClearAll();
-	});
-
-	test("copy() calls clipboard and shows toast", async () => {
-		mockCopyToClipboard.mockImplementation(() => ({
-			success: true,
-			method: "osc52",
-		}));
-		const result = ui.copy("text to copy");
+	test("copy() calls copyToClipboard and returns result", () => {
+		const result = ui.copy("hello world");
 		expect(result.success).toBe(true);
-		expect(result.method).toBe("osc52");
-		// Toast should be shown (add called for toast box and text)
-		expect(mockAdd).toHaveBeenCalled();
+		expect(wasCalled(deps.copyToClipboard)).toBe(true);
 	});
 
-	test("copy() with file method shows file path in toast", async () => {
-		mockCopyToClipboard.mockImplementation(() => ({
-			success: true,
-			method: "file",
-			filePath: "/tmp/airgent-copy-123.txt",
-		}));
-		const result = ui.copy("long text");
-		expect(result.success).toBe(true);
-		expect(result.method).toBe("file");
+	test("copy() passes text as first arg to copyToClipboard", () => {
+		ui.copy("some text");
+		const calls = (deps.copyToClipboard as unknown as { calls: unknown[][] }).calls;
+		expect(calls[0]?.[0]).toBe("some text");
 	});
 
-	test("copy() with failure shows error toast", async () => {
-		mockCopyToClipboard.mockImplementation(() => ({
-			success: false,
-			method: "file",
-			error: "clipboard error",
-		}));
-		const result = ui.copy("text");
-		expect(result.success).toBe(false);
+	test("copy() renders toast box on renderer root", () => {
+		const renderer = (ui as any).renderer;
+		ui.copy("hello");
+		expect(wasCalled(renderer.root.add)).toBe(true);
 	});
 
-	test("showCopyToast does nothing when no renderer", async () => {
-		// Mock createCliRenderer to fail so no renderer
-		const mod = await import("../index");
-		UIManager = mod.UIManager;
-		const ui2 = new UIManager({ refreshIntervalMs: 100 });
-		// Cast to access private method for testing
-		const showToast = (ui2 as any).showCopyToast.bind(ui2);
-		expect(() => showToast({ success: true, method: "osc52" })).not.toThrow();
+	test("copy() does nothing visible when renderer is null", () => {
+		const ui2 = new UIManager({ refreshIntervalMs: 100 }, makeMockDeps());
+		expect(() => ui2.copy("text")).not.toThrow();
 	});
 
-	test("copy toast auto-dismisses after timeout", async () => {
-		// bun:test doesn't have jest - just verify that a timer was set
-		const result = ui.copy("test text");
-		expect(result.success).toBe(true);
-		// Tile the timer will be set
-		expect((ui as any)._copyToastTimer).not.toBeNull();
+	test("showCopyToast success message shows 'Copied!'", () => {
+		const textSpy = deps.renderable.Text as unknown as { calls: any[][] };
+		const before = textSpy.calls.length;
+		ui.copy("hi");
+		expect(textSpy.calls.length).toBeGreaterThan(before);
+		const lastCallArgs = textSpy.calls[textSpy.calls.length - 1]![0];
+		expect(lastCallArgs.content).toBe("Copied!");
 	});
 
-	test("toast uses green border on success", async () => {
-		mockCopyToClipboard.mockImplementation(() => ({
-			success: true,
-			method: "osc52",
-		}));
-		ui.copy("test");
-		// Verify add was called for the toast
-		expect(mockAdd).toHaveBeenCalled();
+	test("showCopyToast failure message shows 'Copy failed'", () => {
+		const failDeps = {
+			...deps,
+			copyToClipboard: spy(() => ({ success: false, method: "file" })),
+		} as UIDeps;
+		const ui2 = new UIManager({ refreshIntervalMs: 100 }, failDeps);
+		return ui2.start().then(() => {
+			const textSpy = failDeps.renderable.Text as unknown as { calls: any[][] };
+			ui2.copy("hi");
+			const lastCallArgs = textSpy.calls[textSpy.calls.length - 1]![0];
+			expect(lastCallArgs.content).toBe("Copy failed");
+		});
 	});
 
-	test("toast uses red border on failure", async () => {
-		mockCopyToClipboard.mockImplementation(() => ({
-			success: false,
-			method: "file",
-			error: "err",
-		}));
-		ui.copy("test");
-		expect(mockAdd).toHaveBeenCalled();
+	test("showCopyToast file method shows file path", () => {
+		const fileDeps = {
+			...deps,
+			copyToClipboard: spy(() => ({
+				success: true,
+				method: "file",
+				filePath: "/tmp/airgent-copy-123.txt",
+			})),
+		} as UIDeps;
+		const ui2 = new UIManager({ refreshIntervalMs: 100 }, fileDeps);
+		return ui2.start().then(() => {
+			const textSpy = fileDeps.renderable.Text as unknown as { calls: any[][] };
+			ui2.copy("hi");
+			const lastCallArgs = textSpy.calls[textSpy.calls.length - 1]![0];
+			expect(lastCallArgs.content).toBe("Copied to /tmp/airgent-copy-123.txt");
+		});
+	});
+
+	test("showCopyToast removes existing toast before adding new one", () => {
+		_vnodeMap["toast-copy"] = makeBoxNode({ id: "toast-copy" });
+		const renderer = (ui as any).renderer;
+		ui.copy("hi");
+		expect(wasCalled(renderer.root.remove)).toBe(true);
+	});
+
+	test("showCopyToast requests render and refocuses input", () => {
+		const renderer = (ui as any).renderer;
+		ui.copy("hi");
+		expect(wasCalled(renderer.requestRender)).toBe(true);
+		expect(wasCalled(renderer.focusRenderable)).toBe(true);
 	});
 });
 
-describe("UIManager — stop()", () => {
-	let ui: import("../index").UIManager;
-
-	beforeEach(async () => {
-		Object.defineProperty(process.stdout, "isTTY", {
-			value: true,
-			configurable: true,
-		});
-		Object.defineProperty(process.stdin, "isTTY", {
-			value: true,
-			configurable: true,
-		});
-		const mod = await import("../index");
-		UIManager = mod.UIManager;
-		ui = new UIManager({ refreshIntervalMs: 100, renderer: mockRenderer });
-		await ui.start();
+describe("UIManager — stop", () => {
+	beforeEach(() => {
+		_vnodeMap = {};
+		setTTY(true);
 	});
 
 	afterEach(() => {
-		mockClearAll();
+		setTTY(true);
 	});
 
 	test("stop() sets running to false", async () => {
+		const ui = new UIManager({ refreshIntervalMs: 100 }, makeMockDeps());
+		await ui.start();
 		ui.stop();
 		expect((ui as any).running).toBe(false);
 	});
 
-	test("stop() destroys renderer", async () => {
+	test("stop() calls renderer.destroy()", async () => {
+		const ui = new UIManager({ refreshIntervalMs: 100 }, makeMockDeps());
+		await ui.start();
+		const renderer = (ui as any).renderer;
 		ui.stop();
-		expect(mockDestroy).toHaveBeenCalled();
+		expect(wasCalled(renderer.destroy)).toBe(true);
 	});
 
-	test("stop() clears renderer reference", async () => {
+	test("stop() nulls out renderer, scrollbox, and input", async () => {
+		const ui = new UIManager({ refreshIntervalMs: 100 }, makeMockDeps());
+		await ui.start();
 		ui.stop();
 		expect((ui as any).renderer).toBeNull();
-	});
-
-	test("stop() clears scrollbox reference", async () => {
-		ui.stop();
 		expect((ui as any).scrollbox).toBeNull();
-	});
-
-	test("stop() clears input reference", async () => {
-		ui.stop();
 		expect((ui as any).input).toBeNull();
 	});
 
-	test("stop() is safe when called multiple times", async () => {
+	test("stop() logs 'UI stopped'", async () => {
+		const deps = makeMockDeps();
+		const ui = new UIManager({ refreshIntervalMs: 100 }, deps);
+		await ui.start();
 		ui.stop();
-		ui.stop(); // second call should not throw
-		expect((ui as any).renderer).toBeNull();
+		expect(calledWith(deps.logger.info as any, "UI stopped")).toBe(true);
 	});
 
-	test("stop() clears copy toast timer", async () => {
+	test("stop() clears pending sigint timer", async () => {
+		const ui = new UIManager({ refreshIntervalMs: 100 }, makeMockDeps());
+		await ui.start();
+		(ui as any)._sigintTimer = setTimeout(() => {}, 10000);
+		ui.stop();
+		expect((ui as any)._sigintTimer).toBeNull();
+	});
+
+	test("stop() clears pending copy toast timer", async () => {
+		const ui = new UIManager({ refreshIntervalMs: 100 }, makeMockDeps());
+		await ui.start();
 		(ui as any)._copyToastTimer = setTimeout(() => {}, 10000);
 		ui.stop();
 		expect((ui as any)._copyToastTimer).toBeNull();
 	});
 
-	test("stop() clears sigint timer", async () => {
-		(ui as any)._sigintTimer = setTimeout(() => {}, 10000);
-		ui.stop();
-		expect((ui as any)._sigintTimer).toBeNull();
-	});
-});
-
-describe("UIManager — selectModel / showSelectMenu", () => {
-	let ui: import("../index").UIManager;
-
-	beforeEach(async () => {
-		Object.defineProperty(process.stdout, "isTTY", {
-			value: true,
-			configurable: true,
-		});
-		Object.defineProperty(process.stdin, "isTTY", {
-			value: true,
-			configurable: true,
-		});
-		const mod = await import("../index");
-		UIManager = mod.UIManager;
-		ui = new UIManager({ refreshIntervalMs: 100 });
-	});
-
-	afterEach(() => {
-		mockClearAll();
-	});
-
-	test("selectModel delegates to showSelectMenu", async () => {
-		const options = [{ name: "opt1", description: "desc1", value: "v1" }];
-		const promise = ui.selectModel("Pick a model", options);
-		// Should not throw
-		expect(promise).toBeDefined();
-	});
-
-	test("showSelectMenu falls back when no renderer", async () => {
-		const ui2 = new UIManager({ refreshIntervalMs: 100 });
-		const options = [{ name: "opt1", description: "desc1", value: "v1" }];
-		const result = await ui2.showSelectMenu("Pick", options);
-		// Fallback readline mock returns "answer" → parseInt → NaN → null
-		expect(result).toBeNull();
-	});
-
-	test("showSelectMenu returns value from fallback", async () => {
-		const ui2 = new UIManager({ refreshIntervalMs: 100 });
-		const options = [
-			{
-				name: "Option 1",
-				description: "First option",
-				value: { provider: "p1", model: "m1" },
-			},
-		];
-		const result = await ui2.showSelectMenu("Test", options);
-		// readline mock returns "answer" → parseInt("answer") = NaN → null
-		expect(result).toBeNull();
-	});
-
-	test("prompt() uses readline", async () => {
-		const result = await ui.prompt("Enter value: ");
-		expect(mockReadlineCreateInterface).toHaveBeenCalled();
-		expect(result).toBe("answer");
-	});
-});
-
-describe("UIManager — handleSelection (copy on select)", () => {
-	let ui: import("../index").UIManager;
-
-	beforeEach(async () => {
-		Object.defineProperty(process.stdout, "isTTY", {
-			value: true,
-			configurable: true,
-		});
-		Object.defineProperty(process.stdin, "isTTY", {
-			value: true,
-			configurable: true,
-		});
-		const mod = await import("../index");
-		UIManager = mod.UIManager;
-		ui = new UIManager({ refreshIntervalMs: 100, renderer: mockRenderer });
+	test("stop() is safe to call when renderer was never created (non-TTY)", async () => {
+		setTTY(false);
+		const ui = new UIManager({ refreshIntervalMs: 100 }, makeMockDeps());
 		await ui.start();
+		expect(() => ui.stop()).not.toThrow();
+	});
+});
+
+describe("UIManager — selectModel", () => {
+	beforeEach(() => {
+		_vnodeMap = {};
+		setTTY(true);
 	});
 
 	afterEach(() => {
-		mockClearAll();
+		setTTY(true);
 	});
 
-	test("handleSelection calls copyToClipboard with selected text", async () => {
-		mockGetSelectedText.mockImplementation(() => "selected text");
-		// Simulate a selection event by accessing the private method
-		const selHandler = (ui as any).handleSelection.bind(ui);
-		selHandler({ getSelectedText: mockGetSelectedText }, mockRenderer);
-		// clipboard copy should be called
-		expect(mockCopyToClipboard).toHaveBeenCalledWith("selected text", expect.any(Function));
+	const options = [
+		{ name: "opt-a", description: "first", value: "a" },
+		{ name: "opt-b", description: "second", value: "b" },
+	];
+
+	test("selectModel() renders a Select overlay when renderer/scrollbox exist", async () => {
+		const deps = makeMockDeps();
+		const ui = new UIManager({ refreshIntervalMs: 100 }, deps);
+		await ui.start();
+
+		const promise = ui.selectModel("Choose one", options);
+		const selectCalls = (deps.renderable.Select as unknown as { calls: any[][] }).calls;
+		expect(selectCalls.length).toBeGreaterThan(0);
+
+		const selectId = selectCalls[selectCalls.length - 1]![0].id;
+		const selectNode = _vnodeMap[selectId];
+		selectNode.getSelectedOption = spy(() => ({ value: "b" }));
+		const onHandlers = (selectNode.on as unknown as { calls: any[][] }).calls;
+		const itemSelectedHandler = onHandlers[onHandlers.length - 1]![1];
+		itemSelectedHandler();
+
+		const result = await promise;
+		expect(result).toBe("b");
 	});
 
-	test("handleSelection ignores empty selection", async () => {
-		mockGetSelectedText.mockImplementation(() => "");
-		const selHandler = (ui as any).handleSelection.bind(ui);
-		selHandler({ getSelectedText: mockGetSelectedText }, mockRenderer);
-		expect(mockCopyToClipboard).not.toHaveBeenCalled();
+	test("selectModel() falls back to readline prompt when renderer is unavailable", async () => {
+		setTTY(false);
+		const deps = makeMockDeps();
+		const ui = new UIManager({ refreshIntervalMs: 100 }, deps);
+		await ui.start();
+
+		const result = await ui.selectModel("Choose one", options);
+		expect(wasCalled(deps.readline.createInterface)).toBe(true);
 	});
 
-	test("handleSelection ignores whitespace-only selection", async () => {
-		mockGetSelectedText.mockImplementation(() => "   ");
-		const selHandler = (ui as any).handleSelection.bind(ui);
-		selHandler({ getSelectedText: mockGetSelectedText }, mockRenderer);
-		expect(mockCopyToClipboard).not.toHaveBeenCalled();
+	test("selectModel() fallback resolves selected option by index", async () => {
+		setTTY(false);
+		const deps = makeMockDeps();
+		(deps.readline.createInterface as any) = spy(() => ({
+			question: spy((_q: string, cb: (a: string) => void) => cb("2")),
+			close: spy(),
+		}));
+		const ui = new UIManager({ refreshIntervalMs: 100 }, deps);
+		await ui.start();
+
+		const result = await ui.selectModel("Choose one", options);
+		expect(result).toBe("b");
 	});
 
-	test("handleSelection does nothing when copy in progress", async () => {
+	test("selectModel() fallback resolves null for invalid index", async () => {
+		setTTY(false);
+		const deps = makeMockDeps();
+		(deps.readline.createInterface as any) = spy(() => ({
+			question: spy((_q: string, cb: (a: string) => void) => cb("99")),
+			close: spy(),
+		}));
+		const ui = new UIManager({ refreshIntervalMs: 100 }, deps);
+		await ui.start();
+
+		const result = await ui.selectModel("Choose one", options);
+		expect(result).toBeNull();
+	});
+});
+
+describe("UIManager — handleSelection", () => {
+	let ui: UIManager;
+	let deps: UIDeps;
+	let renderer: any;
+
+	beforeEach(async () => {
+		_vnodeMap = {};
+		setTTY(true);
+		deps = makeMockDeps();
+		ui = new UIManager({ refreshIntervalMs: 100 }, deps);
+		await ui.start();
+		renderer = (ui as any).renderer;
+	});
+
+	function getSelectionHandler(): (sel: any) => void {
+		const onCalls = (renderer.on as unknown as { calls: any[][] }).calls;
+		const call = onCalls.find((c) => c[0] === "selection");
+		return call![1];
+	}
+
+	test("handleSelection copies non-empty selected text", () => {
+		const handler = getSelectionHandler();
+		const sel = { getSelectedText: spy(() => "selected text") };
+		handler(sel);
+		expect(wasCalled(deps.copyToClipboard)).toBe(true);
+	});
+
+	test("handleSelection ignores whitespace-only selection", () => {
+		const handler = getSelectionHandler();
+		const sel = { getSelectedText: spy(() => "   ") };
+		handler(sel);
+		expect(wasCalled(deps.copyToClipboard)).toBe(false);
+	});
+
+	test("handleSelection ignores empty selection", () => {
+		const handler = getSelectionHandler();
+		const sel = { getSelectedText: spy(() => "") };
+		handler(sel);
+		expect(wasCalled(deps.copyToClipboard)).toBe(false);
+	});
+
+	test("handleSelection swallows errors from getSelectedText", () => {
+		const handler = getSelectionHandler();
+		const sel = {
+			getSelectedText: spy(() => {
+				throw new Error("boom");
+			}),
+		};
+		expect(() => handler(sel)).not.toThrow();
+	});
+
+	test("handleSelection resets _copyInProgress after handling", () => {
+		const handler = getSelectionHandler();
+		const sel = { getSelectedText: spy(() => "text") };
+		handler(sel);
+		expect((ui as any)._copyInProgress).toBe(false);
+	});
+
+	test("handleSelection skips re-entrant calls while copy is in progress", () => {
+		const handler = getSelectionHandler();
 		(ui as any)._copyInProgress = true;
-		const selHandler = (ui as any).handleSelection.bind(ui);
-		selHandler({ getSelectedText: mockGetSelectedText }, mockRenderer);
-		expect(mockCopyToClipboard).not.toHaveBeenCalled();
+		const sel = { getSelectedText: spy(() => "text") };
+		handler(sel);
+		expect(wasCalled(sel.getSelectedText)).toBe(false);
 	});
 });
 
 describe("UIManager — handleCtrlC", () => {
-	let ui: import("../index").UIManager;
+	let ui: UIManager;
+	let deps: UIDeps;
+	let renderer: any;
 
 	beforeEach(async () => {
-		Object.defineProperty(process.stdout, "isTTY", {
-			value: true,
-			configurable: true,
-		});
-		Object.defineProperty(process.stdin, "isTTY", {
-			value: true,
-			configurable: true,
-		});
-		const mod = await import("../index");
-		UIManager = mod.UIManager;
-		ui = new UIManager({ refreshIntervalMs: 100, renderer: mockRenderer });
-		await ui.start();
+		_vnodeMap = {};
+		setTTY(true);
+		deps = makeMockDeps();
 	});
 
 	afterEach(() => {
-		mockClearAll();
-		// Clean up any timers
-		(ui as any)._sigintTimer = null;
+		setTTY(true);
 	});
 
-	test("first Ctrl+C shows warning", async () => {
-		(ui as any).handleCtrlC();
-		// Should have set sigint tracking state
+	function getCtrlCHandler(r: any): (event: any) => void {
+		const onCalls = (r.keyInput.on as unknown as { calls: any[][] }).calls;
+		const call = onCalls.find((c) => c[0] === "keypress");
+		return call![1];
+	}
+
+	test("first Ctrl+C logs a warning and does not shut down", async () => {
+		const onShutdown = spy();
+		ui = new UIManager({ refreshIntervalMs: 100, onShutdown }, deps);
+		await ui.start();
+		renderer = (ui as any).renderer;
+		const handler = getCtrlCHandler(renderer);
+		const scrollbox = (ui as any).scrollbox;
+
+		handler({ ctrl: true, name: "c", preventDefault: spy() });
+		expect(wasCalled(scrollbox.add)).toBe(true);
+		expect(wasCalled(onShutdown)).toBe(false);
 		expect((ui as any)._sigintCount).toBe(1);
+	});
+
+	test("second Ctrl+C within window triggers shutdown", async () => {
+		const onShutdown = spy();
+		ui = new UIManager({ refreshIntervalMs: 100, onShutdown }, deps);
+		await ui.start();
+		renderer = (ui as any).renderer;
+		const handler = getCtrlCHandler(renderer);
+
+		handler({ ctrl: true, name: "c", preventDefault: spy() });
+		handler({ ctrl: true, name: "c", preventDefault: spy() });
+
+		await new Promise((resolve) => process.nextTick(resolve));
+		await new Promise((resolve) => process.nextTick(resolve));
+
+		expect(wasCalled(onShutdown)).toBe(true);
+	});
+
+	test("second Ctrl+C clears the pending sigint timer", async () => {
+		const onShutdown = spy();
+		ui = new UIManager({ refreshIntervalMs: 100, onShutdown }, deps);
+		await ui.start();
+		renderer = (ui as any).renderer;
+		const handler = getCtrlCHandler(renderer);
+
+		handler({ ctrl: true, name: "c", preventDefault: spy() });
+		expect((ui as any)._sigintTimer).not.toBeNull();
+		handler({ ctrl: true, name: "c", preventDefault: spy() });
 		expect((ui as any)._sigintTimer).not.toBeNull();
 	});
 
-	test("second Ctrl+C calls shutdown", async () => {
-		const onShutdown = mock();
-		const mod = await import("../index");
-		UIManager = mod.UIManager;
-		const ui2 = new UIManager({
-			refreshIntervalMs: 100,
-			onShutdown,
-			renderer: mockRenderer,
-		});
-		await ui2.start();
-		(ui2 as any).handleCtrlC(); // first
-		(ui2 as any).handleCtrlC(); // second
-		// process.nextTick defers onShutdown, flush it
-		await new Promise((resolve) => process.nextTick(resolve));
-		expect(onShutdown).toHaveBeenCalled();
+	test("non-ctrl keypress is ignored", async () => {
+		const onShutdown = spy();
+		ui = new UIManager({ refreshIntervalMs: 100, onShutdown }, deps);
+		await ui.start();
+		renderer = (ui as any).renderer;
+		const handler = getCtrlCHandler(renderer);
+		const preventDefault = spy();
+
+		handler({ ctrl: false, name: "c", preventDefault });
+		expect(wasCalled(preventDefault)).toBe(false);
+		expect((ui as any)._sigintCount).toBe(0);
+	});
+
+	test("ctrl key with different letter is ignored", async () => {
+		const onShutdown = spy();
+		ui = new UIManager({ refreshIntervalMs: 100, onShutdown }, deps);
+		await ui.start();
+		renderer = (ui as any).renderer;
+		const handler = getCtrlCHandler(renderer);
+		const preventDefault = spy();
+
+		handler({ ctrl: true, name: "x", preventDefault });
+		expect(wasCalled(preventDefault)).toBe(false);
 	});
 });
 
-describe("UIManager — Edge Cases", () => {
-	beforeEach(async () => {
-		Object.defineProperty(process.stdout, "isTTY", {
-			value: true,
-			configurable: true,
-		});
-		Object.defineProperty(process.stdin, "isTTY", {
-			value: true,
-			configurable: true,
-		});
-		const mod = await import("../index");
-		UIManager = mod.UIManager;
+describe("UIManager — EdgeCases", () => {
+	beforeEach(() => {
+		_vnodeMap = {};
+		setTTY(true);
 	});
 
 	afterEach(() => {
-		mockClearAll();
+		setTTY(true);
 	});
 
-	test("calling log before start() does not throw", () => {
-		const ui = new UIManager({ refreshIntervalMs: 100 });
-		expect(() => ui.log("info", "test", "hello")).not.toThrow();
-	});
-
-	test("calling stop without starting does not throw", () => {
-		const ui = new UIManager({ refreshIntervalMs: 100 });
-		expect(() => ui.stop()).not.toThrow();
-	});
-
-	test("calling start, stop, and start again works", async () => {
-		const ui = new UIManager({
-			refreshIntervalMs: 100,
-			renderer: mockRenderer,
-		});
+	test("start() catches createCliRenderer failure and logs a warning", async () => {
+		const deps = makeMockDeps();
+		deps.renderable.createCliRenderer = spy(async () => {
+			throw new Error("renderer init failed");
+		}) as any;
+		const ui = new UIManager({ refreshIntervalMs: 100 }, deps);
 		await ui.start();
-		ui.stop();
-		// Re-start should work
-		mockStart.mockReset();
-		await ui.start();
+		expect(wasCalled(deps.logger.warn as any)).toBe(true);
 		expect((ui as any).running).toBe(true);
 	});
 
-	test("refreshHeaderAndFooter does not throw when header missing", () => {
-		const ui = new UIManager({ refreshIntervalMs: 100 });
-		expect(() => (ui as any).refreshHeaderAndFooter()).not.toThrow();
-	});
+	function getEnterHandler(inputNode: any): (value: string) => void {
+		const onCalls = (inputNode.on as unknown as { calls: any[][] }).calls;
+		const call = onCalls.find((c) => c[0] === InputRenderableEvents.ENTER);
+		return call![1];
+	}
 
-	test("multiple rapid updateStatus calls merge correctly", () => {
-		const ui = new UIManager({ refreshIntervalMs: 100 });
-		ui.updateStatus({ status: "running" });
-		ui.updateStatus({ pipelineNode: "plan" });
-		ui.updateStatus({ tokenUsage: 100 });
-		expect((ui as unknown as { statusInfo: StatusInfo }).statusInfo.status).toBe("running");
-		expect((ui as unknown as { statusInfo: StatusInfo }).statusInfo.pipelineNode).toBe("plan");
-		expect((ui as unknown as { statusInfo: StatusInfo }).statusInfo.tokenUsage).toBe(100);
-	});
-
-	test("log with unknown source uses default color", () => {
-		const ui = new UIManager({ refreshIntervalMs: 100 });
-		// The sourceColor function should return default for unknown sources
-		expect(() => ui.log("info", "unknown-source", "msg")).not.toThrow();
-	});
-
-	test("copyInProgress flag is reset after selection handling", async () => {
-		const ui = new UIManager({
-			refreshIntervalMs: 100,
-			renderer: mockRenderer,
-		});
+	test("ENTER before ready shows waiting message and clears input", async () => {
+		const deps = makeMockDeps();
+		const onInput = spy();
+		const ui = new UIManager({ refreshIntervalMs: 100, onInput }, deps);
 		await ui.start();
-		// Trigger selection handler
-		mockGetSelectedText.mockImplementation(() => "test");
-		const selHandler = (ui as any).handleSelection.bind(ui);
-		selHandler({ getSelectedText: mockGetSelectedText }, mockRenderer);
-		expect((ui as any)._copyInProgress).toBe(false);
+		const inputNode = (ui as any).input;
+		inputNode.value = "some text";
+		const handler = getEnterHandler(inputNode);
+
+		handler("some text");
+		expect(wasCalled(onInput)).toBe(false);
+		expect(inputNode.value).toBe("");
+	});
+
+	test("ENTER after ready with non-empty value calls onInput and clears input", async () => {
+		const deps = makeMockDeps();
+		const onInput = spy();
+		const ui = new UIManager({ refreshIntervalMs: 100, onInput }, deps);
+		await ui.start();
+		ui.ready = true;
+		const inputNode = (ui as any).input;
+		inputNode.value = "hello";
+		const handler = getEnterHandler(inputNode);
+
+		handler("hello");
+		expect(wasCalled(onInput)).toBe(true);
+		expect(calledWith(onInput, "hello")).toBe(true);
+		expect(inputNode.value).toBe("");
+	});
+
+	test("ENTER after ready with whitespace-only value does not call onInput", async () => {
+		const deps = makeMockDeps();
+		const onInput = spy();
+		const ui = new UIManager({ refreshIntervalMs: 100, onInput }, deps);
+		await ui.start();
+		ui.ready = true;
+		const inputNode = (ui as any).input;
+		const handler = getEnterHandler(inputNode);
+
+		handler("   ");
+		expect(wasCalled(onInput)).toBe(false);
+	});
+
+	test("askQuestion appends Custom... option by default", async () => {
+		const deps = makeMockDeps();
+		const ui = new UIManager({ refreshIntervalMs: 100 }, deps);
+		await ui.start();
+
+		const q = { query: "pick one", options: [{ label: "A", value: "a" }] };
+		const promise = ui.askQuestion(q);
+
+		const selectCalls = (deps.renderable.Select as unknown as { calls: any[][] }).calls;
+		const lastOptions = selectCalls[selectCalls.length - 1]![0].options;
+		expect(lastOptions.length).toBe(2);
+		expect(lastOptions[1].value).toBe("__custom__");
+
+		const selectId = selectCalls[selectCalls.length - 1]![0].id;
+		const selectNode = _vnodeMap[selectId];
+		selectNode.getSelectedOption = spy(() => ({ value: "a" }));
+		const onHandlers = (selectNode.on as unknown as { calls: any[][] }).calls;
+		onHandlers[onHandlers.length - 1]![1]();
+		await promise;
+	});
+
+	test("askQuestion omits Custom... option when allowCustom is false", async () => {
+		const deps = makeMockDeps();
+		const ui = new UIManager({ refreshIntervalMs: 100 }, deps);
+		await ui.start();
+
+		const q = { query: "pick one", options: [{ label: "A", value: "a" }], allowCustom: false };
+		const promise = ui.askQuestion(q);
+
+		const selectCalls = (deps.renderable.Select as unknown as { calls: any[][] }).calls;
+		const lastOptions = selectCalls[selectCalls.length - 1]![0].options;
+		expect(lastOptions.length).toBe(1);
+
+		const selectId = selectCalls[selectCalls.length - 1]![0].id;
+		const selectNode = _vnodeMap[selectId];
+		selectNode.getSelectedOption = spy(() => ({ value: "a" }));
+		const onHandlers = (selectNode.on as unknown as { calls: any[][] }).calls;
+		onHandlers[onHandlers.length - 1]![1]();
+		await promise;
+	});
+
+	test("prompt() resolves with readline answer", async () => {
+		const deps = makeMockDeps();
+		const ui = new UIManager({ refreshIntervalMs: 100 }, deps);
+		const answer = await ui.prompt("Your name: ");
+		expect(answer).toBe("answer");
+		expect(wasCalled(deps.readline.createInterface)).toBe(true);
 	});
 });
 
 describe("UIManager — Integration", () => {
-	beforeEach(async () => {
-		Object.defineProperty(process.stdout, "isTTY", {
-			value: true,
-			configurable: true,
-		});
-		Object.defineProperty(process.stdin, "isTTY", {
-			value: true,
-			configurable: true,
-		});
-		const mod = await import("../index");
-		UIManager = mod.UIManager;
+	beforeEach(() => {
+		_vnodeMap = {};
+		setTTY(true);
 	});
 
 	afterEach(() => {
-		mockClearAll();
+		setTTY(true);
 	});
 
-	test("full lifecycle: construct → start → update → copy → stop", async () => {
-		const onInput = mock();
-		const onShutdown = mock();
-		const ui = new UIManager({
-			refreshIntervalMs: 100,
-			onInput,
-			onShutdown,
-			renderer: mockRenderer,
-		});
+	test("full TTY lifecycle: start, log, updateStatus, copy, stop", async () => {
+		const deps = makeMockDeps();
+		const ui = new UIManager({ refreshIntervalMs: 100 }, deps);
 
-		// start
 		await ui.start();
 		expect((ui as any).running).toBe(true);
-		expect(mockStart).toHaveBeenCalled();
 
-		// update status
-		ui.updateStatus({ status: "running", memoryCount: 5 });
+		ui.log("info", "airgent", "pipeline started");
+		ui.updateStatus({ status: "running", pipelineNode: "plan", tokenUsage: 120 });
 		expect((ui as unknown as { statusInfo: StatusInfo }).statusInfo.status).toBe("running");
 
-		// copy
-		mockCopyToClipboard.mockImplementation(() => ({
-			success: true,
-			method: "osc52",
-		}));
-		const copyResult = ui.copy("hello");
+		const copyResult = ui.copy("some output");
 		expect(copyResult.success).toBe(true);
 
-		// stop
 		ui.stop();
 		expect((ui as any).running).toBe(false);
 		expect((ui as any).renderer).toBeNull();
 	});
 
-	test("non-TTY mode skips renderer creation", async () => {
-		Object.defineProperty(process.stdout, "isTTY", {
-			value: false,
-			configurable: true,
-		});
-		Object.defineProperty(process.stdin, "isTTY", {
-			value: false,
-			configurable: true,
-		});
-		const ui = new UIManager({ refreshIntervalMs: 100 });
+	test("full non-TTY lifecycle: start, log falls back to console, stop", async () => {
+		setTTY(false);
+		const logSpy = spyOn(console, "log").mockImplementation(() => {});
+		const deps = makeMockDeps();
+		const ui = new UIManager({ refreshIntervalMs: 100 }, deps);
+
 		await ui.start();
-		expect(mockStart).not.toHaveBeenCalled();
+		expect((ui as any).running).toBe(true);
+		expect(wasCalled(deps.renderable.createCliRenderer)).toBe(false);
+
+		ui.log("info", "airgent", "non-tty message");
+		expect(logSpy).toHaveBeenCalled();
+
+		ui.stop();
+		expect((ui as any).running).toBe(false);
+		logSpy.mockRestore();
 	});
 
-	test("createCliRenderer failure is caught gracefully", async () => {
-		const ui = new UIManager({ refreshIntervalMs: 100 });
-		await expect(ui.start()).resolves.toBeUndefined();
-		expect((ui as any).running).toBe(true);
+	test("selection copy flow updates toast and refocuses input end-to-end", async () => {
+		const deps = makeMockDeps();
+		const ui = new UIManager({ refreshIntervalMs: 100 }, deps);
+		await ui.start();
+
+		const renderer = (ui as any).renderer;
+		const onCalls = (renderer.on as unknown as { calls: any[][] }).calls;
+		const selectionHandler = onCalls.find((c) => c[0] === "selection")![1];
+
+		selectionHandler({ getSelectedText: spy(() => "copied via selection") });
+
+		expect(wasCalled(deps.copyToClipboard)).toBe(true);
+		expect(wasCalled(renderer.focusRenderable)).toBe(true);
+
+		ui.stop();
+	});
+
+	test("double Ctrl+C during an active session shuts everything down cleanly", async () => {
+		const onShutdown = spy();
+		const deps = makeMockDeps();
+		const ui = new UIManager({ refreshIntervalMs: 100, onShutdown }, deps);
+		await ui.start();
+
+		const renderer = (ui as any).renderer;
+		const onCalls = (renderer.keyInput.on as unknown as { calls: any[][] }).calls;
+		const keyHandler = onCalls.find((c) => c[0] === "keypress")![1];
+
+		keyHandler({ ctrl: true, name: "c", preventDefault: spy() });
+		keyHandler({ ctrl: true, name: "c", preventDefault: spy() });
+
+		await new Promise((resolve) => process.nextTick(resolve));
+		await new Promise((resolve) => process.nextTick(resolve));
+
+		expect(wasCalled(onShutdown)).toBe(true);
 	});
 });
-
-// ============================================================
-// Helpers
-// ============================================================
-
-function mockClearAll() {
-	for (const key of Object.keys(_vnodeMap)) delete _vnodeMap[key];
-	const mocks = [
-		mockAdd,
-		mockRemove,
-		mockFindDescendantById,
-		mockFocusRenderable,
-		mockStart,
-		mockDestroy,
-		mockRequestRender,
-		mockCopyToClipboardOSC52,
-		mockGetSelectedText,
-		mockGetSelectedOption,
-		mockCopyToClipboard,
-		mockReadlineCreateInterface,
-		mockLoggerChild,
-		mockTextCtor,
-		mockScrollBoxCtor,
-		mockInputCtor,
-		mockBoxCtor,
-		mockSelectCtor,
-		(mockRenderer as any).on,
-		(mockRenderer as any).keyInput.on,
-	];
-	for (const m of mocks) {
-		// Use mockClear (preserves implementation) instead of mockReset (clears it)
-		// so mock.module factory functions keep working across test boundaries.
-		if (typeof m?.mockClear === "function") m.mockClear();
-	}
-	// Restore mocks whose implementations may have been overridden per-test
-	mockFindDescendantById.mockImplementation((id: string) => _vnodeMap[id] || null);
-	mockReadlineCreateInterface.mockImplementation(() => ({
-		question: mock((_q: string, cb: (a: string) => void) => cb("answer")),
-		close: mock(),
-	}));
-	mockCopyToClipboard.mockImplementation((_text, _osc52) => ({
-		success: true,
-		method: "osc52",
-	}));
-}

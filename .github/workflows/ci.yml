@@ -45,5 +45,8 @@ jobs:
       - name: Run typecheck
         run: bun run typecheck
 
+      - name: Run setup stubs
+        run: node scripts/setup-test-stubs.mjs
+
       - name: Run tests
-        run: bun run test
+        run: bun test --isolate 2>&1 || (bun test --isolate --reporter=junit > /tmp/results.xml 2>&1; cat /tmp/results.xml; exit 1)
