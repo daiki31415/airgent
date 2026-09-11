@@ -99,6 +99,8 @@ describe("ValidationAgent.validate", () => {
 		expect(report).toHaveProperty("inferenceAsFact");
 		expect(report).toHaveProperty("issues");
 		expect(report).toHaveProperty("overallHealth");
+		expect(report).toHaveProperty("stats");
+		expect(report.stats).toMatchObject({ totalEntries: 0, healthyEntries: 0, issueCount: 0 });
 	});
 
 	test("detects contradictions from memory system", async () => {
@@ -136,7 +138,11 @@ describe("ValidationAgent.validate", () => {
 
 		const report = await agent.validate();
 		expect(report.contradictions).toBe(1);
-		expect(report.issues.some((i) => i.includes("Contradiction"))).toBe(true);
+		expect(report.issues.some((i) => i.description.includes("Contradiction"))).toBe(true);
+		const issue = report.issues.find((i) => i.type === "contradiction");
+		expect(issue?.severity).toBe("error");
+		expect(issue?.entries).toEqual(expect.arrayContaining(["m1", "m2"]));
+		expect(issue?.suggestion.length).toBeGreaterThan(0);
 	});
 
 	test("detects circular references", async () => {
@@ -175,7 +181,11 @@ describe("ValidationAgent.validate", () => {
 
 		const report = await agent.validate();
 		expect(report.circularReferences).toBeGreaterThanOrEqual(1);
-		expect(report.issues.some((i) => i.includes("Circular"))).toBe(true);
+		expect(report.issues.some((i) => i.description.includes("Circular"))).toBe(true);
+		const issue = report.issues.find((i) => i.type === "circular_ref");
+		expect(issue?.severity).toBe("error");
+		expect(issue?.entries).toEqual(expect.arrayContaining(["m1", "m2"]));
+		expect(issue?.suggestion.length).toBeGreaterThan(0);
 	});
 
 	test("detects hallucinated links (low confidence) via direct storage check", async () => {
@@ -252,11 +262,44 @@ describe("ValidationAgent.validate", () => {
 		expect(hasUncertainty).toBe(true);
 	});
 
-	test("overallHealth is warning with <= 3 issues", async () => {
+	test("overallHealth is degraded with <= 3 warning-level issues", async () => {
 		const { agent, storage } = createSystem();
 		agent.init(sampleContext());
 
-		// Create a contradiction
+		// Create a warning-level issue (inference labeled as observed)
+		storage.insertMemory({
+			id: "m1",
+			sessionId: "s1",
+			bug: "b1",
+			investigation: "",
+			rootCause: "",
+			fix: "",
+			reason: "",
+			confidence: 0.9,
+			tags: ["t"],
+			files: [],
+			commands: [],
+		});
+		storage.insertEvidence(
+			"ev1",
+			"m1",
+			"observed",
+			"The bug is probably in the auth module",
+			"log",
+		);
+
+		const report = await agent.validate();
+		expect(report.overallHealth).toBe("degraded");
+		expect(report.issues).toHaveLength(1);
+		expect(report.issues[0]?.severity).toBe("warning");
+		expect(report.issues[0]?.type).toBe("inference_as_fact");
+	});
+
+	test("overallHealth is critical with an error-level issue", async () => {
+		const { agent, storage } = createSystem();
+		agent.init(sampleContext());
+
+		// Create a contradiction (error severity => critical even with 1 issue)
 		storage.insertMemory({
 			id: "m1",
 			sessionId: "s1",
@@ -286,7 +329,7 @@ describe("ValidationAgent.validate", () => {
 		storage.insertLink("l1", "m1", "m2", "same_cause", 0.8);
 
 		const report = await agent.validate();
-		expect(report.overallHealth).toBe("warning");
+		expect(report.overallHealth).toBe("critical");
 	});
 
 	test("overallHealth is critical with > 3 issues", async () => {
@@ -535,9 +578,12 @@ describe("ValidationAgent additional edge cases", () => {
 		storage.insertLink("l1", "m1", "m2", "same_cause", 0.8);
 
 		const report = await agent.validate();
-		const contradictionIssues = report.issues.filter((i) => i.startsWith("Contradiction"));
+		const contradictionIssues = report.issues.filter((i) => i.type === "contradiction");
 		expect(contradictionIssues.length).toBeGreaterThanOrEqual(1);
-		expect(contradictionIssues[0]).toContain("vs");
+		expect(contradictionIssues[0]?.description).toContain("vs");
+		expect(contradictionIssues[0]?.severity).toBe("error");
+		expect(contradictionIssues[0]?.entries.length).toBeGreaterThanOrEqual(2);
+		expect(contradictionIssues[0]?.suggestion.length).toBeGreaterThan(0);
 	});
 
 	test("validate does not throw on empty memory system", async () => {
@@ -563,5 +609,148 @@ describe("ValidationAgent additional edge cases", () => {
 		const r2 = await agent.validate();
 		expect(r1.contradictions).toBe(r2.contradictions);
 		expect(r1.overallHealth).toBe(r2.overallHealth);
+	});
+});
+
+describe("ValidationAgent stats", () => {
+	test("stats are zeroed on empty memory system", async () => {
+		const { agent } = createSystem();
+		agent.init(sampleContext());
+
+		const report = await agent.validate();
+		expect(report.stats).toEqual({ totalEntries: 0, healthyEntries: 0, issueCount: 0 });
+	});
+
+	test("stats reflect total entries and issue count", async () => {
+		const { agent, storage } = createSystem();
+		agent.init(sampleContext());
+
+		storage.insertMemory({
+			id: "m1",
+			sessionId: "s1",
+			bug: "b1",
+			investigation: "",
+			rootCause: "cause_a",
+			fix: "",
+			reason: "",
+			confidence: 0.9,
+			tags: ["t"],
+			files: [],
+			commands: [],
+		});
+		storage.insertMemory({
+			id: "m2",
+			sessionId: "s1",
+			bug: "b2",
+			investigation: "",
+			rootCause: "cause_b",
+			fix: "",
+			reason: "",
+			confidence: 0.9,
+			tags: ["t"],
+			files: [],
+			commands: [],
+		});
+		storage.insertLink("l1", "m1", "m2", "same_cause", 0.8);
+
+		const report = await agent.validate();
+		expect(report.stats.totalEntries).toBe(2);
+		expect(report.stats.issueCount).toBe(report.issues.length);
+		expect(report.stats.issueCount).toBeGreaterThanOrEqual(1);
+		// Both entries are involved in the contradiction => 0 healthy
+		expect(report.stats.healthyEntries).toBe(0);
+	});
+
+	test("healthyEntries excludes only involved entries", async () => {
+		const { agent, storage } = createSystem();
+		agent.init(sampleContext());
+
+		for (const id of ["m1", "m2", "m3"]) {
+			storage.insertMemory({
+				id,
+				sessionId: "s1",
+				bug: `bug-${id}`,
+				investigation: "",
+				rootCause: "",
+				fix: "",
+				reason: "",
+				confidence: 0.8,
+				tags: ["t"],
+				files: [],
+				commands: [],
+			});
+		}
+		storage.insertEvidence("ev1", "m1", "observed", "The bug is probably in auth", "log");
+
+		const report = await agent.validate();
+		expect(report.stats.totalEntries).toBe(3);
+		expect(report.stats.issueCount).toBe(1);
+		expect(report.stats.healthyEntries).toBe(2);
+	});
+
+	test("detects hallucinated links via validate()", async () => {
+		const { agent, storage } = createSystem();
+		agent.init(sampleContext());
+
+		storage.insertMemory({
+			id: "m1",
+			sessionId: "s1",
+			bug: "b1",
+			investigation: "",
+			rootCause: "",
+			fix: "",
+			reason: "",
+			confidence: 0.8,
+			tags: ["t"],
+			files: [],
+			commands: [],
+		});
+		storage.insertMemory({
+			id: "m2",
+			sessionId: "s1",
+			bug: "b2",
+			investigation: "",
+			rootCause: "",
+			fix: "",
+			reason: "",
+			confidence: 0.8,
+			tags: ["t"],
+			files: [],
+			commands: [],
+		});
+		storage.insertLink("l1", "m1", "m2", "similar_pattern", 0.1);
+
+		const report = await agent.validate();
+		expect(report.hallucinatedLinks).toBe(1);
+		const issue = report.issues.find((i) => i.type === "hallucinated_link");
+		expect(issue?.severity).toBe("warning");
+		expect(issue?.entries).toEqual(expect.arrayContaining(["m1", "m2"]));
+		expect(report.overallHealth).toBe("degraded");
+	});
+
+	test("detects inference-as-fact via validate()", async () => {
+		const { agent, storage } = createSystem();
+		agent.init(sampleContext());
+
+		storage.insertMemory({
+			id: "m1",
+			sessionId: "s1",
+			bug: "b1",
+			investigation: "",
+			rootCause: "",
+			fix: "",
+			reason: "",
+			confidence: 0.8,
+			tags: ["t"],
+			files: [],
+			commands: [],
+		});
+		storage.insertEvidence("ev1", "m1", "verified", "This might be the root cause", "log");
+
+		const report = await agent.validate();
+		expect(report.inferenceAsFact).toBe(1);
+		const issue = report.issues.find((i) => i.type === "inference_as_fact");
+		expect(issue?.severity).toBe("warning");
+		expect(issue?.entries).toEqual(["m1"]);
 	});
 });

@@ -201,8 +201,9 @@ function makeMockInstances(): any {
 				circularReferences: 0,
 				hallucinatedLinks: 0,
 				inferenceAsFact: 0,
-				issues: [] as string[],
+				issues: [],
 				overallHealth: "healthy" as const,
+				stats: { totalEntries: 0, healthyEntries: 0, issueCount: 0 },
 			})),
 		},
 		watchdog: {
@@ -995,6 +996,7 @@ describe("Airgent — Pipeline Handlers", () => {
 			inferenceAsFact: 0,
 			issues: [],
 			overallHealth: "healthy",
+			stats: { totalEntries: 0, healthyEntries: 0, issueCount: 0 },
 		}));
 		const h = handlers.get("validate")!;
 		// biome-ignore lint/suspicious/noExplicitAny: handler returns dynamic type
@@ -1008,8 +1010,17 @@ describe("Airgent — Pipeline Handlers", () => {
 			circularReferences: 1,
 			hallucinatedLinks: 0,
 			inferenceAsFact: 0,
-			issues: ["i1"],
-			overallHealth: "warning",
+			issues: [
+				{
+					severity: "error",
+					type: "contradiction",
+					description: "i1",
+					entries: ["m1", "m2"],
+					suggestion: "fix",
+				},
+			],
+			overallHealth: "degraded",
+			stats: { totalEntries: 2, healthyEntries: 0, issueCount: 1 },
 		})) as any;
 		const h = handlers.get("validate")!;
 		await h(new Map());

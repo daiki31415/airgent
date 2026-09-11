@@ -196,13 +196,39 @@ export interface MemoryLink {
 	confidence: number;
 }
 
+export type ValidationIssueSeverity = "warning" | "error";
+
+export type ValidationIssueType =
+	| "contradiction"
+	| "circular_ref"
+	| "stale"
+	| "duplicate"
+	| "orphaned"
+	| "hallucinated_link"
+	| "inference_as_fact";
+
+export interface ValidationIssue {
+	severity: ValidationIssueSeverity;
+	type: ValidationIssueType;
+	description: string;
+	entries: string[];
+	suggestion: string;
+}
+
+export interface ValidationStats {
+	totalEntries: number;
+	healthyEntries: number;
+	issueCount: number;
+}
+
 export interface ValidationReport {
 	contradictions: number;
 	circularReferences: number;
 	hallucinatedLinks: number;
 	inferenceAsFact: number;
-	issues: string[];
-	overallHealth: "healthy" | "warning" | "critical";
+	issues: ValidationIssue[];
+	overallHealth: "healthy" | "degraded" | "critical";
+	stats: ValidationStats;
 }
 
 export interface CompressedEntry {
