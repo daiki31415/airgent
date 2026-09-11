@@ -17,11 +17,11 @@ Airgent is a local-first AI agent framework that connects to an [OpenCode](https
 |---|---|
 | Linux | Fully Supported |
 | macOS | Experimental |
-| Windows | Partially Supported |
+| Windows | Not Supported (use WSL) |
 
-> **Note:** On Windows, the `/copy` command works via file fallback
-> (clipboard content is written to a temp file), but other features are
-> not CI-verified.
+> **Note:** Native Windows is not supported. Please run on WSL as Linux.
+> The `/copy` command has a file fallback implemented as a safety net for
+> native Windows, but it is not CI-verified.
 
 ## Installation
 
