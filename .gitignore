@@ -13,8 +13,8 @@ coverage
 
 # logs
 logs
-_.log
-report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
+*.log
+report.*.json
 
 # dotenv environment variable files
 .env
@@ -39,4 +39,6 @@ data/
 
 # Finder (MacOS) folder config
 .DS_Store
-bun-*.zip\nbun-*-dir/\nfailed_run_log.txt
+bun-*.zip
+bun-*-dir/
+failed_run_log.txt
