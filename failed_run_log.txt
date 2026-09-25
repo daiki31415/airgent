@@ -1,0 +1,1501 @@
+test (macos-latest, 1.2.x)	Run tests	﻿2026-06-27T09:32:36.6380500Z ##[group]Run bun test
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.6380690Z ^[[36;1mbun test^[[0m
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.6408530Z shell: /bin/bash -e {0}
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.6408700Z ##[endgroup]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.6998430Z bun test v1.2.23 (cf136713)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.7076370Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.7077150Z ##[group]src/__tests__/airgent.test.ts:
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8372390Z (pass) Airgent — Constructor & Initialization > creates instance using prototype without constructor
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8373070Z (pass) Airgent — Constructor & Initialization > starts with null sessionId [1.76ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8373590Z (pass) Airgent — Constructor & Initialization > records startTime as number [0.09ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8374080Z (pass) Airgent — Constructor & Initialization > pipelineData starts empty [0.08ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8374570Z (pass) Airgent — Constructor & Initialization > running starts false [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8378050Z (pass) Airgent — start() and stop() > start() initializes session and starts UI [0.45ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8378840Z (pass) Airgent — start() and stop() > start() is idempotent [0.07ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8379300Z (pass) Airgent — start() and stop() > start() checks API health [0.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8380220Z (pass) Airgent — start() and stop() > stop() stops UI and ends session [0.09ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8380840Z (pass) Airgent — start() and stop() > stop() is safe when not started [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8381660Z (pass) Airgent — start() and stop() > stop() is idempotent [0.08ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8387160Z (pass) Airgent — Command Handling > /help outputs command list [0.55ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8399110Z (pass) Airgent — Command Handling > /info shows system info [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8399850Z (pass) Airgent — Command Handling > /info shows not connected when unhealthy [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8400400Z (pass) Airgent — Command Handling > /status shows uptime [0.09ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8400800Z (pass) Airgent — Command Handling > /session outputs session JSON
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8401210Z (pass) Airgent — Command Handling > /copy with text copies to clipboard
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8401620Z (pass) Airgent — Command Handling > /copy warns when nothing to copy
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8402120Z (pass) Airgent — Command Handling > /copy uses pipelineData as fallback [0.33ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8402570Z (pass) Airgent — Command Handling > /copy shows error on clipboard failure
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8402970Z (pass) Airgent — Command Handling > /setting opens settings menu
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8403350Z (pass) Airgent — Command Handling > /compress triggers compression
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8403720Z (pass) Airgent — Command Handling > /providers lists providers
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8404100Z (pass) Airgent — Command Handling > /providers handles API error [0.48ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8404480Z (pass) Airgent — Command Handling > /sync push with URL pushes
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8404860Z (pass) Airgent — Command Handling > /sync pull pulls
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8407740Z (pass) Airgent — Command Handling > /sync push without URL still executes push [0.26ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8408230Z (pass) Airgent — Command Handling > /cat with file attempts read [0.25ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8408650Z (pass) Airgent — Command Handling > /cat without file shows usage [0.07ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8409110Z (pass) Airgent — Command Handling > non-command input sends to processTask [0.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8409590Z (pass) Airgent — Command Handling > /mcp list shows configured servers [0.41ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8410060Z (pass) Airgent — Command Handling > /mcp list shows 'no servers' when empty [0.08ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8410580Z (pass) Airgent — Command Handling > /mcp add saves local server [0.09ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8411090Z (pass) Airgent — Command Handling > /mcp add prevents duplicates [0.01ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8411630Z (pass) Airgent — Command Handling > /mcp add with missing args shows usage
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8412180Z (pass) Airgent — Command Handling > /mcp add-remote saves remote [0.17ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8413050Z (pass) Airgent — Command Handling > /mcp add-remote missing args shows usage [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8413620Z (pass) Airgent — Command Handling > /mcp connect connects server [0.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8414070Z (pass) Airgent — Command Handling > /mcp connect without name shows usage [0.14ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8414510Z (pass) Airgent — Command Handling > /mcp disconnect disconnects [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8415240Z (pass) Airgent — Command Handling > /mcp remove deletes server from config [0.08ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8416250Z (pass) Airgent — Command Handling > /mcp unknown subcommand warns [0.10ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8417820Z (pass) Airgent — Command Handling > /model lists current models [0.15ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8418330Z (pass) Airgent — Command Handling > unknown command is processed as task
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8418880Z (pass) Airgent — Command Handling > rate limited input returns early [0.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8421560Z (pass) Airgent — processTask flow > processTask throws if not started [0.27ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8423280Z (pass) Airgent — processTask flow > processTask plans and executes pipeline [0.17ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8424050Z (pass) Airgent — processTask flow > processTask displays generated output [0.08ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8424930Z (pass) Airgent — processTask flow > processTask skips output when empty [0.08ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8425590Z (pass) Airgent — processTask flow > processTask runs context inspection
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8426250Z (pass) Airgent — processTask flow > processTask warns on high corruption [0.12ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8427100Z (pass) Airgent — processTask flow > processTask does not warn on low corruption [0.07ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8427670Z (pass) Airgent — processTask flow > processTask runs watchdog [0.04ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8429000Z (pass) Airgent — processTask flow > processTask warns on unhealthy watchdog [0.14ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8429730Z (pass) Airgent — processTask flow > processTask updates status [0.07ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8430830Z (pass) Airgent — processTask flow > processTask handles errors gracefully [0.11ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8431430Z (pass) Airgent — processTask flow > processTask sets error status on failure [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8431930Z (pass) Airgent — processTask flow > processTask resets pipelineData at start [0.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8432800Z (pass) Airgent — buildAgentContext > returns context with all required fields [0.08ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8433310Z (pass) Airgent — buildAgentContext > includes systemPrompt from PromptManager [0.04ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8433830Z (pass) Airgent — buildAgentContext > includes relevant memories [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8434400Z (pass) Airgent — buildAgentContext > includes skillIndex [0.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8434850Z (pass) Airgent — buildAgentContext > includes activeSkills [0.04ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8435660Z (pass) Airgent — buildAgentContext > tokenCount estimated from prompt and task length [0.07ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8436440Z (pass) Airgent — buildAgentContext > messages contain one user message [0.04ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8436920Z (pass) Airgent — buildAgentContext > state includes task and startTime [0.04ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8442610Z (pass) Airgent — Pipeline Handlers > clarify handler stores clarifiedTask [0.62ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8444750Z (pass) Airgent — Pipeline Handlers > clarify handler uses streaming when showPipelineProgress [0.20ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8446060Z (pass) Airgent — Pipeline Handlers > plan handler stores plan [0.13ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8446890Z (pass) Airgent — Pipeline Handlers > plan handler uses clarifiedTask when available [0.08ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8448190Z (pass) Airgent — Pipeline Handlers > generate handler stores generatedOutput [0.13ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8449050Z (pass) Airgent — Pipeline Handlers > generate handler includes plan and clarifiedTask [0.08ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8449920Z (pass) Airgent — Pipeline Handlers > generate handler includes relevant memories [0.09ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8451120Z (pass) Airgent — Pipeline Handlers > test handler skips when no generatedOutput [0.12ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8452040Z (pass) Airgent — Pipeline Handlers > test handler evaluates output [0.09ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8452740Z (pass) Airgent — Pipeline Handlers > test handler detects issues [0.07ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8453450Z (pass) Airgent — Pipeline Handlers > test handler passes clean output [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8454450Z (pass) Airgent — Pipeline Handlers > validate handler calls validation agent [0.09ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8455140Z (pass) Airgent — Pipeline Handlers > validate handler warns on unhealthy [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8456170Z (pass) Airgent — Pipeline Handlers > report handler organizes and compresses [0.10ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8456910Z (pass) Airgent — Pipeline Handlers > report handler skips when no sessionId [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8458180Z (pass) Airgent — Edge Cases > empty task processes with plan step [0.12ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8460520Z (pass) Airgent — Edge Cases > long task (10k chars) passed to planner [0.24ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8461540Z (pass) Airgent — Edge Cases > pipeline with no selected nodes [0.10ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8462320Z (pass) Airgent — Edge Cases > sequential tasks update currentTask [0.07ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8464230Z (pass) Airgent — Streaming (streamNodeOutput) > streamNodeOutput streams and returns content [0.18ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8465140Z (pass) Airgent — Streaming (streamNodeOutput) > streamNodeOutput stores in pipelineData field [0.09ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8470350Z [2026-06-27T09:32:36.846Z] [WARN] [airgent:llm] streaming failed; falling back to non-streaming with partial context. UI may show stream content that diverges from final content — callers should reconcile. {
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8471000Z   accumulatedChars: 0,
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8471190Z   error: "stream failed",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8471360Z }
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8471780Z (pass) Airgent — Streaming (streamNodeOutput) > streamNodeOutput falls back to non-streaming on error [0.50ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8472410Z (pass) Airgent — Streaming (streamNodeOutput) > streamNodeOutput shows node prefix [0.10ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8472900Z (pass) Airgent — applyModelConfig > switches all agent models [0.08ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8473340Z (pass) Airgent — applyModelConfig > uses current model config values [0.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8473810Z (pass) Airgent — updateStatus > updateStatus delegates to UI manager [0.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8474230Z (pass) Airgent — updateStatus > updateStatus with multiple fields [0.04ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8474470Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8474820Z ##[endgroup]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8474930Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8475190Z ##[group]src/ui/__tests__/ui.test.ts:
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8529670Z (pass) UIManager — Constructor > creates instance with options [3.30ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8530170Z (pass) UIManager — Constructor > initializes with default status info [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8531130Z (pass) UIManager — Constructor > stores onInput callback [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8531530Z (pass) UIManager — Constructor > stores onShutdown callback [0.04ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8531940Z (pass) UIManager — Constructor > detects non-TTY environment [0.01ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8532330Z (pass) UIManager — Constructor > detects TTY environment [0.07ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8535230Z (pass) UIManager — start() > start() uses injected renderer and sets running [0.30ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8535620Z [2026-06-27T09:32:36.853Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8536030Z (pass) UIManager — start() > start() does nothing if already running [0.18ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8536390Z [2026-06-27T09:32:36.853Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8536790Z (pass) UIManager — start() > start() works in non-TTY mode without opening TUI [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8537280Z [2026-06-27T09:32:36.853Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8537610Z (pass) UIManager — start() > start() sets startTime [0.09ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8537930Z [2026-06-27T09:32:36.853Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8538450Z [2026-06-27T09:32:36.853Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8538860Z (pass) UIManager — log/stream/notice > log() outputs info messages via addLine [0.07ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8539300Z [2026-06-27T09:32:36.853Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8539850Z (pass) UIManager — log/stream/notice > log() with warn prefix includes level [0.09ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8540220Z [2026-06-27T09:32:36.853Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8540770Z (pass) UIManager — log/stream/notice > log() with error level includes ERROR prefix [0.07ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8541160Z [2026-06-27T09:32:36.854Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8541540Z (pass) UIManager — log/stream/notice > stream() outputs line via addLine
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8541890Z [2026-06-27T09:32:36.854Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8542300Z (pass) UIManager — log/stream/notice > notice() uses 'ai' source color [0.09ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8542800Z (pass) UIManager — log/stream/notice > log() works before start() with non-TTY fallback [0.12ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8543200Z [2026-06-27T09:32:36.854Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8543600Z (pass) UIManager — updateStatus > updateStatus merges into statusInfo [0.13ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8543950Z [2026-06-27T09:32:36.854Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8544400Z (pass) UIManager — updateStatus > updateStatus with partial updates works [0.01ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8544800Z [2026-06-27T09:32:36.854Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8545160Z (pass) UIManager — updateStatus > updateStatus with sessionId [0.10ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8545490Z [2026-06-27T09:32:36.854Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8545760Z [2026-06-27T09:32:36.854Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8546140Z (pass) UIManager — updateStatus > updateStatus with memoryCount [0.04ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8546590Z (pass) UIManager — updateStatus > updateStatus sets error status styling [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8546970Z [2026-06-27T09:32:36.854Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8547250Z [2026-06-27T09:32:36.854Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8547700Z (pass) UIManager — updateStatus > updateStatus does not throw when header/footer not set up [0.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8550260Z [2026-06-27T09:32:36.854Z] [WARN] [airgent:ui] opentui init failed 118 | 				const titleText = Text({
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8550750Z 119 | 					id: "header-title",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8550950Z 120 | 					content: " Airgent ",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8551140Z 121 | 					fg: "#7aa2f7",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8551310Z 122 | 				});
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8551460Z 123 | 				this.headerBox.add(titleText);
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8551700Z                ^
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8551940Z TypeError: null is not an object (evaluating 'this.headerBox.add')
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8552510Z       at start (/Users/runner/work/airgent/airgent/src/ui/index.ts:123:10)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8552920Z       at start (/Users/runner/work/airgent/airgent/src/ui/index.ts:89:31)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8553340Z       at <anonymous> (/Users/runner/work/airgent/airgent/src/ui/__tests__/ui.test.ts:543:12)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8553610Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8553710Z [2026-06-27T09:32:36.854Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8554160Z (pass) UIManager — showCopyToast / copy > copy() calls clipboard and shows toast [0.48ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8554700Z (pass) UIManager — showCopyToast / copy > copy() with file method shows file path in toast [0.10ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8555210Z (pass) UIManager — showCopyToast / copy > copy() with failure shows error toast [0.07ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8555750Z (pass) UIManager — showCopyToast / copy > showCopyToast does nothing when no renderer [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8556250Z [2026-06-27T09:32:36.855Z] [WARN] [airgent:ui] opentui init failed 118 | 				const titleText = Text({
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8556620Z 119 | 					id: "header-title",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8556940Z 120 | 					content: " Airgent ",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8557120Z 121 | 					fg: "#7aa2f7",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8557280Z 122 | 				});
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8557440Z 123 | 				this.headerBox.add(titleText);
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8557640Z                ^
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8557850Z TypeError: null is not an object (evaluating 'this.headerBox.add')
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8558200Z       at start (/Users/runner/work/airgent/airgent/src/ui/index.ts:123:10)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8558570Z       at start (/Users/runner/work/airgent/airgent/src/ui/index.ts:89:31)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8558990Z       at <anonymous> (/Users/runner/work/airgent/airgent/src/ui/__tests__/ui.test.ts:543:12)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8559270Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8559370Z [2026-06-27T09:32:36.855Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8559740Z [2026-06-27T09:32:36.855Z] [WARN] [airgent:ui] opentui init failed 118 | 				const titleText = Text({
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8560090Z 119 | 					id: "header-title",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8560280Z 120 | 					content: " Airgent ",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8560470Z 121 | 					fg: "#7aa2f7",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8560610Z 122 | 				});
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8560770Z 123 | 				this.headerBox.add(titleText);
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8560970Z                ^
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8561210Z TypeError: null is not an object (evaluating 'this.headerBox.add')
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8561560Z       at start (/Users/runner/work/airgent/airgent/src/ui/index.ts:123:10)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8561930Z       at start (/Users/runner/work/airgent/airgent/src/ui/index.ts:89:31)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8562360Z       at <anonymous> (/Users/runner/work/airgent/airgent/src/ui/__tests__/ui.test.ts:543:12)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8562630Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8562730Z [2026-06-27T09:32:36.855Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8563130Z [2026-06-27T09:32:36.855Z] [WARN] [airgent:ui] opentui init failed 118 | 				const titleText = Text({
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8563500Z 119 | 					id: "header-title",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8563680Z 120 | 					content: " Airgent ",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8563910Z 121 | 					fg: "#7aa2f7",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8564070Z 122 | 				});
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8564230Z 123 | 				this.headerBox.add(titleText);
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8564430Z                ^
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8564660Z TypeError: null is not an object (evaluating 'this.headerBox.add')
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8565020Z       at start (/Users/runner/work/airgent/airgent/src/ui/index.ts:123:10)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8565400Z       at start (/Users/runner/work/airgent/airgent/src/ui/index.ts:89:31)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8565820Z       at <anonymous> (/Users/runner/work/airgent/airgent/src/ui/__tests__/ui.test.ts:543:12)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8566090Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8566190Z [2026-06-27T09:32:36.855Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8566580Z [2026-06-27T09:32:36.855Z] [WARN] [airgent:ui] opentui init failed 118 | 				const titleText = Text({
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8567060Z 119 | 					id: "header-title",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8567250Z 120 | 					content: " Airgent ",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8567450Z 121 | 					fg: "#7aa2f7",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8567600Z 122 | 				});
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8567750Z 123 | 				this.headerBox.add(titleText);
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8567960Z                ^
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8568180Z TypeError: null is not an object (evaluating 'this.headerBox.add')
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8568540Z       at start (/Users/runner/work/airgent/airgent/src/ui/index.ts:123:10)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8568890Z       at start (/Users/runner/work/airgent/airgent/src/ui/index.ts:89:31)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8569290Z       at <anonymous> (/Users/runner/work/airgent/airgent/src/ui/__tests__/ui.test.ts:543:12)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8569560Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8569670Z [2026-06-27T09:32:36.855Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8570140Z (pass) UIManager — showCopyToast / copy > copy toast auto-dismisses after timeout [0.09ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8570650Z (pass) UIManager — showCopyToast / copy > toast uses green border on success [0.10ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8571510Z (pass) UIManager — showCopyToast / copy > toast uses red border on failure [0.02ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8571910Z (pass) UIManager — stop() > stop() sets running to false
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8572230Z (pass) UIManager — stop() > stop() destroys renderer
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8572550Z (pass) UIManager — stop() > stop() clears renderer reference
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8572920Z (pass) UIManager — stop() > stop() clears scrollbox reference
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8573270Z (pass) UIManager — stop() > stop() clears input reference [0.31ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8573650Z (pass) UIManager — stop() > stop() is safe when called multiple times
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8574000Z (pass) UIManager — stop() > stop() clears copy toast timer
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8574300Z (pass) UIManager — stop() > stop() clears sigint timer
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8574750Z (pass) UIManager — selectModel / showSelectMenu > selectModel delegates to showSelectMenu [0.38ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8575340Z (pass) UIManager — selectModel / showSelectMenu > showSelectMenu falls back when no renderer [0.11ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8575920Z (pass) UIManager — selectModel / showSelectMenu > showSelectMenu returns value from fallback [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8576440Z (pass) UIManager — selectModel / showSelectMenu > prompt() uses readline [0.01ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8577030Z (pass) UIManager — handleSelection (copy on select) > handleSelection calls copyToClipboard with selected text [0.17ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8577680Z (pass) UIManager — handleSelection (copy on select) > handleSelection ignores empty selection [0.11ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8578280Z (pass) UIManager — handleSelection (copy on select) > handleSelection ignores whitespace-only selection [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8578890Z (pass) UIManager — handleSelection (copy on select) > handleSelection does nothing when copy in progress
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8579380Z (pass) UIManager — handleCtrlC > first Ctrl+C shows warning [0.20ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8579810Z [2026-06-27T09:32:36.855Z] [WARN] [airgent:ui] opentui init failed 118 | 				const titleText = Text({
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8580150Z 119 | 					id: "header-title",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8580350Z 120 | 					content: " Airgent ",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8580540Z 121 | 					fg: "#7aa2f7",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8580700Z 122 | 				});
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8580870Z 123 | 				this.headerBox.add(titleText);
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8581070Z                ^
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8581280Z TypeError: null is not an object (evaluating 'this.headerBox.add')
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8581620Z       at start (/Users/runner/work/airgent/airgent/src/ui/index.ts:123:10)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8581960Z       at start (/Users/runner/work/airgent/airgent/src/ui/index.ts:89:31)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8582350Z       at <anonymous> (/Users/runner/work/airgent/airgent/src/ui/__tests__/ui.test.ts:543:12)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8582610Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8582710Z [2026-06-27T09:32:36.855Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8583280Z [2026-06-27T09:32:36.855Z] [WARN] [airgent:ui] opentui init failed 118 | 				const titleText = Text({
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8583620Z 119 | 					id: "header-title",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8583790Z 120 | 					content: " Airgent ",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8583960Z 121 | 					fg: "#7aa2f7",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8584100Z 122 | 				});
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8584250Z 123 | 				this.headerBox.add(titleText);
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8584430Z                ^
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8584680Z TypeError: null is not an object (evaluating 'this.headerBox.add')
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8585030Z       at start (/Users/runner/work/airgent/airgent/src/ui/index.ts:123:10)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8585370Z       at start (/Users/runner/work/airgent/airgent/src/ui/index.ts:89:31)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8585770Z       at <anonymous> (/Users/runner/work/airgent/airgent/src/ui/__tests__/ui.test.ts:543:12)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8586020Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8586120Z [2026-06-27T09:32:36.855Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8586380Z [2026-06-27T09:32:36.855Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8586810Z [2026-06-27T09:32:36.855Z] [INFO] [airgent:ui] UI stopped
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8587060Z [2026-06-27T09:32:36.855Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8587320Z [2026-06-27T09:32:36.855Z] [INFO] [airgent:ui] UI stopped
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8587570Z [2026-06-27T09:32:36.855Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8587830Z [2026-06-27T09:32:36.855Z] [INFO] [airgent:ui] UI stopped
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8588120Z [2026-06-27T09:32:36.855Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8588410Z [2026-06-27T09:32:36.855Z] [INFO] [airgent:ui] UI stopped
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8588740Z [2026-06-27T09:32:36.855Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8596180Z [2026-06-27T09:32:36.855Z] [INFO] [airgent:ui] UI stopped
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8596490Z [2026-06-27T09:32:36.855Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8596750Z [2026-06-27T09:32:36.855Z] [INFO] [airgent:ui] UI stopped
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8597000Z [2026-06-27T09:32:36.855Z] [INFO] [airgent:ui] UI stopped
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8597260Z [2026-06-27T09:32:36.855Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8597510Z [2026-06-27T09:32:36.855Z] [INFO] [airgent:ui] UI stopped
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8597750Z [2026-06-27T09:32:36.855Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8598000Z [2026-06-27T09:32:36.855Z] [INFO] [airgent:ui] UI stopped
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8598160Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8598210Z   Pick a model
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8598330Z   1) opt1  desc1
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8598410Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8598460Z   Pick
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8598570Z   1) opt1  desc1
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8598640Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8598690Z   Test
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8598810Z   1) Option 1  First option
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8599000Z [2026-06-27T09:32:36.856Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8599250Z [2026-06-27T09:32:36.856Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8599500Z [2026-06-27T09:32:36.856Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8599750Z [2026-06-27T09:32:36.856Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8600000Z [2026-06-27T09:32:36.856Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8600240Z [2026-06-27T09:32:36.856Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8600670Z (pass) UIManager — handleCtrlC > second Ctrl+C calls shutdown [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8601080Z (pass) UIManager — Edge Cases > calling log before start() does not throw [0.01ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8601490Z (pass) UIManager — Edge Cases > calling stop without starting does not throw
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8601900Z (pass) UIManager — Edge Cases > calling start, stop, and start again works [0.13ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8602390Z (pass) UIManager — Edge Cases > refreshHeaderAndFooter does not throw when header missing [0.02ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8602880Z (pass) UIManager — Edge Cases > multiple rapid updateStatus calls merge correctly [0.02ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8603610Z (pass) UIManager — Edge Cases > log with unknown source uses default color
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8604060Z (pass) UIManager — Edge Cases > copyInProgress flag is reset after selection handling [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8604740Z (pass) UIManager — Integration > full lifecycle: construct → start → update → copy → stop [0.16ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8605170Z (pass) UIManager — Integration > non-TTY mode skips renderer creation
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8605590Z (pass) UIManager — Integration > createCliRenderer failure is caught gracefully [0.57ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8605850Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8606120Z ##[endgroup]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8606200Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8606390Z ##[group]src/pipeline/__tests__/build-dag.test.ts:
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8606650Z [2026-06-27T09:32:36.857Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8606910Z [2026-06-27T09:32:36.857Z] [INFO] [airgent:ui] UI stopped
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8607160Z [2026-06-27T09:32:36.857Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8607420Z [2026-06-27T09:32:36.857Z] [INFO] [airgent:ui] UI stopped
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8607660Z [2026-06-27T09:32:36.857Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8608050Z [2026-06-27T09:32:36.857Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8608290Z [2026-06-27T09:32:36.857Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8608540Z [2026-06-27T09:32:36.857Z] [INFO] [airgent:ui] UI stopped
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8608780Z [2026-06-27T09:32:36.857Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8609030Z [2026-06-27T09:32:36.858Z] [INFO] [airgent:ui] UI started
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8814340Z (pass) buildDAG > returns empty nodes for empty input
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8814960Z (pass) buildDAG > resolves full dependency chain for generate [0.14ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8815500Z (pass) buildDAG > resolves all nodes for full pipeline [0.02ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8815790Z (pass) buildDAG > does not duplicate nodes
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8816060Z (pass) buildDAG > maintains correct dependency ordering [0.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8816400Z (pass) buildDAG > single clarify node
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8816680Z (pass) buildDAG > single plan node includes clarify dependency [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8817190Z (pass) buildDAG > validate depends on generate (parallel sibling of test) [0.02ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8817620Z (pass) buildDAG > report pulls in entire pipeline
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8817870Z (pass) buildDAG > clarify has no dependencies
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8818160Z (pass) buildDAG > each node has correct dependency edges [0.11ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8818470Z (pass) buildDAG > timeout is set on each node [0.04ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8818730Z (pass) buildDAG > each node has maxRetries defined
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8818900Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8819110Z ##[endgroup]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8819190Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.8819420Z ##[group]src/pipeline/__tests__/pipeline-engine.test.ts:
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.9898950Z (pass) PipelineEngine execute > executes a single node handler
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.9905640Z (pass) PipelineEngine execute > executes nodes in dependency order [3.13ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.9908310Z (pass) PipelineEngine execute > returns error when handler not registered [0.16ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.9916190Z (pass) PipelineEngine execute > retries on handler failure and succeeds [0.75ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.9922420Z (pass) PipelineEngine execute > throws after exhausting retries [0.50ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.9925270Z (pass) PipelineEngine execute > skips already completed nodes [0.41ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.9927070Z (pass) PipelineEngine execute > tracks pipeline state [0.04ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.9929130Z (pass) PipelineEngine execute > resets session state [0.17ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.9931050Z (pass) PipelineEngine execute > allows multiple independent sessions [0.13ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.9932970Z (pass) PipelineEngine execute > handler error propagates correctly [0.13ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.9934010Z (pass) PipelineEngine execute > empty DAG executes without error [0.02ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.9935700Z (pass) PipelineEngine execute > completed nodes are tracked in state [0.20ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.9937730Z (pass) PipelineEngine execute > reset works on state with no data [0.02ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:36.9943010Z (pass) PipelineEngine execute > executes independent branches in parallel [0.34ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.0448270Z (pass) PipelineEngine execute > throws timeout when handler exceeds timeout [50.60ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.0559310Z (pass) PipelineEngine execute > succeeds within timeout [10.59ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.0562200Z (pass) PipelineEngine execute > RetryContext attempt increments on retry [0.77ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.0576560Z (pass) PipelineEngine execute > dynamic DAG mutation > handler can dynamically add a known node by name [0.60ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.0579570Z (pass) PipelineEngine execute > dynamic DAG mutation > handler can dynamically add a custom DAGNode [1.11ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.0587710Z (pass) PipelineEngine execute > dynamic DAG mutation > dynamically added node runs after its dependencies complete [0.55ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.0593040Z (pass) PipelineEngine execute > dynamic DAG mutation > handler can dynamically remove a node from the DAG [0.95ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.0608910Z (pass) PipelineEngine execute > dynamic DAG mutation > removing a node that another node depends on causes deadlock [0.46ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.0611070Z (pass) PipelineEngine execute > RetryContext strategy reflects rollback on max retries
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.0641940Z (pass) PipelineEngine execute > timeout error triggers model_switch strategy [4.38ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.0643310Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.0644260Z ##[endgroup]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.0644730Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.0645650Z ##[group]src/memory/__tests__/memory-system.test.ts:
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.0807280Z (pass) MemorySystem > recordRaw inserts a raw log [4.46ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.0908740Z (pass) MemorySystem > getRawLogsBySession returns session logs [1.11ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1010260Z (pass) MemorySystem > createMemory inserts memory, evidence, and auto-links [3.20ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1111620Z (pass) MemorySystem > findRelevant returns empty for no tags [1.11ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1125480Z (pass) MemorySystem > findRelevant returns matching memories [1.28ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1126110Z (pass) MemorySystem > findRelevant respects minConfidence [0.23ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1126660Z (pass) MemorySystem > getEvidence returns evidence array [1.76ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1127190Z (pass) MemorySystem > getLinked returns linked memories [1.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1127800Z (pass) MemorySystem > findContradictions delegates to storage [0.94ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1128540Z (pass) MemorySystem > findCircularReferences delegates to storage
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1129190Z (pass) MemorySystem > recordRaw with zero tokenCount defaults to 0 [1.52ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1129720Z (pass) MemorySystem > recordRaw generates unique IDs for each entry
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1130240Z (pass) MemorySystem > getRawLogsBySession respects limit parameter [1.61ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1130860Z (pass) MemorySystem > getRawLogsBySession returns empty array for unknown session [0.10ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1131490Z (pass) MemorySystem > createMemory stores all fields correctly [1.30ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1132010Z (pass) MemorySystem > createMemory stores multiple evidence entries [1.23ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1132560Z (pass) MemorySystem > findRelevant returns no matches for non-existent tags
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1133090Z (pass) MemorySystem > findRelevant sorts by confidence descending [0.86ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1133650Z (pass) MemorySystem > createMemory with empty evidence stores no evidence [1.76ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1134290Z (pass) MemorySystem > createMemory auto-links to existing memories with matching tags [1.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1134950Z (pass) MemorySystem > getEvidence returns empty array for memory with no evidence [0.81ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1135580Z (pass) MemorySystem > getLinked returns empty array for memory with no links [0.77ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1136110Z (pass) MemorySystem > handles very large content in recordRaw [0.85ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1136840Z (pass) MemorySystem > createMemory handles very large bug text [0.77ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1137360Z (pass) MemorySystem > multiple recordRaw calls with same session are stored [0.76ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1137690Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1138030Z ##[endgroup]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1138120Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1138390Z ##[group]src/config/__tests__/mcp-config.test.ts:
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1658650Z (pass) ConfigManager MCP > loadMCPServers returns empty array when no config exists
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1660000Z (pass) ConfigManager MCP > loadMCPServers reads saved servers [0.85ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1661800Z (pass) ConfigManager MCP > saveMCPServers persists to disk [0.18ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1664480Z (pass) ConfigManager MCP > saveMCPServers overwrites existing file [0.24ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1666210Z (pass) ConfigManager MCP > loadMCPServers handles malformed JSON gracefully [0.14ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1667450Z (pass) ConfigManager MCP > loadMCPServers handles missing servers key [0.12ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1668880Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1670070Z ##[endgroup]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1670450Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1670730Z ##[group]src/config/__tests__/config.test.ts:
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1692140Z (pass) ConfigManager > load returns complete config with defaults [0.74ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1698990Z (pass) ConfigManager > load reads constitution frontmatter [0.70ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1702910Z (pass) ConfigManager > load reads constitution principles [0.52ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1708610Z (pass) ConfigManager > load reads constitution constraints [0.51ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1713210Z (pass) ConfigManager > load reads persona frontmatter [0.49ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1718450Z (pass) ConfigManager > load reads persona rules (uses # persona section) [0.51ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1723230Z (pass) ConfigManager > load reads models from models.json [0.49ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1728440Z (pass) ConfigManager > load reads settings from settings.json [0.51ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1733620Z (pass) ConfigManager > load returns cached config on second call [0.53ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1739660Z (pass) ConfigManager > needsConfig returns true when models are empty [0.55ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1745800Z (pass) ConfigManager > needsConfig returns false when models are configured [0.63ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1752680Z (pass) ConfigManager > saveSettings persists partial settings [0.70ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1759740Z (pass) ConfigManager > saveSettings merges with existing settings [0.72ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1767280Z (pass) ConfigManager > saveModels persists models without apiKey [0.76ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1774180Z (pass) ConfigManager > getModels returns models (shallow copy - top level) [0.57ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1779580Z (pass) ConfigManager > loadMCPServers returns empty array when no config [0.47ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1786820Z (pass) ConfigManager > loadMCPServers reads saved servers [0.83ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1793040Z (pass) ConfigManager > saveMCPServers persists to disk [0.71ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1803660Z (pass) ConfigManager > load handles missing config files by creating defaults [1.02ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1810110Z (pass) ConfigManager > invalid models.json falls back to defaults [0.55ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1816410Z (pass) ConfigManager > invalid settings.json falls back to defaults [0.71ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1822420Z (pass) ConfigManager > invalid mcp.json returns empty array [0.67ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1828150Z (pass) ConfigManager > mcp.json missing servers key returns empty array [0.55ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1831160Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1831530Z ##[endgroup]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1831650Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.1832020Z ##[group]src/agents/__tests__/compression.test.ts:
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.2723720Z (pass) CompressionAgent.constructor > sets role to compression
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.2730510Z (pass) CompressionAgent.constructor > stores model parameter [2.09ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.2743300Z (pass) CompressionAgent.compress > returns compressed=false when usage below threshold [0.67ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.2759330Z (pass) CompressionAgent.compress > returns compressed=true when usage exceeds threshold [2.47ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9321790Z (pass) CompressionAgent.compress > groups messages into chunks of ~4000 tokens [655.94ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9331680Z (pass) CompressionAgent.compress > returns correct original and compressed counts [0.68ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9337180Z (pass) CompressionAgent.compress > reduction percentage is calculated correctly [0.93ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9341340Z (pass) CompressionAgent.compress > uses default threshold of 0.7 [0.54ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9347330Z (pass) CompressionAgent.compress > compresses when threshold is 0 and messages exist [0.65ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9351470Z (pass) CompressionAgent.compress > handles empty messages array [0.37ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9355990Z (pass) CompressionAgent.compress > handles single message under threshold [0.41ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9359790Z (pass) CompressionAgent.compress > uses maxContextTokens from context state [0.46ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9363800Z (pass) CompressionAgent.compress > defaults maxContextTokens to 32000 when not in state [0.44ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9376520Z (pass) CompressionAgent.decompress > decompress stores entry and finds via originalId [1.31ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9380690Z (pass) CompressionAgent.decompress > returns empty array for empty entryIds [0.31ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9385290Z (pass) CompressionAgent.decompress > skips entries that fail decompression [0.42ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9391020Z (pass) CompressionAgent.decompress > handles mix of valid and invalid originalIds [0.65ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9395380Z (pass) CompressionAgent error handling > throws if not initialized for compress (indirectly via think) [0.40ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9399450Z (pass) CompressionAgent error handling > handles context with null state gracefully [0.43ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9612190Z (pass) CompressionAgent edge cases > messages with moderately long content are grouped correctly [20.51ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9620270Z (pass) CompressionAgent edge cases > messages with empty content are counted [1.20ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9625440Z (pass) CompressionAgent edge cases > multiple small messages below threshold do not compress [0.78ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9630160Z (pass) CompressionAgent edge cases > messages with different roles are grouped together [0.51ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9634050Z (pass) CompressionAgent.init > stores context [0.47ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9638690Z (pass) CompressionAgent additional edge cases > compress with threshold=1.0 never compresses [0.38ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9643430Z (pass) CompressionAgent additional edge cases > compress with threshold=0 and empty messages returns compressed=false [0.66ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9819640Z (pass) CompressionAgent additional edge cases > groupMessages splits large messages into chunks [16.02ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9829860Z (pass) CompressionAgent additional edge cases > reduction calculation shows correct percentage [2.66ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9830410Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9830910Z ##[endgroup]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9831010Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9831230Z ##[group]src/agents/__tests__/base.test.ts:
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9859140Z (pass) BaseAgent.constructor > sets role from constructor parameter
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9859590Z (pass) BaseAgent.constructor > sets model from constructor parameter
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9860150Z (pass) BaseAgent.constructor > sets api from constructor parameter [0.39ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9860560Z (pass) BaseAgent.constructor > accepts all valid AgentRole values [0.08ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9860990Z (pass) BaseAgent.init > stores context and logs sessionId [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9861360Z (pass) BaseAgent.init > overwrites previous context on second call [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9861730Z (pass) BaseAgent.init > stores full systemPrompt in context [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9862140Z (pass) BaseAgent.init > context is null before init [0.02ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9864180Z (pass) BaseAgent.think > calls api.chat with system and user messages [0.27ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9865030Z (pass) BaseAgent.think > returns response content from api.chat [0.07ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9865460Z (pass) BaseAgent.think > works with empty system prompt [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9865850Z (pass) BaseAgent.think > works with empty user prompt [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9866280Z (pass) BaseAgent.think > throws if not initialized [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9867010Z (pass) BaseAgent.think > error propagates when api.chat throws [0.07ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9867550Z (pass) BaseAgent.think > error propagates when api.chat rejects with non-Error [0.02ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9868230Z (pass) BaseAgent.think > api.chat receives the model entry passed to constructor [0.01ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9876190Z (pass) BaseAgent.thinkStream > yields chunks from api.streamChat [0.24ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9879980Z (pass) BaseAgent.thinkStream > passes correct messages to api.streamChat [0.95ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9881680Z (pass) BaseAgent.thinkStream > throws if not initialized [0.08ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9882800Z (pass) BaseAgent.thinkStream > handles empty stream from api.streamChat [0.01ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9884070Z (pass) BaseAgent.thinkStream > works with single chunk [0.11ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9885490Z (pass) BaseAgent.thinkStream > stream yields same content as chat for same input [0.14ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9887120Z (pass) BaseAgent.thinkStream > passes model to api.streamChat [0.10ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9890270Z (pass) BaseAgent.thinkStream > uses system prompt from context [0.26ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9891290Z (pass) BaseAgent.switchModel > changes the active model [0.11ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9891720Z (pass) BaseAgent.switchModel > switchModel updates to different provider [0.01ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9892240Z (pass) BaseAgent.estimateTokens > estimates ~1 token per 3.5 characters [0.04ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9892730Z (pass) BaseAgent.estimateTokens > rounds up fractional tokens [0.04ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9893070Z (pass) BaseAgent.estimateTokens > handles very long text
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9893410Z (pass) BaseAgent.estimateTokens > handles unicode characters [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9893960Z (pass) BaseAgent.destroy > clears context to null [0.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9894340Z (pass) BaseAgent.destroy > can be called multiple times without error [0.08ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9894900Z (pass) BaseAgent.destroy > after destroy, think throws [0.04ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9895320Z (pass) BaseAgent.role property > is readable and matches constructor arg [0.04ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9895830Z (pass) BaseAgent.role property > is readonly (TypeScript prevents reassignment at compile time)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9896160Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9896490Z ##[endgroup]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9896590Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:37.9896820Z ##[group]src/agents/__tests__/planner.test.ts:
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.0814920Z (pass) PlannerAgent.constructor > sets role to planner
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.0823970Z (pass) PlannerAgent.constructor > stores model parameter [0.37ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.0824560Z (pass) PlannerAgent.init > stores context [0.07ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.0826350Z (pass) PlannerAgent.selectNodes > returns generate and report always even when LLM omits them [0.16ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.0827020Z (pass) PlannerAgent.selectNodes > parses comma-separated response
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.0827470Z (pass) PlannerAgent.selectNodes > handles spaces around commas
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.0827950Z (pass) PlannerAgent.selectNodes > deduplicates nodes
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.0828380Z (pass) PlannerAgent.selectNodes > filters out invalid node names [0.54ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.0828770Z (pass) PlannerAgent.selectNodes > lowercases all node names
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.0829390Z (pass) PlannerAgent.selectNodes > returns all-uppercase nodes correctly
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.0829850Z (pass) PlannerAgent.selectNodes > handles response with only generate
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.0830290Z (pass) PlannerAgent.selectNodes > handles duplicate entries plus mandatory adds
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.0830830Z (pass) PlannerAgent.selectNodes > empty LLM response falls back to generate+report [0.26ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.0831920Z (pass) PlannerAgent.selectNodes > LLM response with only invalid nodes returns generate+report [0.02ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.0832470Z (pass) PlannerAgent.selectNodes > calls think with correct prompt [0.07ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.0833000Z (pass) PlannerAgent.selectNodes > selectNodes with partial match returns valid subset [0.11ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.0833560Z (pass) PlannerAgent.analyzeTask > returns PipelineNode[] from selectNodes [0.08ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.0834030Z (pass) PlannerAgent.analyzeTask > includes generate in result [0.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.0834460Z (pass) PlannerAgent.analyzeTask > includes report in result [0.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.0834990Z (pass) PlannerAgent.analyzeTask > returns ordered list matching LLM selection plus mandatory [0.07ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.0835540Z (pass) PlannerAgent.analyzeTask > handles very long task description [0.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.0836110Z (pass) PlannerAgent.analyzeTask > handles task description with special characters [0.02ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.0836900Z (pass) PlannerAgent.replan > returns string from think() [0.07ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.0837320Z (pass) PlannerAgent.replan > includes previous plan and failure in prompt
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.0837720Z (pass) PlannerAgent.replan > handles empty previous plan
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.0838060Z (pass) PlannerAgent.replan > handles empty failure context
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.0838440Z (pass) PlannerAgent error handling > propagates error from api.chat
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.0840350Z (pass) PlannerAgent error handling > throws if not initialized [0.83ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.0841160Z (pass) PlannerAgent error handling > throws on analyzeTask if not initialized [0.02ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.0842100Z (pass) PlannerAgent model parameter > uses custom model from constructor for api calls [0.02ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.0842450Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.0842780Z ##[endgroup]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.0842870Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.0843130Z ##[group]src/agents/__tests__/memory-organizer.test.ts:
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.1911230Z (pass) MemoryOrganizerAgent.constructor > sets role to memory_organizer [1.89ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.1916750Z (pass) MemoryOrganizerAgent.constructor > stores model parameter [2.39ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.1945210Z (pass) MemoryOrganizerAgent.init > stores context [1.62ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.1964830Z (pass) MemoryOrganizerAgent.organize > returns count 0 when no raw logs exist [2.22ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.1999350Z (pass) MemoryOrganizerAgent.organize > creates memory from raw log with bug pattern [4.46ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.2022580Z (pass) MemoryOrganizerAgent.organize > creates memory with evidence entries [1.43ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.2041920Z (pass) MemoryOrganizerAgent.organize > parses investigation lines from raw logs [2.79ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.2064710Z (pass) MemoryOrganizerAgent.organize > handles multiple bugs in consecutive logs [1.96ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.2082650Z (pass) MemoryOrganizerAgent.organize > classifies evidence as observed by default [1.43ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.2100320Z (pass) MemoryOrganizerAgent.organize > extracts tags from bug text [1.80ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.2115400Z (pass) MemoryOrganizerAgent with structured log patterns > detects bug: pattern in logs [2.50ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.2128900Z (pass) MemoryOrganizerAgent with structured log patterns > detects error: pattern in logs [1.47ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.2142640Z (pass) MemoryOrganizerAgent with structured log patterns > handles root cause analysis logs [0.57ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.2157090Z (pass) MemoryOrganizerAgent with structured log patterns > handles logs with fix: pattern [1.44ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.2170960Z (pass) MemoryOrganizerAgent with structured log patterns > handles logs with reason: pattern [2.00ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.2183900Z (pass) MemoryOrganizerAgent with structured log patterns > creates fallback pattern when no bug/fix detected [1.54ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.2193920Z (pass) MemoryOrganizerAgent classifyEvidence > classifies test source as verified [0.54ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.2202600Z (pass) MemoryOrganizerAgent classifyEvidence > classifies log source as observed [1.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.2210780Z (pass) MemoryOrganizerAgent classifyEvidence > classifies LLM source as generated [0.88ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.2219050Z (pass) MemoryOrganizerAgent classifyEvidence > classifies uncertain content as inferred [0.69ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.2226450Z (pass) MemoryOrganizerAgent calculateConfidence > returns 0.3 for empty evidence [0.82ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.2233950Z (pass) MemoryOrganizerAgent calculateConfidence > verified evidence yields high confidence [0.74ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.2241240Z (pass) MemoryOrganizerAgent calculateConfidence > observed evidence yields medium confidence [0.76ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.2248900Z (pass) MemoryOrganizerAgent calculateConfidence > capped at 1.0 [1.00ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.2257080Z (pass) MemoryOrganizerAgent extractTags > extracts file extension tags [0.48ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.2264620Z (pass) MemoryOrganizerAgent extractTags > extracts keyword tags from bug text [0.82ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.2272830Z (pass) MemoryOrganizerAgent extractTags > deduplicates tags [0.83ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.2283130Z (pass) MemoryOrganizerAgent error handling > handles session with only non-bug logs [1.28ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.2292000Z (pass) MemoryOrganizerAgent error handling > handles empty strings in logs [0.59ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.2313200Z (pass) MemoryOrganizerAgent error handling > handles very large log content [2.44ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.2313710Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.2314340Z ##[endgroup]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.2314530Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.2315460Z ##[group]src/agents/__tests__/worker.test.ts:
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.2973900Z (pass) WorkerAgent.constructor > sets role to worker [4.02ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.2983690Z (pass) WorkerAgent.constructor > stores model parameter [1.09ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.2994570Z (pass) WorkerAgent.init > stores context from init call [0.96ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.3025410Z (pass) WorkerAgent.execute (non-streaming) > returns { content } with response text [2.74ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.3038140Z (pass) WorkerAgent.execute (non-streaming) > calls api.chat with system prompt and user prompt [1.45ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.3050920Z (pass) WorkerAgent.execute (non-streaming) > records raw memory for prompt [1.94ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.3065910Z (pass) WorkerAgent.execute (non-streaming) > records raw memory for response [1.49ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.3080110Z (pass) WorkerAgent.execute (non-streaming) > passes full prompt with context enhancement [1.49ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.3110090Z (pass) WorkerAgent.execute (non-streaming) > handles very long prompt [2.90ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.3125840Z (pass) WorkerAgent.execute (streaming with onChunk) > returns { content } with complete streamed text [0.49ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.3136540Z (pass) WorkerAgent.execute (streaming with onChunk) > calls onChunk for each stream chunk [1.58ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.3146730Z (pass) WorkerAgent.execute (streaming with onChunk) > calls api.streamChat when onChunk is provided [1.63ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.3157290Z (pass) WorkerAgent.execute (streaming with onChunk) > records memory for streamed response [0.45ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.3166240Z (pass) WorkerAgent.execute (streaming with onChunk) > handles empty onChunk callback [1.46ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.3181510Z (pass) WorkerAgent.execute (streaming with onChunk) > onChunk is called with incremental content [1.14ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.3185800Z (pass) WorkerAgent error handling > propagates error from api.chat (non-streaming) [0.85ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.3212780Z (pass) WorkerAgent error handling > propagates error from api.streamChat (streaming) [2.41ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.3220960Z (pass) WorkerAgent error handling > throws if not initialized [1.15ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.3229450Z (pass) WorkerAgent error handling > throws if not initialized with streaming [0.35ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.3239480Z (pass) WorkerAgent with context enhancement > includes compressed context in prompt when available [1.11ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.3250620Z (pass) WorkerAgent with context enhancement > works without compressed context [1.29ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.3258720Z (pass) WorkerAgent.extractTopics > extracts topics from patterns in prompt [0.90ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.3265180Z (pass) WorkerAgent.extractTopics > extracts error type keywords [0.59ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.3271900Z (pass) WorkerAgent model usage > passes model to api.chat [0.50ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.3278610Z (pass) WorkerAgent edge cases > handles empty prompt [0.72ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.3285490Z (pass) WorkerAgent edge cases > handles special characters in prompt [0.62ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.3292590Z (pass) WorkerAgent edge cases > execute returns structured result object [0.70ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.3301070Z (pass) WorkerAgent edge cases > execute with onChunk but empty stream yields empty content [0.71ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.3308090Z (pass) WorkerAgent edge cases > execute with stream uses sessionId from context [1.17ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.3314520Z (pass) WorkerAgent edge cases > execute non-stream uses sessionId from context [0.35ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.3315340Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.3315960Z ##[endgroup]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.3316080Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.3316440Z ##[group]src/agents/__tests__/watchdog.test.ts:
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.3995600Z (pass) WatchdogAgent.constructor > sets role to watchdog
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.3996470Z (pass) WatchdogAgent.constructor > stores model parameter [0.50ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.3997370Z (pass) WatchdogAgent.init > stores context [0.08ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.4002680Z (pass) WatchdogAgent.check > returns healthy with empty actions when no issues [0.59ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.4004330Z (pass) WatchdogAgent.check > returns healthy when optional fields are undefined [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.4005870Z (pass) WatchdogAgent.check > returns force_stop when failures >= 3
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.4007140Z (pass) WatchdogAgent.check > no action for failures below threshold (< 3) [0.22ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.4008130Z (pass) WatchdogAgent.check > force_stop reason includes failure count [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.4009410Z (pass) WatchdogAgent.check > returns warning for token surge [0.13ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.4010340Z (pass) WatchdogAgent.check > token surge warning includes token values [0.08ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.4011560Z (pass) WatchdogAgent.check > token surge not triggered with fewer than 3 data points [0.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.4012840Z (pass) WatchdogAgent.check > token surge not triggered when avg is 0
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.4013920Z (pass) WatchdogAgent.check > limits token history to 10 entries [0.24ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.4015030Z (pass) WatchdogAgent.check > returns model_switch when retries >= 5
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.4018890Z (pass) WatchdogAgent.check > model_switch action includes fallback model [0.16ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.4020060Z (pass) WatchdogAgent.check > no model_switch for retries below 5
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.4021090Z (pass) WatchdogAgent.check > returns compress_suggest when drift > 0.7 [0.31ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.4022120Z (pass) WatchdogAgent.check > compress_suggest reason includes drift score
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.4023010Z (pass) WatchdogAgent.check > no drift action when drift <= 0.7 [0.14ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.4024250Z (pass) WatchdogAgent.check > combines multiple issues into actions array
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.4025430Z (pass) WatchdogAgent.check > drift with empty previous context returns 0
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.4026200Z (pass) WatchdogAgent.reset > clears all internal state [0.28ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.4026900Z (pass) WatchdogAgent.reset > after reset, check returns healthy [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.4027650Z (pass) WatchdogAgent edge cases > handles empty failures object [0.04ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.4028600Z (pass) WatchdogAgent edge cases > handles empty retries object [0.01ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.4029300Z (pass) WatchdogAgent edge cases > handles null context [0.14ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.4030120Z (pass) WatchdogAgent edge cases > handles undefined failures gracefully [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.4031580Z (pass) WatchdogAgent edge cases > supports multiple failure sources [0.02ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.4032500Z (pass) WatchdogAgent edge cases > progressively accumulates state across check calls [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.4033330Z (pass) WatchdogAgent edge cases > negative token values handled
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.4034030Z (pass) WatchdogAgent edge cases > zero tokens handled
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.4034710Z (pass) WatchdogAgent edge cases > token surge with exactly 3 entries check works
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.4035200Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.4035720Z ##[endgroup]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.4035890Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.4036300Z ##[group]src/agents/__tests__/validation.test.ts:
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5205540Z (pass) ValidationAgent.constructor > sets role to validation [4.89ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5230480Z (pass) ValidationAgent.constructor > stores model parameter [3.16ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5275700Z (pass) ValidationAgent.validate > returns healthy when no issues exist [4.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5300030Z (pass) ValidationAgent.validate > returns default report structure [1.33ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5328640Z (pass) ValidationAgent.validate > detects contradictions from memory system [2.69ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5350550Z (pass) ValidationAgent.validate > detects circular references [4.02ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5370730Z (pass) ValidationAgent.validate > detects hallucinated links (low confidence) via direct storage check [0.67ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5391270Z (pass) ValidationAgent.validate > detects inference via direct access [3.34ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5412730Z (pass) ValidationAgent.validate > overallHealth is warning with <= 3 issues [0.74ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5450100Z (pass) ValidationAgent.validate > overallHealth is critical with > 3 issues [3.29ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5464180Z (pass) ValidationAgent.validate > handles empty memory system [2.83ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5478070Z (pass) ValidationAgent.repair > returns 0 when no issues exist [1.25ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5492480Z (pass) ValidationAgent.repair > detects and reports circular references [1.39ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5505320Z (pass) ValidationAgent edge cases > memory with no links does not cause hallucination [1.45ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5520330Z (pass) ValidationAgent edge cases > memory with high confidence link is not hallucinated [1.30ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5531120Z (pass) ValidationAgent.init > stores context [1.50ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5546980Z (pass) ValidationAgent additional edge cases > multiple contradictions all add to issue count [0.97ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5560260Z (pass) ValidationAgent additional edge cases > issues array contains descriptive messages for each problem type [2.38ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5570620Z (pass) ValidationAgent additional edge cases > validate does not throw on empty memory system [0.58ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5581520Z (pass) ValidationAgent additional edge cases > validate returns consistent structure on repeated calls [1.58ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5582520Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5583280Z ##[endgroup]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5583580Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5584460Z ##[group]src/agents/__tests__/context-inspector.test.ts:
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5621860Z (pass) ContextInspectorAgent.constructor > sets role to context_inspector
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5623130Z (pass) ContextInspectorAgent.constructor > stores model parameter [1.23ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5624130Z (pass) ContextInspectorAgent.init > stores context [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5628870Z (pass) ContextInspectorAgent.inspect > returns InspectionResult with score 0 for first clean inspection [0.59ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5630680Z (pass) ContextInspectorAgent.inspect > detects same error repeated across inspections [0.25ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5631930Z (pass) ContextInspectorAgent.inspect > detects purpose drift when focus diverges from original task [0.02ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5633160Z (pass) ContextInspectorAgent.inspect > no purpose drift when focus matches original task [0.12ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5634230Z (pass) ContextInspectorAgent.inspect > no purpose drift with fewer than 5 messages
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5636470Z (pass) ContextInspectorAgent.inspect > detects stuck TODOs [0.13ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5637360Z (pass) ContextInspectorAgent.inspect > no stuck TODO when TODOs change [0.11ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5644840Z (pass) ContextInspectorAgent.inspect > detects assumption fixation [0.11ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5656850Z (pass) ContextInspectorAgent.inspect > no assumption fixation with fewer than 3 states [0.04ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5658260Z (pass) ContextInspectorAgent.inspect > detects error change unrecognized when errors shift [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5659540Z (pass) ContextInspectorAgent.inspect > no error change flag with single error change [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5660650Z (pass) ContextInspectorAgent.inspect > returns correct score accumulation
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5661830Z (pass) ContextInspectorAgent.inspect > score is capped at 1.0 [0.14ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5662840Z (pass) ContextInspectorAgent edge cases > handles empty errors array
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5663770Z (pass) ContextInspectorAgent edge cases > handles empty todos array
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5664680Z (pass) ContextInspectorAgent edge cases > handles empty messages array
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5666250Z (pass) ContextInspectorAgent edge cases > handles undefined assumptions
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5667220Z (pass) ContextInspectorAgent edge cases > maintains max 20 previous states
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5668270Z (pass) ContextInspectorAgent edge cases > handles inspection after many inspections [0.75ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5669370Z (pass) ContextInspectorAgent additional edge cases > no error change when going from no errors to one error
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5670780Z (pass) ContextInspectorAgent additional edge cases > error change flagged when multiple errors added and removed
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5672140Z (pass) ContextInspectorAgent additional edge cases > same error but appearing 2 times does not trigger flag
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5673480Z (pass) ContextInspectorAgent additional edge cases > purpose drift not triggered when first message not found
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5674850Z (pass) ContextInspectorAgent additional edge cases > score is cumulative when multiple flags are true [0.32ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5676040Z (pass) ContextInspectorAgent.suggestRemediation > returns no remediation for low score
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5677320Z (pass) ContextInspectorAgent.suggestRemediation > calls think() when remediation is needed
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5678530Z (pass) ContextInspectorAgent.suggestRemediation > includes relevant issues in remediation prompt
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5679800Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5680720Z ##[endgroup]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5680890Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.5681340Z ##[group]src/utils/__tests__/resolve-safe-path.test.ts:
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.6906880Z (pass) resolveSafePath > resolves existing file within allowed dir [0.57ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.6909250Z (pass) resolveSafePath > throws on non-existent file [0.75ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.6911220Z (pass) resolveSafePath > throws on path traversal attempt [0.12ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.6913020Z (pass) resolveSafePath > resolves file in subdirectory [0.08ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.6914620Z (pass) resolveSafePath > throws on traversal via ../ beyond allowed dirs [0.10ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.6916580Z (pass) resolveSafePath > throws on absolute path pointing outside allowed dirs [0.44ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.6924800Z (pass) resolveSafePath > resolves file within HOME directory [1.00ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.6926870Z (pass) resolveSafePath > rejects file with same name as allowed dir root but different path [0.04ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.6928960Z (pass) resolveSafePath > normalizes mixed slashes [0.20ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.6930310Z (pass) resolveSafePath > resolves path with trailing dot [0.08ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.6931910Z (pass) resolveSafePath > empty path resolves to CWD (within allowed dirs) [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.6933540Z (pass) resolveSafePath > throws on path with null byte [0.14ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.6935100Z (pass) resolveSafePath > throws on symlink pointing outside allowed dirs [0.13ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.6937850Z (pass) resolveSafePath > whitespace path throws (resolve adds to CWD, no such file) [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.6942510Z (pass) resolveSafePath > resolves file with special characters in name [0.77ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.6951420Z (pass) resolveSafePath > resolves file with unicode characters [0.53ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.6953350Z (pass) resolveSafePath > throws on very long path exceeding OS limits
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.6966020Z (pass) resolveSafePath > resolves file when allowed dir is a parent of CWD [0.37ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.6968450Z (pass) resolveSafePath > rejects existing file outside allowed dirs
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.6977600Z (pass) resolveSafePath > getAllowedDirs reflects current process.cwd() (not stale)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.6996660Z (pass) resolveSafePath > getAllowedDirs updates after process.chdir [0.49ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.6997810Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.6999430Z ##[endgroup]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.7000120Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.7001250Z ##[group]src/utils/__tests__/sanitize-error.test.ts:
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.7128540Z (pass) sanitizeError > extracts message from Error object
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.7131820Z (pass) sanitizeError > strips stack traces [1.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.7133020Z (pass) sanitizeError > converts non-Error to string [0.01ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.7134280Z (pass) sanitizeError > caps length at 500 chars [0.18ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.7135430Z (pass) sanitizeError > handles empty string [0.07ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.7136530Z (pass) sanitizeError > handles undefined [0.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.7137850Z (pass) sanitizeError > handles Error without message [0.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.7139260Z (pass) sanitizeError > redacts home directory paths [0.09ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.7140700Z (pass) sanitizeError > redacts multiple home directory occurrences [0.10ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.7142240Z (pass) sanitizeError > handles exactly 500 char boundary [0.16ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.7143780Z (pass) sanitizeError > handles 501 chars with triple-dot truncation [0.14ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.7145200Z (pass) sanitizeError > handles number 0 [0.04ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.7146330Z (pass) sanitizeError > handles boolean false [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.7147710Z (pass) sanitizeError > strips multiple newlines from Error message [0.07ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.7149540Z (pass) sanitizeError > handles Error with only stack and no message [0.08ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.7151120Z (pass) sanitizeError > redacts multiple distinct HOME paths [0.19ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.7152450Z (pass) sanitizeError > handles Array as error [0.14ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.7155730Z (pass) sanitizeError > handles plain object as error [0.04ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.7157340Z (pass) sanitizeError > handles Error with special regex chars in message
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.7159030Z (pass) sanitizeError > does not modify safe short messages
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.7160800Z (pass) sanitizeError > handles very long error with existing newlines truncates to first line
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.7188050Z (pass) sanitizeError > handles Error with multi-byte unicode characters
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.7189300Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.7190350Z ##[endgroup]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.7190840Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.7191610Z ##[group]src/utils/__tests__/rate-limiter.test.ts:
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.7663300Z (pass) RateLimiter > allows initial consumption
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.7665150Z (pass) RateLimiter > blocks when tokens run out [0.78ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.8300740Z (pass) RateLimiter > refills tokens over time [63.48ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.8970100Z (pass) RateLimiter > does not exceed maxTokens on refill [66.86ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.8972870Z (pass) RateLimiter > handles zero refill amount [0.42ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:38.8974730Z (pass) RateLimiter > consumes all burst tokens then blocks [0.21ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:39.0129950Z (pass) RateLimiter > partial refill restores some tokens [115.56ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:39.2317900Z (pass) RateLimiter > multiple refill cycles accumulate up to maxTokens [218.83ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:39.3450580Z (pass) RateLimiter > does not refill before interval elapses [112.20ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:39.3453760Z (pass) RateLimiter > handles zero maxTokens [0.08ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:39.3455390Z (pass) RateLimiter > handles negative maxTokens [0.47ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:39.3775160Z (pass) RateLimiter > does not overflow beyond maxTokens on rapid refill cycles [32.95ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:39.5868200Z (pass) RateLimiter > lazy refill on first consume after long idle [209.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:39.6970070Z (pass) RateLimiter > currentTokens never exceeds maxTokens [110.33ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:39.6971370Z (pass) RateLimiter > constructor validates positive maxTokens [0.25ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:39.6972910Z (pass) RateLimiter > constructor handles very large maxTokens [0.09ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:39.6974050Z (pass) RateLimiter > constructor handles zero refillAmount
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:39.6976950Z (pass) RateLimiter > rapid sequential consumption drains tokens
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:39.8086370Z (pass) RateLimiter > exact time boundary for refill [111.07ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:39.9837370Z (pass) RateLimiter > multiple refill intervals accumulate partial refills [175.07ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:39.9845250Z (pass) RateLimiter > tryConsume with no time elapsed does not refill [0.17ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.0560990Z (pass) RateLimiter > large refillAmount capped by maxTokens [71.91ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2190570Z (pass) RateLimiter > non-integer refill intervals handled via floor [163.16ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2192780Z (pass) RateLimiter > edge: maxTokens set to 1 [0.34ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2194590Z (pass) RateLimiter > edge: refillAmount greater than maxTokens [0.10ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2207070Z (pass) RateLimiter > atomicity: interleaved calls never exceed maxTokens [1.40ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2208980Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2211010Z ##[endgroup]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2211980Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2213450Z ##[group]src/utils/__tests__/clipboard.test.ts:
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2285910Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2348360Z ##[error]Expected: [ "hello" ]
+test (macos-latest, 1.2.x)	Run tests	But it was not called.
+test (macos-latest, 1.2.x)	Run tests	      at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:80:19)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2365200Z 75 | 	test("OSC52 mode returns success when callback returns true", () => {
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2366140Z 76 | 		const osc52Fn = mock(() => true);
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2366790Z 77 | 		const result = copyToClipboard("hello", osc52Fn);
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2367470Z 78 | 		expect(result.success).toBe(true);
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2368090Z 79 | 		expect(result.method).toBe("osc52");
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2368750Z 80 | 		expect(osc52Fn).toHaveBeenCalledWith("hello");
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2369390Z                        ^
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2370000Z error: expect(received).toHaveBeenCalledWith(...expected)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2370570Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2370780Z Expected: [ "hello" ]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2371230Z But it was not called.
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2372100Z       at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:80:19)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2373340Z (fail) copyToClipboard > OSC52 mode returns success when callback returns true
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2374000Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2377400Z ##[error]Expected: "file"
+test (macos-latest, 1.2.x)	Run tests	Received: "osc52"
+test (macos-latest, 1.2.x)	Run tests	
+test (macos-latest, 1.2.x)	Run tests	      at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:90:25)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2379770Z 85 | 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2380280Z 86 | 		const result = copyToClipboard("hello", osc52Fn, {
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2380970Z 87 | 			spawnSync: successfulSpawn(),
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2381520Z 88 | 			platform: "win32",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2382110Z 89 | 		});
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2382560Z 90 | 		expect(result.method).toBe("file");
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2383110Z                              ^
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2383630Z error: expect(received).toBe(expected)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2384030Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2384200Z Expected: "file"
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2384670Z Received: "osc52"
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2384940Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2385530Z       at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:90:25)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2388830Z (fail) copyToClipboard > OSC52 mode falls through when callback returns false [2.44ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2389690Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2392620Z ##[error]Expected: "file"
+test (macos-latest, 1.2.x)	Run tests	Received: "osc52"
+test (macos-latest, 1.2.x)	Run tests	
+test (macos-latest, 1.2.x)	Run tests	      at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:103:25)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2395100Z  98 | 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2395600Z  99 | 		const result = copyToClipboard("text", osc52Fn, {
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2396380Z 100 | 			spawnSync: successfulSpawn(),
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2396930Z 101 | 			platform: "win32",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2397380Z 102 | 		});
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2397820Z 103 | 		expect(result.method).toBe("file");
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2398380Z                               ^
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2398940Z error: expect(received).toBe(expected)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2399330Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2399490Z Expected: "file"
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2399920Z Received: "osc52"
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2400180Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2400820Z       at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:103:25)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2403680Z (fail) copyToClipboard > OSC52 mode falls through when callback throws [2.22ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2405450Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2409260Z ##[error]Expected: "pbcopy"
+test (macos-latest, 1.2.x)	Run tests	Received: "osc52"
+test (macos-latest, 1.2.x)	Run tests	
+test (macos-latest, 1.2.x)	Run tests	      at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:111:25)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2412360Z 106 | 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2413130Z 107 | 	test("pbcopy on macOS returns success with method pbcopy", () => {
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2414230Z 108 | 		const sp = successfulSpawn();
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2415570Z 109 | 		const result = copyToClipboard("hello mac", undefined, { spawnSync: sp, platform: "darwin" });
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2416940Z 110 | 		expect(result.success).toBe(true);
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2417750Z 111 | 		expect(result.method).toBe("pbcopy");
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2418500Z                               ^
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2419160Z error: expect(received).toBe(expected)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2419700Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2419890Z Expected: "pbcopy"
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2420450Z Received: "osc52"
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2420800Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2421670Z       at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:111:25)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2423450Z (fail) copyToClipboard > pbcopy on macOS returns success with method pbcopy [0.49ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2424400Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2427940Z ##[error]Expected: "file"
+test (macos-latest, 1.2.x)	Run tests	Received: "osc52"
+test (macos-latest, 1.2.x)	Run tests	
+test (macos-latest, 1.2.x)	Run tests	      at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:123:25)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2431110Z 118 | 	test("pbcopy fall through when spawnSync throws on macOS", () => {
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2432410Z 119 | 		const result = copyToClipboard("fallback text", undefined, {
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2433530Z 120 | 			spawnSync: throwingSpawn(),
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2434250Z 121 | 			platform: "darwin",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2434820Z 122 | 		});
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2435340Z 123 | 		expect(result.method).toBe("file");
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2436300Z                               ^
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2436970Z error: expect(received).toBe(expected)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2437500Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2437690Z Expected: "file"
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2438310Z Received: "osc52"
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2438650Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2439570Z       at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:123:25)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2441470Z (fail) copyToClipboard > pbcopy fall through when spawnSync throws on macOS [0.59ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2442450Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2448890Z ##[error]Expected: "file"
+test (macos-latest, 1.2.x)	Run tests	Received: "osc52"
+test (macos-latest, 1.2.x)	Run tests	
+test (macos-latest, 1.2.x)	Run tests	      at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:139:25)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2451350Z 134 | 				output: [],
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2451770Z 135 | 				signal: null,
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2452430Z 136 | 			})) as unknown as typeof import("node:child_process").spawnSync,
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2453220Z 137 | 			platform: "darwin",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2454050Z 138 | 		});
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2454460Z 139 | 		expect(result.method).toBe("file");
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2455050Z                               ^
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2455560Z error: expect(received).toBe(expected)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2455950Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2456100Z Expected: "file"
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2456490Z Received: "osc52"
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2456720Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2457360Z       at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:139:25)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2458730Z (fail) copyToClipboard > pbcopy fall through when status is non-zero on macOS [0.28ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2459500Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2462060Z ##[error]Expected: "wl-copy"
+test (macos-latest, 1.2.x)	Run tests	Received: "osc52"
+test (macos-latest, 1.2.x)	Run tests	
+test (macos-latest, 1.2.x)	Run tests	      at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:152:25)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2464460Z 147 | 		const result = copyToClipboard("wayland text", undefined, {
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2465220Z 148 | 			spawnSync: sp,
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2465670Z 149 | 			platform: "linux",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2466110Z 150 | 		});
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2466510Z 151 | 		expect(result.success).toBe(true);
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2467350Z 152 | 		expect(result.method).toBe("wl-copy");
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2468020Z                               ^
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2468550Z error: expect(received).toBe(expected)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2469040Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2469210Z Expected: "wl-copy"
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2469600Z Received: "osc52"
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2469850Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2470460Z       at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:152:25)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2471760Z (fail) copyToClipboard > wl-copy on Linux Wayland returns success [0.22ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2472440Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2475190Z ##[error]Expected: "xclip"
+test (macos-latest, 1.2.x)	Run tests	Received: "osc52"
+test (macos-latest, 1.2.x)	Run tests	
+test (macos-latest, 1.2.x)	Run tests	      at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:179:25)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2477420Z 174 | 				};
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2478110Z 175 | 			}) as unknown as typeof import("node:child_process").spawnSync,
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2478900Z 176 | 			platform: "linux",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2479350Z 177 | 		});
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2479840Z 178 | 		expect(result.success).toBe(true);
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2480570Z 179 | 		expect(result.method).toBe("xclip");
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2481170Z                               ^
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2481670Z error: expect(received).toBe(expected)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2482070Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2482230Z Expected: "xclip"
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2482710Z Received: "osc52"
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2482970Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2483590Z       at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:179:25)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2485100Z (fail) copyToClipboard > wl-copy fall through on Wayland when spawnSync throws [0.19ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2485900Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2488620Z ##[error]Expected: "xclip"
+test (macos-latest, 1.2.x)	Run tests	Received: "osc52"
+test (macos-latest, 1.2.x)	Run tests	
+test (macos-latest, 1.2.x)	Run tests	      at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:188:25)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2490970Z 183 | 		delete process.env.WAYLAND_DISPLAY;
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2491540Z 184 | 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2492040Z 185 | 		const sp = successfulSpawn();
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2493070Z 186 | 		const result = copyToClipboard("xclip text", undefined, { spawnSync: sp, platform: "linux" });
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2494210Z 187 | 		expect(result.success).toBe(true);
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2494860Z 188 | 		expect(result.method).toBe("xclip");
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2495530Z                               ^
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2496060Z error: expect(received).toBe(expected)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2496450Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2496610Z Expected: "xclip"
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2496990Z Received: "osc52"
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2497230Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2497860Z       at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:188:25)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2499090Z (fail) copyToClipboard > xclip on Linux X11 returns success [0.19ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2499720Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2502580Z ##[error]Expected: "xsel"
+test (macos-latest, 1.2.x)	Run tests	Received: "osc52"
+test (macos-latest, 1.2.x)	Run tests	
+test (macos-latest, 1.2.x)	Run tests	      at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:215:25)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2504800Z 210 | 				};
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2505380Z 211 | 			}) as unknown as typeof import("node:child_process").spawnSync,
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2506230Z 212 | 			platform: "linux",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2506700Z 213 | 		});
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2507200Z 214 | 		expect(result.success).toBe(true);
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2507810Z 215 | 		expect(result.method).toBe("xsel");
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2508380Z                               ^
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2508880Z error: expect(received).toBe(expected)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2509390Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2509540Z Expected: "xsel"
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2509920Z Received: "osc52"
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2510160Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2510790Z       at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:215:25)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2512180Z (fail) copyToClipboard > xclip fall through to xsel when xclip spawnSync throws [0.17ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2512960Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2515890Z ##[error]Expected: "xsel"
+test (macos-latest, 1.2.x)	Run tests	Received: "osc52"
+test (macos-latest, 1.2.x)	Run tests	
+test (macos-latest, 1.2.x)	Run tests	      at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:238:25)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2520470Z 233 | 				};
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2521230Z 234 | 			}) as unknown as typeof import("node:child_process").spawnSync,
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2522040Z 235 | 			platform: "linux",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2522800Z 236 | 		});
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2523230Z 237 | 		expect(result.success).toBe(true);
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2523850Z 238 | 		expect(result.method).toBe("xsel");
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2524410Z                               ^
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2524930Z error: expect(received).toBe(expected)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2525330Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2525490Z Expected: "xsel"
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2525880Z Received: "osc52"
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2526130Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2526790Z       at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:238:25)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2528080Z (fail) copyToClipboard > xsel on Linux X11 returns success [0.16ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2528710Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2531780Z ##[error]Expected: "xsel"
+test (macos-latest, 1.2.x)	Run tests	Received: "osc52"
+test (macos-latest, 1.2.x)	Run tests	
+test (macos-latest, 1.2.x)	Run tests	      at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:270:25)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2534240Z 265 | 				};
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2534820Z 266 | 			}) as unknown as typeof import("node:child_process").spawnSync,
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2535570Z 267 | 			platform: "linux",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2536000Z 268 | 		});
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2536410Z 269 | 		expect(result.success).toBe(true);
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2537010Z 270 | 		expect(result.method).toBe("xsel");
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2537590Z                               ^
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2538090Z error: expect(received).toBe(expected)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2538490Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2538640Z Expected: "xsel"
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2539020Z Received: "osc52"
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2539270Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2539920Z       at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:270:25)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2541260Z (fail) copyToClipboard > xclip non-zero status falls through to xsel [0.20ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2541960Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2544280Z ##[error]Expected: "file"
+test (macos-latest, 1.2.x)	Run tests	Received: "osc52"
+test (macos-latest, 1.2.x)	Run tests	
+test (macos-latest, 1.2.x)	Run tests	      at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:278:25)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2546300Z 273 | 	test("fallback to temp file when all CLI methods fail", () => {
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2547170Z 274 | 		// No spawnSync override -> no CLI methods -> file fallback with real fs
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2547820Z 275 | 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2548440Z 276 | 		const result = copyToClipboard("final fallback", undefined, { platform: "win32" });
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2549260Z 277 | 		expect(result.success).toBe(true);
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2549770Z 278 | 		expect(result.method).toBe("file");
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2550240Z                               ^
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2562240Z error: expect(received).toBe(expected)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2562590Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2562730Z Expected: "file"
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2563050Z Received: "osc52"
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2563250Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2564360Z       at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:278:25)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2565540Z (fail) copyToClipboard > fallback to temp file when all CLI methods fail [0.19ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2566140Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2568260Z ##[error]Expected: false
+test (macos-latest, 1.2.x)	Run tests	Received: true
+test (macos-latest, 1.2.x)	Run tests	
+test (macos-latest, 1.2.x)	Run tests	      at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:296:26)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2570290Z 291 | 			writeFileSync: mock((..._: any[]) => {
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2588500Z 292 | 				throw new Error("disk full");
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2589010Z 293 | 			}) as any,
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2589350Z 294 | 			platform: "win32",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2589790Z 295 | 		});
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2590150Z 296 | 		expect(result.success).toBe(false);
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2590650Z                                ^
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2591080Z error: expect(received).toBe(expected)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2591850Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2591970Z Expected: false
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2592290Z Received: true
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2592470Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2593080Z       at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:296:26)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2594240Z (fail) copyToClipboard > file fallback reports error when writeFileSync throws [0.21ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2594890Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2597160Z ##[error]Expected: "xclip"
+test (macos-latest, 1.2.x)	Run tests	Received: "osc52"
+test (macos-latest, 1.2.x)	Run tests	
+test (macos-latest, 1.2.x)	Run tests	      at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:310:25)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2599180Z 305 | 		const result = copyToClipboard("", undefined, {
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2599750Z 306 | 			spawnSync: successfulSpawn(),
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2600210Z 307 | 			platform: "linux",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2600570Z 308 | 		});
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2600900Z 309 | 		expect(result.success).toBe(true);
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2601430Z 310 | 		expect(result.method).toBe("xclip");
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2602090Z                               ^
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2602520Z error: expect(received).toBe(expected)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2602840Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2602960Z Expected: "xclip"
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2603280Z Received: "osc52"
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2603490Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2604010Z       at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:310:25)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2605060Z (fail) copyToClipboard > empty string is copied successfully [0.17ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2605590Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2607640Z ##[error]Expected: "pbcopy"
+test (macos-latest, 1.2.x)	Run tests	Received: "osc52"
+test (macos-latest, 1.2.x)	Run tests	
+test (macos-latest, 1.2.x)	Run tests	      at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:319:25)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2609630Z 314 | 		const longText = "x".repeat(100_000);
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2610140Z 315 | 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2610460Z 316 | 		const sp = successfulSpawn();
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2611290Z 317 | 		const result = copyToClipboard(longText, undefined, { spawnSync: sp, platform: "darwin" });
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2612170Z 318 | 		expect(result.success).toBe(true);
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2612690Z 319 | 		expect(result.method).toBe("pbcopy");
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2613170Z                               ^
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2613580Z error: expect(received).toBe(expected)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2613910Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2614030Z Expected: "pbcopy"
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2614360Z Received: "osc52"
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2614550Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2615070Z       at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:319:25)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2616110Z (fail) copyToClipboard > very long string is copied successfully [0.23ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2616650Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2618620Z ##[error]Expected: false
+test (macos-latest, 1.2.x)	Run tests	Received: true
+test (macos-latest, 1.2.x)	Run tests	
+test (macos-latest, 1.2.x)	Run tests	      at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:334:26)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2620580Z 329 | 			writeFileSync: mock((..._: any[]) => {
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2621430Z 330 | 				throw new Error("permission denied");
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2621930Z 331 | 			}) as any,
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2622260Z 332 | 			platform: "linux",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2622610Z 333 | 		});
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2622940Z 334 | 		expect(result.success).toBe(false);
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2623410Z                                ^
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2623830Z error: expect(received).toBe(expected)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2624150Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2624270Z Expected: false
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2624580Z Received: true
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2624770Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2625280Z       at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:334:26)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2626380Z (fail) copyToClipboard > all methods fail returns false with method file [0.16ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2626970Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2629010Z ##[error]Expected: "xclip"
+test (macos-latest, 1.2.x)	Run tests	Received: "osc52"
+test (macos-latest, 1.2.x)	Run tests	
+test (macos-latest, 1.2.x)	Run tests	      at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:367:25)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2630590Z 362 | 				};
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2631000Z 363 | 			}) as unknown as typeof import("node:child_process").spawnSync,
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2631720Z 364 | 			platform: "linux",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2632020Z 365 | 		});
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2632300Z 366 | 		expect(result.success).toBe(true);
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2632730Z 367 | 		expect(result.method).toBe("xclip");
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2633130Z                               ^
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2633480Z error: expect(received).toBe(expected)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2633760Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2633860Z Expected: "xclip"
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2634130Z Received: "osc52"
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2634310Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2634750Z       at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:367:25)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2635730Z (fail) copyToClipboard > Wayland wl-copy non-zero status falls through to xclip [0.21ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2636570Z (pass) copyToClipboard > OSC52 with empty text returns success [0.09ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2637020Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2638750Z ##[error]Expected: "pbcopy"
+test (macos-latest, 1.2.x)	Run tests	Received: "osc52"
+test (macos-latest, 1.2.x)	Run tests	
+test (macos-latest, 1.2.x)	Run tests	      at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:385:25)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2640430Z 380 | 		const result = copyToClipboard("no osc52", undefined, {
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2640970Z 381 | 			spawnSync: successfulSpawn(),
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2641360Z 382 | 			platform: "darwin",
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2641790Z 383 | 		});
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2642090Z 384 | 		expect(result.success).toBe(true);
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2642530Z 385 | 		expect(result.method).toBe("pbcopy");
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2642930Z                               ^
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2643290Z error: expect(received).toBe(expected)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2643560Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2643670Z Expected: "pbcopy"
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2643950Z Received: "osc52"
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2644130Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2644560Z       at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:385:25)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2645440Z (fail) copyToClipboard > no OSC52 callback skips OSC52 path [0.16ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2646080Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2647790Z ##[error]Expected: "file"
+test (macos-latest, 1.2.x)	Run tests	Received: "osc52"
+test (macos-latest, 1.2.x)	Run tests	
+test (macos-latest, 1.2.x)	Run tests	      at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:391:25)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2649320Z 386 | 	});
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2649560Z 387 | 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2649960Z 388 | 	test("file fallback method includes filePath in result", () => {
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2650770Z 389 | 		const result = copyToClipboard("temp file test", undefined, { platform: "win32" });
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2651470Z 390 | 		expect(result.success).toBe(true);
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2651910Z 391 | 		expect(result.method).toBe("file");
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2652300Z                               ^
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2652660Z error: expect(received).toBe(expected)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2652930Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2653040Z Expected: "file"
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2653320Z Received: "osc52"
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2653660Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2654110Z       at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:391:25)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2655080Z (fail) copyToClipboard > file fallback method includes filePath in result [0.22ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2655610Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2657550Z ##[error]Expected number of calls: 3
+test (macos-latest, 1.2.x)	Run tests	Received number of calls: 0
+test (macos-latest, 1.2.x)	Run tests	
+test (macos-latest, 1.2.x)	Run tests	      at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:409:14)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2659520Z 404 | 		const r3 = copyToClipboard("third", undefined, { spawnSync: sp, platform: "darwin" });
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2660230Z 405 | 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2660500Z 406 | 		expect(r1.success).toBe(true);
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2660900Z 407 | 		expect(r2.success).toBe(true);
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2661300Z 408 | 		expect(r3.success).toBe(true);
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2661710Z 409 | 		expect(sp).toHaveBeenCalledTimes(3);
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2662110Z                    ^
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2662520Z error: expect(received).toHaveBeenCalledTimes(expected)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2662890Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2663150Z Expected number of calls: 3
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2663490Z Received number of calls: 0
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2663720Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2664170Z       at <anonymous> (/Users/runner/work/airgent/airgent/src/utils/__tests__/clipboard.test.ts:409:14)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2665040Z (fail) copyToClipboard > multiple consecutive calls work [0.18ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2665460Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2665820Z ##[endgroup]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2665980Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2666350Z ##[group]src/utils/__tests__/smart-cat.test.ts:
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2666920Z (pass) smartCat > reads a text file with cat [0.55ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2667460Z (pass) smartCat > handles non-existent file [0.27ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2668000Z (pass) smartCat > throws on archive file (zip) [0.09ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2668530Z (pass) smartCat > throws on archive file (tar.gz)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2669040Z (pass) smartCat > throws on archive file (7z) [0.17ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2669580Z (pass) smartCat > throws on archive file (rar) [0.07ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2670120Z (pass) smartCat > throws on archive file (tgz) [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2670690Z (pass) smartCat > reads nested file in subdirectory [0.13ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2671280Z (pass) smartCat > truncates with maxLines option [0.20ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2671950Z (pass) smartCat > maxLines of 0 returns full content (no truncation) [0.11ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2672680Z (pass) smartCat > lineNumbers option adds line numbering [0.23ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2673370Z (pass) smartCat > lineNumbers with maxLines works together [0.11ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2674050Z (pass) smartCat > reads compressed file with zcat (gz) [0.33ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2674600Z (pass) smartCat > reads markdown file [0.10ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2675120Z (pass) smartCat > empty file returns empty string [0.09ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2675720Z (pass) smartCat > very large file content is returned [0.25ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2676390Z (pass) smartCat > smartCat can read a file within HOME directory [0.09ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2676840Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2677120Z ##[endgroup]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2677250Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2677550Z ##[group]src/utils/__tests__/logger.test.ts:
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2677990Z (pass) Logger > creates child logger with compound name
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2678490Z (pass) Logger > child inherits log level from parent [0.13ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2679030Z (pass) Logger > child inherits debug mode from parent [0.04ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2679530Z (pass) Logger > setDebug toggles debug mode [0.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2680010Z (pass) sanitizeError > extracts message from Error [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2680550Z (pass) sanitizeError > strips stack trace lines [0.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2681060Z (pass) sanitizeError > converts non-Error to string [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2681590Z (pass) sanitizeError > caps length at 500 chars with ellipsis
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2682320Z (pass) sanitizeError > does not add ellipsis for under-500 strings [0.11ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2683040Z (pass) sanitizeError > handles empty string
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2683540Z (pass) sanitizeError > redacts home directory path when HOME is set
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2684080Z (pass) sanitizeError > handles Error with no message
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2684580Z (pass) Logger extended > setDebug enables debug mode [0.14ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2685080Z (pass) Logger extended > setDebug disables debug mode
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2685620Z (pass) Logger extended > child creates child logger with compound name
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2686210Z (pass) Logger extended > child inherits level from parent
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2686760Z (pass) Logger extended > child inherits debugMode from parent [0.11ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2687390Z (pass) Logger extended > multiple child loggers from same parent [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2688000Z (pass) Logger extended > child logger can have its own child [0.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2688630Z (pass) Logger extended > debug does not log when debugMode is false [0.15ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2689270Z (pass) Logger extended > debug logs when debugMode is true [0.07ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2690330Z (pass) Logger extended > info respects level filtering (warn should not show info) [0.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2691030Z (pass) Logger extended > error and fatal use console.error [0.12ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2691650Z (pass) Logger extended > sanitizeError with nested Error objects [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2692350Z (pass) Logger extended > sanitizeError with very long first line truncates [0.07ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2693080Z (pass) Logger extended > sanitizeError with special characters in path [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2693810Z (pass) Logger extended > sanitizeError with object that has custom toString [0.08ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2694260Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2694530Z ##[endgroup]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2694670Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2694990Z ##[group]src/storage/__tests__/storage.test.ts:
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2695510Z (pass) Storage raw_logs > inserts and retrieves raw logs [1.78ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2696040Z [2026-06-27T09:32:40.253Z] [DEBUG] [test] should not show
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2696610Z (pass) Storage raw_logs > getRawLogs orders by timestamp DESC [7.98ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2697180Z (pass) Storage raw_logs > getRawLogs respects limit [1.10ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2791930Z (pass) Storage raw_logs > deleteRawLogsOlderThan removes old logs [10.91ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2800090Z (pass) Storage raw_logs > returns empty array for unknown session [0.61ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2809430Z (pass) Storage memories > inserts and retrieves memory [0.81ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2817650Z (pass) Storage memories > getMemory returns null for missing id [0.93ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2827150Z (pass) Storage memories > searchMemories filters by tags [0.82ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2837490Z (pass) Storage memories > searchMemories respects minConfidence [1.45ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2847440Z (pass) Storage memories > searchMemories orders by confidence DESC [0.54ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2857610Z (pass) Storage memory_links > inserts and retrieves linked memories [0.99ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2868860Z (pass) Storage memory_links > getLinkedMemories returns from both source and target [1.02ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2876830Z (pass) Storage evidence > inserts and retrieves evidence [1.09ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2885680Z (pass) Storage sessions > creates and ends session [0.78ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2893830Z (pass) Storage sessions > getActiveSessions returns only active [0.88ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2901700Z (pass) Storage sessions > adds session messages [0.83ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2909870Z (pass) Storage compressed entries > inserts compressed entry with timestamp [1.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2921580Z (pass) Storage compressed entries > getCompressedByTopics searches topics [0.42ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2929400Z (pass) Storage compressed entries > getCompressedByOriginalId finds by original id [1.09ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2937800Z (pass) Storage compressed entries > saveCompressedEntry skips duplicates [0.79ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2945210Z (pass) Storage metadata > set and get metadata [1.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2951870Z (pass) Storage metadata > getMetadata returns null for missing key [0.65ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2958820Z (pass) Storage metadata > setMetadata overwrites existing key [0.52ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2966080Z (pass) Storage metadata > getRecentSessions returns last sessions [0.66ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2975550Z (pass) Storage metadata > getRecentSessions defaults to 50 limit [0.73ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2982680Z (pass) Storage metadata > endSession with failed status [0.95ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2989320Z (pass) Storage metadata > endSession with crashed status [1.08ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.2996300Z (pass) Storage metadata > getSession returns null for non-existent session [0.27ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3004620Z (pass) Storage metadata > getActiveSessions returns empty when none active [1.20ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3015470Z (pass) Storage memory_links advanced > inserts link with all valid types [0.42ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3023520Z (pass) Storage evidence advanced > inserts evidence with all types [0.99ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3121030Z (pass) Storage evidence advanced > getEvidence orders by timestamp [10.25ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3127430Z (pass) Storage getAllCompressed > returns empty array when no entries [0.28ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3135250Z (pass) Storage getAllCompressed > returns all entries ordered by timestamp DESC [0.86ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3142250Z (pass) Storage getAllMetadata > returns all key-value pairs [0.57ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3148420Z (pass) Storage getAllMetadata > returns empty object when no metadata [0.69ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3155030Z (pass) Storage compressed entry edge cases > getCompressedByOriginalId returns null for missing [0.62ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3162050Z (pass) Storage compressed entry edge cases > getCompressedByTopics returns empty for no match [0.90ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3169470Z (pass) Storage compressed entry edge cases > insertCompressedEntry stores all fields [0.48ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3176990Z (pass) Storage raw_logs edge cases > insertRawLog with empty content [0.31ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3186020Z (pass) Storage raw_logs edge cases > insertRawLog with very large content [0.74ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3192950Z (pass) Storage raw_logs edge cases > deleteRawLogsOlderThan with no matching logs [0.90ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3199880Z (pass) Storage raw_logs edge cases > deleteRawLogsOlderThan with all logs old [0.70ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3207150Z (pass) Storage memory edge cases > insertMemory with empty arrays serializes correctly [0.69ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3215290Z (pass) Storage memory edge cases > insertMemory with special characters in tags [0.79ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3215730Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3216160Z ##[endgroup]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3216380Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3216900Z ##[group]src/prompt/__tests__/prompt-manager.test.ts:
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3247670Z (pass) PromptManager.buildNodePrompt > returns string for node type: clarify [0.33ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3248440Z (pass) PromptManager.buildNodePrompt > returns string for node type: plan [0.50ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3249470Z (pass) PromptManager.buildNodePrompt > returns string for node type: generate [0.09ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3250520Z (pass) PromptManager.buildNodePrompt > returns string for node type: test [0.08ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3251420Z (pass) PromptManager.buildNodePrompt > returns string for node type: validate [0.04ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3252750Z (pass) PromptManager.buildNodePrompt > returns string for node type: report [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3254080Z (pass) PromptManager.buildNodePrompt > caches node templates (calls readFile only once per node) [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3255220Z (pass) PromptManager.buildNodePrompt > different nodes return different content [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3256180Z (pass) PromptManager.buildNodePrompt > buildNodePrompt includes base system prompt [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3257160Z (pass) PromptManager.buildNodePrompt > buildNodePrompt includes separator between base and node content [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3258440Z (pass) PromptManager.buildSystemPrompt > includes constitution content [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3259050Z (pass) PromptManager.buildSystemPrompt > includes persona content [0.13ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3259650Z (pass) PromptManager.buildSystemPrompt > includes runtime debug setting [0.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3260390Z (pass) PromptManager.buildSystemPrompt > omits skills section when no skills available [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3261790Z (pass) PromptManager.buildSystemPrompt > includes skills section when skills exist [0.01ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3262500Z (pass) PromptManager.buildSystemPrompt > returns token count estimate [0.04ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3263400Z (pass) PromptManager.buildSystemPrompt > separates layers with dashes [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3264390Z (pass) PromptManager.buildSystemPrompt > config debug=false produces correct output [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3265210Z (pass) PromptManager.buildSystemPrompt > multi-line principles are rendered as list [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3266440Z (pass) PromptManager.buildSystemPrompt > multi-line constraints are rendered as list [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3277160Z (pass) PromptManager.buildSystemPrompt > multi-line ethical guidelines are rendered as list [0.35ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3277950Z (pass) PromptManager.buildSystemPrompt > multi-line rules are rendered as list [0.84ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3278700Z (pass) PromptManager.wouldExceedLimit > returns false for empty additional tokens [0.07ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3279510Z (pass) PromptManager.wouldExceedLimit > returns false for small additional tokens [0.08ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3289480Z (pass) PromptManager.wouldExceedLimit > returns true when combined tokens exceed limit [0.08ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3290180Z (pass) PromptManager.wouldExceedLimit > returns false when combined tokens are within limit [0.09ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3290850Z (pass) PromptManager.wouldExceedLimit > exact limit boundary (equal) returns true [0.08ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3291500Z (pass) PromptManager.wouldExceedLimit > zero additional tokens does not exceed generous limit
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3292200Z (pass) PromptManager.wouldExceedLimit > wouldExceedLimit uses maxSystemPromptTokens from config [0.23ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3292900Z (pass) PromptManager caching behavior > buildSystemPrompt is not cached (recalculates each call)
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3293510Z (pass) PromptManager caching behavior > token count is consistent across calls [0.15ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3294020Z (pass) PromptManager constructor > accepts minimal config [0.19ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3294290Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3294590Z ##[endgroup]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3294700Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3294980Z ##[group]src/compression/__tests__/compression.test.ts:
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3307470Z (pass) CompressionManager.compress > extracts topics from headers
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3308040Z (pass) CompressionManager.compress > extracts file paths from content [0.36ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3308560Z (pass) CompressionManager.compress > extracts error keywords [0.04ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3309070Z (pass) CompressionManager.compress > extracts commands [0.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3309620Z (pass) CompressionManager.compress > extracts PascalCase entities [0.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3310240Z (pass) CompressionManager.compress > calculates importance score based on metadata [0.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3351710Z (pass) CompressionManager.compress > truncates content over 1000 chars [3.44ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3352220Z (pass) CompressionManager.compress > keeps content under 1000 chars as-is [0.77ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3352880Z (pass) CompressionManager.compress > combines multiple messages with role headers [0.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3353510Z (pass) CompressionManager.compress > baseline importance for empty metadata
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3354190Z (pass) CompressionManager.compress > errors boost importance significantly [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3354930Z (pass) CompressionManager.compress > handles empty messages array [0.07ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3355430Z (pass) CompressionManager.compress > handles messages with special characters [0.07ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3355920Z (pass) CompressionManager.compress > deduplicates extracted topics
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3356370Z (pass) CompressionManager.compress > extracts uppercase error keywords [0.10ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3356880Z (pass) CompressionManager.compress > commands with sudo prefix extracted correctly
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3357370Z (pass) CompressionManager.compress > title uses first 3 topics [0.07ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3357860Z (pass) CompressionManager.compress > title falls back to default when no topics [0.01ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3358440Z (pass) CompressionManager.compress > tokenCount is calculated from combined content length [0.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3359020Z (pass) CompressionManager.compress > originalId falls back to messages[0].id [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3359590Z (pass) CompressionManager.compress > generates UUID for originalId when messages empty [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3360270Z (pass) CompressionManager.extractMetadata > extracts file paths with various extensions
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3360800Z (pass) CompressionManager.extractMetadata > extracts error codes like E0001
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3361300Z (pass) CompressionManager.extractMetadata > extracts PascalCase entities from text
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3361790Z (pass) CompressionManager.calculateImportance > baseline score is 0.3
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3362240Z (pass) CompressionManager.calculateImportance > errors add up to 0.3 max
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3362730Z (pass) CompressionManager.calculateImportance > files add up to 0.15 max [0.13ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3363250Z (pass) CompressionManager.calculateImportance > commands add up to 0.15 max [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3363800Z (pass) CompressionManager.calculateImportance > entities add up to 0.1 max [0.02ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3364340Z (pass) CompressionManager.calculateImportance > all factors combined cap at 1.0 [0.04ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3366850Z (pass) CompressionManager.findForDecompression > returns empty for empty options [0.64ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3372580Z (pass) CompressionManager.findForDecompression > returns empty when storage has no matches [0.25ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3377860Z (pass) CompressionManager.findForDecompression > combines topics, files, and errors into search terms [0.58ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3382450Z (pass) CompressionManager.decompress > throws for non-existent entry [0.53ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3387600Z (pass) CompressionManager.compressSession > does nothing for empty session [0.44ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3393540Z (pass) CompressionManager.compressSession > compresses session with raw logs [0.52ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3399290Z (pass) CompressionManager.compressSession > compressSession compresses all logs into one entry [0.59ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3399780Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3399990Z ##[endgroup]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3400080Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3400270Z ##[group]src/api/__tests__/mcp.test.ts:
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3415970Z (pass) OpenCodeAPI MCP > listMCP returns server status map
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3416370Z (pass) OpenCodeAPI MCP > listMCP throws on non-ok response [0.35ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3417750Z (pass) OpenCodeAPI MCP > addMCP sends local server config [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3418250Z (pass) OpenCodeAPI MCP > addMCP throws on non-ok [0.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3419150Z (pass) OpenCodeAPI MCP > addMCP sends remote server config [0.09ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3420240Z (pass) OpenCodeAPI MCP > connectMCP sends POST and returns void on success [0.07ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3420670Z (pass) OpenCodeAPI MCP > connectMCP throws on non-ok [0.02ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3421460Z (pass) OpenCodeAPI MCP > disconnectMCP sends POST and returns void on success [0.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3421960Z (pass) OpenCodeAPI MCP > disconnectMCP throws on non-ok [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3422370Z (pass) OpenCodeAPI MCP > listMCP returns empty object for no servers [0.04ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3423160Z (pass) OpenCodeAPI MCP > URL-encodes MCP server name in connect/disconnect [0.01ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3423600Z (pass) OpenCodeAPI MCP > connectMCP sends POST verb [0.04ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3423940Z (pass) OpenCodeAPI MCP > disconnectMCP sends POST verb [0.04ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3424310Z (pass) OpenCodeAPI MCP > listMCP returns empty for no servers
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3425160Z (pass) OpenCodeAPI MCP > addMCP with remote type sends url in config [0.07ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3425830Z (pass) OpenCodeAPI MCP > addMCP with empty command array [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3426320Z (pass) OpenCodeAPI MCP > listMCP returns error status for failed servers [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3426780Z (pass) OpenCodeAPI MCP > addMCP throws on 403 forbidden [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3427230Z (pass) OpenCodeAPI MCP > connectMCP with special characters in name [0.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3427750Z (pass) OpenCodeAPI MCP > disconnectMCP with special characters in name [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3429440Z (pass) OpenCodeAPI MCP > healthCheck returns healthy response [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3430130Z (pass) OpenCodeAPI MCP > healthCheck returns unhealthy on fetch error [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3431040Z (pass) OpenCodeAPI MCP > listProviders returns provider info [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3431740Z (pass) OpenCodeAPI MCP > getProviders returns provider IDs from listProviders [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3432380Z (pass) OpenCodeAPI MCP > createSession creates a new session [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3432950Z (pass) OpenCodeAPI MCP > deleteSession deletes a session [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3433240Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3433580Z ##[endgroup]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3433670Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3433890Z ##[group]src/api/__tests__/opencode.test.ts:
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3454750Z (pass) OpenCodeAPI constructor > uses default baseUrl when nothing configured
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3455300Z (pass) OpenCodeAPI constructor > uses provided baseUrl option [0.37ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3455730Z (pass) OpenCodeAPI constructor > strips trailing slash from baseUrl [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3456370Z (pass) OpenCodeAPI constructor > sends Authorization header when password is configured [0.02ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3456870Z (pass) OpenCodeAPI constructor > omits Authorization header when no password
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3457350Z (pass) OpenCodeAPI constructor > env OPENCODE_SERVER_PASSWORD is used as password [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3457910Z (pass) OpenCodeAPI.healthCheck > returns healthy:true when server responds ok [0.04ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3458410Z (pass) OpenCodeAPI.healthCheck > returns healthy:false on non-ok status [0.04ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3458870Z (pass) OpenCodeAPI.healthCheck > returns healthy:false when fetch throws [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3459340Z (pass) OpenCodeAPI sessions > createSession sends POST and returns session [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3459860Z (pass) OpenCodeAPI sessions > createSession throws on non-ok [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3460280Z (pass) OpenCodeAPI sessions > listSessions returns array [0.06ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3461020Z (pass) OpenCodeAPI sessions > getSession returns matching session [0.07ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3461480Z (pass) OpenCodeAPI sessions > getSession throws on non-ok [0.01ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3461860Z (pass) OpenCodeAPI sessions > deleteSession returns boolean [0.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3462260Z (pass) OpenCodeAPI sessions > deleteSession throws on non-ok [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3462630Z (pass) OpenCodeAPI sessions > abortSession sends POST [0.04ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3463960Z (pass) OpenCodeAPI messages > sendMessage returns prompt result [0.11ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3464790Z (pass) OpenCodeAPI messages > sendMessage sends POST with text part [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3465290Z (pass) OpenCodeAPI messages > sendMessage passes system option into body [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3465810Z (pass) OpenCodeAPI messages > sendMessage throws on non-ok [0.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3466580Z (pass) OpenCodeAPI messages > listMessages returns array [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3467250Z (pass) OpenCodeAPI messages > listMessages appends limit query param when specified [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3467770Z (pass) OpenCodeAPI providers > listProviders returns all/connected/defaults [0.04ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3468230Z (pass) OpenCodeAPI providers > getAuthMethods returns method map [0.04ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3468800Z (pass) OpenCodeAPI providers > setAuth sends PUT with API key in body [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3469250Z (pass) OpenCodeAPI providers > getProviders returns flat array of provider IDs
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3473630Z (pass) OpenCodeAPI.chat > returns assistant content from response parts [0.19ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3474070Z (pass) OpenCodeAPI.chat > model field in response reflects provider/model [0.29ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3475210Z (pass) OpenCodeAPI.chat > includes system message as system prompt [0.01ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3476770Z (pass) OpenCodeAPI.chat > multiple user messages: prompt contains all content [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3478170Z (pass) OpenCodeAPI.chat > model string with provider/model format is parsed correctly [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3478790Z (pass) OpenCodeAPI.chat > throws when no user message in input [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3479220Z (pass) OpenCodeAPI.chat > throws when only system message provided [0.01ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3480240Z (pass) OpenCodeAPI.chat > handles very long message content [0.11ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3494210Z (pass) OpenCodeAPI.streamChat > yields SSE delta chunks in order [1.08ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3496290Z (pass) OpenCodeAPI.streamChat > yields content and text SSE fields [0.51ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3498660Z (pass) OpenCodeAPI.streamChat > falls back to chat() when SSE POST returns non-ok [0.19ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3500230Z (pass) OpenCodeAPI.streamChat > falls back to chat() when response body has no readable stream [0.09ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3505020Z [2026-06-27T09:32:40.350Z] [WARN] [airgent:api] Streaming failed: Error: network failure, falling back to non-streaming
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3505650Z (pass) OpenCodeAPI.streamChat > falls back to chat() on fetch error during streaming [0.50ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3507050Z (pass) OpenCodeAPI.streamChat > returns JSON body when response is not SSE content-type [0.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3507370Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3507600Z ##[endgroup]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3507770Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3508000Z ##[group]src/skills/__tests__/skills.test.ts:
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3525850Z (pass) SkillsManager > constructor loads index [0.04ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3526280Z (pass) SkillsManager > getIndex returns skill list [0.10ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3526690Z (pass) SkillsManager > getActiveSkills returns empty initially [0.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3527440Z (pass) SkillsManager > loadSkill loads a skill by name [0.05ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3527820Z (pass) SkillsManager > loadSkill returns null for unknown skill
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3528300Z (pass) SkillsManager > loadSkill caches after first load
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3528800Z (pass) SkillsManager > getActiveSkills includes loaded skills
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3530290Z (pass) SkillsManager > injectSkill replaces {{skill:name}} placeholder with skill content [0.12ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3530840Z (pass) SkillsManager > injectSkill removes placeholder for unknown skill [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3531300Z (pass) SkillsManager > injectSkill with no placeholder leaves prompt unchanged [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3531760Z (pass) SkillsManager > injectSkill with multiple placeholders replaces all [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3532200Z (pass) SkillsManager > getActiveSkills returns all loaded skill names [0.03ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3535460Z (pass) SkillsManager > loadSkill returns null for non-existent file [0.24ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3537020Z (pass) SkillsManager > loadSkill returns null for path outside skills directory [0.17ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3539260Z (pass) SkillsManager > handles malformed index.json gracefully [0.22ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3542300Z (pass) SkillsManager > handles missing index.json gracefully [0.24ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3543730Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3544000Z ##[endgroup]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3544380Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3544610Z ##[group]src/sync/__tests__/sync.test.ts:
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3571420Z (pass) DeviceSync > constructor creates sync directory
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3573170Z (pass) DeviceSync > initGit initializes git repository [1.44ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3575570Z (pass) DeviceSync > initGit creates .gitignore [0.16ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3580800Z (pass) DeviceSync > push exports data and runs git commands [0.55ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3584320Z (pass) DeviceSync > push with no data exports empty arrays [0.35ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3588840Z (pass) DeviceSync > pull imports data from export file [0.42ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3589750Z (pass) DeviceSync > pull handles missing export file gracefully [0.13ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3592180Z (pass) DeviceSync > pull with empty compressed array works [0.20ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3595160Z (pass) DeviceSync > git command failure throws error [0.21ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3598650Z (pass) DeviceSync > initGit handles existing git repository [0.41ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3602780Z (pass) DeviceSync > conflicting data during pull overwrites locally [0.32ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3632900Z (pass) DeviceSync > push with large data exports successfully [2.98ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3634870Z (pass) DeviceSync > git command result parsing returns stdout and stderr [0.32ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3637330Z (pass) DeviceSync > network failure during push is caught [0.22ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3638880Z (pass) DeviceSync > initGit with non-default remote URL [0.04ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3640150Z (pass) DeviceSync > sync dir is created even without git init [0.08ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3643210Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3643540Z ##[endgroup]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3643630Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3643870Z 21 tests failed:
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3646850Z (fail) copyToClipboard > OSC52 mode returns success when callback returns true
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3647600Z (fail) copyToClipboard > OSC52 mode falls through when callback returns false [2.44ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3648190Z (fail) copyToClipboard > OSC52 mode falls through when callback throws [2.22ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3648650Z (fail) copyToClipboard > pbcopy on macOS returns success with method pbcopy [0.49ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3649910Z (fail) copyToClipboard > pbcopy fall through when spawnSync throws on macOS [0.59ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3650580Z (fail) copyToClipboard > pbcopy fall through when status is non-zero on macOS [0.28ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3651120Z (fail) copyToClipboard > wl-copy on Linux Wayland returns success [0.22ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3651590Z (fail) copyToClipboard > wl-copy fall through on Wayland when spawnSync throws [0.19ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3652060Z (fail) copyToClipboard > xclip on Linux X11 returns success [0.19ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3652540Z (fail) copyToClipboard > xclip fall through to xsel when xclip spawnSync throws [0.17ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3653010Z (fail) copyToClipboard > xsel on Linux X11 returns success [0.16ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3653440Z (fail) copyToClipboard > xclip non-zero status falls through to xsel [0.20ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3654050Z (fail) copyToClipboard > fallback to temp file when all CLI methods fail [0.19ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3654620Z (fail) copyToClipboard > file fallback reports error when writeFileSync throws [0.21ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3655070Z (fail) copyToClipboard > empty string is copied successfully [0.17ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3655560Z (fail) copyToClipboard > very long string is copied successfully [0.23ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3656040Z (fail) copyToClipboard > all methods fail returns false with method file [0.16ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3656510Z (fail) copyToClipboard > Wayland wl-copy non-zero status falls through to xclip [0.21ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3658430Z (fail) copyToClipboard > no OSC52 callback skips OSC52 path [0.16ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3658840Z (fail) copyToClipboard > file fallback method includes filePath in result [0.22ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3659410Z (fail) copyToClipboard > multiple consecutive calls work [0.18ms]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3659630Z 
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3659680Z  803 pass
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3659800Z  21 fail
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3659920Z  1322 expect() calls
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3660080Z Ran 824 tests across 28 files. [3.66s]
+test (macos-latest, 1.2.x)	Run tests	2026-06-27T09:32:40.3668260Z ##[error]Process completed with exit code 1.
