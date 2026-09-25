@@ -291,6 +291,18 @@ export class Storage {
 		return this.db.prepare("SELECT * FROM memories WHERE id = ?").get(id) as MemoryRow | null;
 	}
 
+	countMemories(): number {
+		const row = this.db.prepare("SELECT COUNT(*) as count FROM memories").get() as {
+			count: number;
+		};
+		return row?.count ?? 0;
+	}
+
+	getAllMemoryIds(): string[] {
+		const rows = this.db.prepare("SELECT id FROM memories").all() as Array<{ id: string }>;
+		return rows.map((r) => r.id);
+	}
+
 	searchMemories(tags: string[], minConfidence = 0.3): MemoryRow[] {
 		if (tags.length === 0) return [];
 
