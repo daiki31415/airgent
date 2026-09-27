@@ -8,7 +8,6 @@
 import type { CompressionManager } from "../compression";
 import type { MemorySystem } from "../memory";
 import type { SkillsManager } from "../skills";
-import type { CompressedEntry } from "../types";
 import { BaseAgent } from "./base";
 
 export class WorkerAgent extends BaseAgent {
@@ -50,10 +49,15 @@ export class WorkerAgent extends BaseAgent {
 		return this.skills;
 	}
 
-	async execute(prompt: string, onChunk?: (chunk: string) => void): Promise<{ content: string }> {
+	async execute(
+		prompt: string,
+		onChunk?: (chunk: string) => void,
+		topics?: string[],
+	): Promise<{ content: string }> {
 		this.logger.info(`Executing: ${prompt.slice(0, 100)}`);
 
-		const decompressed = this.findRelevantContext(prompt);
+		const decompressed =
+			topics && topics.length > 0 ? this.compression.findForDecompression({ topics }) : [];
 		let contextEnhancement = "";
 		if (decompressed.length > 0) {
 			contextEnhancement =
@@ -96,54 +100,5 @@ export class WorkerAgent extends BaseAgent {
 			this.estimateTokens(result),
 		);
 		return { content: result };
-	}
-
-	private findRelevantContext(prompt: string): CompressedEntry[] {
-		const topics = this.extractTopics(prompt);
-		return topics.length > 0 ? this.compression.findForDecompression({ topics }) : [];
-	}
-
-	private extractTopics(text: string): string[] {
-		const topics = new Set<string>();
-
-		const patterns = [
-			// error: TypeError, bug: null-pointer, fix: memory-leak, issue: race-condition
-			/(?:error|bug|fix|issue):\s*([a-zA-Z_][a-zA-Z0-9_-]*)/gi,
-
-			// in/of/for the file.ts, in src/utils/helper.ts, for myFunction
-			/(?:in|of|for)\s+(?:the\s+)?([a-zA-Z_][a-zA-Z0-9_-]*(?:[/.][a-zA-Z_][a-zA-Z0-9_-]*)*)/g,
-
-			// Common error types
-			/\b(?:TypeError|ReferenceError|SyntaxError|RangeError|Error|Exception)\w*/g,
-
-			// camelCase identifiers (function names, variables)
-			/\b[a-z]+(?:[A-Z][a-z0-9]+)+\b/g,
-
-			// kebab-case identifiers (file names, CSS classes, CLI flags)
-			/\b[a-z]+(?:-[a-z0-9]+)+\b/g,
-
-			// snake_case identifiers (Python, configs, env vars)
-			/\b[a-z_][a-z0-9_]*\b/g,
-
-			// File paths with extensions
-			/\b[a-zA-Z_][a-zA-Z0-9_\-/]*\.(?:ts|js|tsx|jsx|json|md|py|rs|go|java|cpp|h)\b/g,
-
-			// Function calls: foo(), bar.baz(), obj.method()
-			/\b[a-zA-Z_][a-zA-Z0-9_.]*\(\)/g,
-		];
-
-		for (const pattern of patterns) {
-			for (const match of text.matchAll(pattern)) {
-				if (match) {
-					const captured = match[match.length - 1] || match[0];
-					if (captured && captured.length > 2) {
-						// Normalize: lowercase, strip trailing ()
-						const normalized = captured.replace(/\(\)$/, "").toLowerCase();
-						topics.add(normalized);
-					}
-				}
-			}
-		}
-		return Array.from(topics);
 	}
 }
