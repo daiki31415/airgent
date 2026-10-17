@@ -338,7 +338,7 @@ describe("WorkerAgent with context enhancement", () => {
 		const { worker, api } = createWorker({ compression, chatResponse: "done" });
 		worker.init(sampleContext());
 
-		await worker.execute("bug: TypeError in src/auth.ts");
+		await worker.execute("bug: TypeError in src/auth.ts", undefined, ["auth", "login"]);
 
 		// biome-ignore lint/suspicious/noExplicitAny: accessing mock internals from bun:test
 		const callArgs = (api.chat as any).mock.calls[0];
@@ -358,32 +358,6 @@ describe("WorkerAgent with context enhancement", () => {
 		const fullPrompt = callArgs[1][1].content;
 		// Should not contain "Relevant past context" header
 		expect(fullPrompt).not.toContain("Relevant past context");
-	});
-});
-
-describe("WorkerAgent.extractTopics", () => {
-	test("extracts topics from patterns in prompt", async () => {
-		// extractTopics is private; we test indirectly via execute
-		const { worker, api } = createWorker({ chatResponse: "done" });
-		worker.init(sampleContext());
-
-		await worker.execute("fix bug: TypeError in src/util.ts");
-
-		const callArgs = (api.chat as any).mock.calls[0];
-		const prompt = callArgs[1][1].content;
-		expect(prompt).toContain("TypeError");
-		expect(prompt).toContain("src/util.ts");
-	});
-
-	test("extracts error type keywords", async () => {
-		const { worker, api } = createWorker({ chatResponse: "done" });
-		worker.init(sampleContext());
-
-		await worker.execute("ReferenceError in test.js");
-
-		const callArgs = (api.chat as any).mock.calls[0];
-		const prompt = callArgs[1][1].content;
-		expect(prompt).toContain("ReferenceError");
 	});
 });
 

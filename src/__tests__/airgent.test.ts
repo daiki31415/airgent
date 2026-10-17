@@ -13,7 +13,7 @@
 
 import { beforeEach, describe, expect, test } from "bun:test";
 import { Airgent as AirgentClass } from "../Airgent";
-import type { AgentContext, ModelEntry, StructuredMemory } from "../types";
+import type { AgentContext, ModelEntry } from "../types";
 import {
 	anyArr,
 	anyStr,
@@ -789,29 +789,14 @@ describe("Airgent — buildAgentContext", () => {
 		expect(ctx.systemPrompt).toBe("custom prompt");
 	});
 
-	test("includes relevant memories", () => {
-		const mems: StructuredMemory[] = [
-			{
-				id: "m1",
-				sessionId: "sess-1",
-				bug: "b",
-				investigation: "",
-				root_cause: "",
-				fix: "f",
-				reason: "",
-				evidence: [],
-				confidence: 0.9,
-				tags: [],
-				files: [],
-				commands: [],
-				created: 0,
-				updated: 0,
-				links: [],
-			},
-		];
-		mocks.memory.findRelevant = spy(() => mems) as any;
+	test("relevantMemories starts empty (topics are not known until the clarify pipeline node runs)", () => {
+		// buildAgentContext runs before the "clarify" pipeline node, so no
+		// clarifiedTopics exist yet. It deliberately does not call
+		// memory.findRelevant([task]) here, since passing the raw task string
+		// as a single tag would never match memory_tags anyway.
 		const ctx: AgentContext = agent.buildAgentContext("task");
-		expect(ctx.memory.relevantMemories).toEqual(mems);
+		expect(ctx.memory.relevantMemories).toEqual([]);
+		expect(callCount(mocks.memory.findRelevant)).toBe(0);
 	});
 
 	test("includes skillIndex", () => {
@@ -925,6 +910,7 @@ describe("Airgent — Pipeline Handlers", () => {
 	});
 
 	test("generate handler includes relevant memories", async () => {
+		agent.pipelineData.clarifiedTopics = "auth,login";
 		mocks.memory.findRelevant = spy(() => [
 			{
 				id: "m1",
@@ -948,6 +934,7 @@ describe("Airgent — Pipeline Handlers", () => {
 		const h = handlers.get("generate")!;
 		await h(new Map());
 		expect(wasCalled(mocks.worker.execute)).toBe(true);
+		expect(calledWith(mocks.memory.findRelevant, ["auth", "login"])).toBe(true);
 	});
 
 	test("test handler skips when no generatedOutput", async () => {

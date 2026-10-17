@@ -21,6 +21,7 @@ Respond with **valid JSON only**, no markdown fences, no commentary:
   "goal": "string",
   "constraints": ["string", "..."],
   "affectedFiles": ["string", "..."],
+  "topics": ["string", "..."],
   "ambiguities": ["string", "..."],
   "priority": "critical | standard | exploratory"
 }
@@ -33,6 +34,7 @@ If the request is a greeting, chit-chat, or contains zero actionable content, re
   "goal": "non-task: greeting or chit-chat",
   "constraints": [],
   "affectedFiles": [],
+  "topics": [],
   "ambiguities": ["No actionable task detected"],
   "priority": "exploratory"
 }
@@ -44,6 +46,7 @@ If the request is a greeting, chit-chat, or contains zero actionable content, re
 - `goal` must be a single sentence, not a paragraph.
 - `constraints` can be empty array `[]` if none detected.
 - `affectedFiles` should be file paths or module names. Empty `[]` if unknown.
+- `topics` is 3-6 short lowercase keywords describing the task domain (e.g. "login", "auth", "ui") — used for memory search, not file paths. Avoid generic words ("the", "fix", "bug").
 - `ambiguities` is critical — list everything that would block precise execution.
 - `priority` helps downstream decide depth of effort.
 - If the request references code, try to infer the file or area from context.
@@ -59,6 +62,7 @@ If the request is a greeting, chit-chat, or contains zero actionable content, re
   "goal": "Fix login button responsiveness and functionality on mobile devices",
   "constraints": ["Must maintain desktop behavior", "Cross-browser compatibility"],
   "affectedFiles": ["src/components/LoginButton.tsx", "src/styles/login.css"],
+  "topics": ["login", "button", "mobile", "responsiveness"],
   "ambiguities": ["What specific mobile devices or viewport widths?", "Is the issue CSS-only or JS logic?", "Any error messages in console?"],
   "priority": "standard"
 }
@@ -72,6 +76,7 @@ If the request is a greeting, chit-chat, or contains zero actionable content, re
   "goal": "non-task: greeting or chit-chat",
   "constraints": [],
   "affectedFiles": [],
+  "topics": [],
   "ambiguities": ["No actionable task detected"],
   "priority": "exploratory"
 }
