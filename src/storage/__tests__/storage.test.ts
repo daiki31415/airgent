@@ -78,6 +78,32 @@ describe("Storage memories", () => {
 		expect(mem?.confidence).toBe(0.9);
 	});
 
+	test("inserts every tag across the batch chunk boundary", () => {
+		// Storage inserts tags in chunks of 50: check below, at, just over, and well over the boundary.
+		for (const count of [1, 49, 50, 51, 120]) {
+			const s = createStorage();
+			const tags = Array.from({ length: count }, (_, i) => `tag-${i}`);
+			s.insertMemory({
+				id: `mem-${count}`,
+				sessionId: "s1",
+				bug: "b",
+				investigation: "",
+				rootCause: "",
+				fix: "f",
+				reason: "",
+				confidence: 0.9,
+				tags,
+				files: [],
+				commands: [],
+			});
+			// The first, the last, and a tag from the middle must all be searchable.
+			for (const tag of [tags[0], tags[count - 1], tags[Math.floor(count / 2)]]) {
+				const found = s.searchMemories([tag as string]);
+				expect(found.map((m) => m.id)).toContain(`mem-${count}`);
+			}
+		}
+	});
+
 	test("getMemory returns null for missing id", () => {
 		const s = createStorage();
 		expect(s.getMemory("nonexistent")).toBeNull();
