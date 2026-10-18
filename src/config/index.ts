@@ -16,6 +16,7 @@ import type {
 	Persona,
 	Settings,
 } from "../types";
+import { MODEL_ROLES } from "../types";
 import { rootLogger, sanitizeError } from "../utils/logger";
 
 const DEFAULT_CONFIG_DIR = path.join(homedir(), ".config", "Airgent");
@@ -120,7 +121,9 @@ export class ConfigManager {
 		const filePath = path.join(this.configDir, "models.json");
 		const raw = this.readOrCreate(filePath, JSON.stringify(DEFAULT_MODELS, null, 2));
 		try {
-			return JSON.parse(raw);
+			// Merge with defaults so a models.json written before a role existed
+			// still yields an entry for it (empty, so needsConfig() reports it).
+			return { ...DEFAULT_MODELS, ...JSON.parse(raw) };
 		} catch {
 			this.logger.warn("Invalid models.json, using defaults");
 			return DEFAULT_MODELS;
@@ -141,18 +144,7 @@ export class ConfigManager {
 	needsConfig(): boolean {
 		const m = this.cache?.models;
 		if (!m) return true;
-		return (
-			!m.planner?.provider ||
-			!m.planner?.model ||
-			!m.generate?.provider ||
-			!m.generate?.model ||
-			!m.compression?.provider ||
-			!m.compression?.model ||
-			!m.validation?.provider ||
-			!m.validation?.model ||
-			!m.watchdog?.provider ||
-			!m.watchdog?.model
-		);
+		return MODEL_ROLES.some((role) => !m[role]?.provider || !m[role]?.model);
 	}
 
 	saveSettings(partial: Partial<Settings>): void {

@@ -11,20 +11,23 @@ import type { ConfigManager } from "../config/index";
 import type { PipelineEngine } from "../pipeline/index";
 import type { Storage } from "../storage/index";
 import type { DeviceSync } from "../sync/index";
-import type { MCPServerConfig, ModelConfig, ModelEntry, Settings } from "../types";
+import type { MCPServerConfig, ModelConfig, ModelEntry, ModelRole, Settings } from "../types";
+import { MODEL_ROLES } from "../types";
 import type { StatusInfo, UIManager } from "../ui/index";
 import { sanitizeError } from "../utils/logger";
 import { smartCat } from "../utils/smart-cat";
 
-type ModelRole = "planner" | "generate" | "compression" | "validation" | "watchdog";
+// Typed as Record<ModelRole, string>: adding a role to MODEL_ROLES is a compile
+// error until its label is added here.
+const ROLE_LABELS: Record<ModelRole, string> = {
+	planner: "Planner (task decomposition)",
+	generate: "Generate (primary generation)",
+	compression: "Compression (context compression)",
+	validation: "Validation (quality check)",
+	watchdog: "Watchdog (error detection)",
+};
 
-const ROLE_CONFIGS: Array<{ key: ModelRole; label: string }> = [
-	{ key: "planner", label: "Planner (task decomposition)" },
-	{ key: "generate", label: "Generate (primary generation)" },
-	{ key: "compression", label: "Compression (context compression)" },
-	{ key: "validation", label: "Validation (quality check)" },
-	{ key: "watchdog", label: "Watchdog (error detection)" },
-];
+const ROLE_CONFIGS = MODEL_ROLES.map((key) => ({ key, label: ROLE_LABELS[key] }));
 
 export interface AgentHandle {
 	configManager: ConfigManager;
