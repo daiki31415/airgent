@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -21,6 +21,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -40,7 +43,29 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Run lint
+        id: lint
         run: bun run lint
+        continue-on-error: true
+
+      - name: Auto-fix lint (Ubuntu only, PR only, non-fork only)
+        if: steps.lint.outcome == 'failure' && matrix.os == 'ubuntu-latest' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          BIOME_EXIT=0
+          bunx @biomejs/biome check --write . || BIOME_EXIT=$?
+          if [ -n "$(git status --porcelain)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git commit -m "style: auto-fix lint issues via biome [ci]"
+            git push origin "HEAD:refs/heads/$HEAD_REF"
+          fi
+          exit $BIOME_EXIT
+
+      - name: Fail if lint failed
+        if: steps.lint.outcome == 'failure'
+        run: exit 1
 
       - name: Run typecheck
         run: bun run typecheck

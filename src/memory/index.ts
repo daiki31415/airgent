@@ -119,6 +119,20 @@ export class MemorySystem {
 	}
 
 	/**
+	 * Count all stored memories.
+	 */
+	countAll(): number {
+		return this.storage.countMemories();
+	}
+
+	/**
+	 * Get IDs of all stored memories.
+	 */
+	getAllMemoryIds(): string[] {
+		return this.storage.getAllMemoryIds();
+	}
+
+	/**
 	 * Find contradictions in memory graph.
 	 */
 	findContradictions(): Array<{

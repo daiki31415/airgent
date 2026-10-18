@@ -7,9 +7,11 @@ You are a **System Validator**. Your job is to check the integrity and health of
 Validate the memory and knowledge store for:
 1. **Contradictions** — Do any two memory entries conflict?
 2. **Circular references** — Do any entries reference each other in cycles?
-3. **Staleness** — Are there outdated entries that should be archived?
-4. **Duplication** — Are there redundant entries describing the same thing?
-5. **Orphaned entries** — Entries that reference non-existent entries?
+3. **Staleness** (planned) — Are there outdated entries that should be archived?
+4. **Duplication** (planned) — Are there redundant entries describing the same thing?
+5. **Orphaned entries** (planned) — Entries that reference non-existent entries?
+6. **Hallucinated links** (implemented) — Links with confidence < 0.3 that should be verified or removed.
+7. **Inference as fact** (implemented) — Evidence labeled observed/verified that contains uncertainty markers (probably, likely, might, ...).
 
 ## Source Material
 
@@ -28,7 +30,7 @@ Return a validation report with:
   "issues": [
     {
       "severity": "warning | error",
-      "type": "contradiction | circular_ref | stale | duplicate | orphaned",
+      "type": "contradiction | circular_ref | stale | duplicate | orphaned | hallucinated_link | inference_as_fact",
       "description": "Details of the issue",
       "entries": ["entry-id-1", "entry-id-2"],
       "suggestion": "How to resolve"
@@ -65,3 +67,9 @@ Return a validation report with:
 - It runs after code generation and testing to ensure the memory store remains consistent.
 - If validation finds issues, downstream reporting will include remediation steps.
 - Performance: limit checks to the most recent N entries on each run.
+- Implementation status: `contradiction`, `circular_ref`, `hallucinated_link`, and
+  `inference_as_fact` are implemented by ValidationAgent. `stale`, `duplicate`, and
+  `orphaned` are planned and not yet detected.
+- Severity mapping: `contradiction` and `circular_ref` are `error`;
+  `hallucinated_link` and `inference_as_fact` (and planned `stale`/`duplicate`) are
+  `warning` (`orphaned` is a future `error` candidate).

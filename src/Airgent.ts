@@ -87,6 +87,7 @@ export class Airgent {
 	private logger = rootLogger.child("airgent");
 	pipelineData: {
 		clarifiedTask?: string;
+		clarifiedTopics?: string;
 		plan?: string;
 		generatedOutput?: string;
 		testResult?: string;
@@ -244,7 +245,13 @@ export class Airgent {
 
 	buildAgentContext(task: string): AgentContext {
 		const { prompt } = this.promptManager.buildSystemPrompt();
-		const memories = this.memory.findRelevant([task]);
+		// No topics available yet at this point in the pipeline (clarify runs later
+		// and populates pipelineData.clarifiedTopics). findRelevant([task]) would
+		// pass the raw task as a single tag, which memory_tags never matches, so
+		// we start with no relevant memories here rather than a call that's
+		// effectively always empty anyway. The generate handler performs the real
+		// memory lookup once clarifiedTopics is available.
+		const memories: AgentContext["memory"]["relevantMemories"] = [];
 
 		return {
 			sessionId: this.sessionId!,

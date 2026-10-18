@@ -50,12 +50,13 @@ export function registerPipelineHandlers(agent: PipelineHandle): void {
 				: undefined,
 		});
 
-		const parsed = safeParseJSON<{ goal?: string }>(content);
+		const parsed = safeParseJSON<{ goal?: string; topics?: string[] }>(content);
 		if (!parsed?.goal) {
 			agent.ui.log("warn", "clarify", "LLM returned invalid JSON for clarification");
 		}
 
 		agent.pipelineData.clarifiedTask = content;
+		agent.pipelineData.clarifiedTopics = parsed?.topics?.filter(Boolean).join(",") ?? "";
 		if (!agent.config.settings.showPipelineProgress) {
 			agent.ui.log("info", "clarify", "Analyzed task");
 		}
@@ -96,7 +97,10 @@ export function registerPipelineHandlers(agent: PipelineHandle): void {
 	});
 
 	agent.pipeline.registerHandler("generate", async () => {
-		const memories = agent.memory.findRelevant([agent.currentTask]).slice(0, 3);
+		const topics = agent.pipelineData.clarifiedTopics
+			? agent.pipelineData.clarifiedTopics.split(",").filter(Boolean)
+			: [];
+		const memories = topics.length > 0 ? agent.memory.findRelevant(topics).slice(0, 3) : [];
 		const memoryStr = memories.map((m) => `- ${m.bug}: ${m.fix}`).join("\n");
 		const parts = [
 			memoryStr ? `Relevant context:\n${memoryStr}` : "",
@@ -117,6 +121,7 @@ export function registerPipelineHandlers(agent: PipelineHandle): void {
 						}
 					}
 				: undefined,
+			topics,
 		);
 		agent.pipelineData.generatedOutput = result.content;
 		if (!agent.config.settings.showPipelineProgress) {

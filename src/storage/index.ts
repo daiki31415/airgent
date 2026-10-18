@@ -5,7 +5,7 @@
  * Merged from 5 separate DBs into one.
  */
 
-import { Database } from "bun:sqlite";
+import { Database, type Statement } from "bun:sqlite";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
@@ -63,9 +63,14 @@ export interface CompressedRow {
 
 const STORAGE_DIR = path.join(os.homedir(), ".config", "Airgent", "memory");
 
+// Max tags per multi-row INSERT. Keeps the number of distinct SQL strings
+// (and therefore cached statements) bounded at this value.
+const TAG_INSERT_CHUNK = 50;
+
 export class Storage {
 	private db: Database;
 	private logger = rootLogger.child("db");
+	private stmtCache = new Map<string, Statement>();
 
 	constructor(dbPath?: string) {
 		const finalPath = dbPath || path.join(STORAGE_DIR, "airgent.db");
@@ -80,6 +85,21 @@ export class Storage {
 
 	transaction<T>(fn: () => T): T {
 		return this.db.transaction(fn)();
+	}
+
+	/**
+	 * Prepare a statement once per SQL string and reuse it.
+	 * Only for SQL whose text is fixed (or has a small bounded set of variants).
+	 * Statements whose text grows with the input, such as IN (...) or
+	 * OR-joined LIKE lists, must use this.db.prepare() so the cache stays bounded.
+	 */
+	private prep(sql: string): Statement {
+		let stmt = this.stmtCache.get(sql);
+		if (!stmt) {
+			stmt = this.db.prepare(sql);
+			this.stmtCache.set(sql, stmt);
+		}
+		return stmt;
 	}
 
 	private init(): void {
@@ -224,21 +244,19 @@ export class Storage {
 		content: string,
 		tokenCount = 0,
 	): void {
-		this.db
-			.prepare(
-				"INSERT INTO raw_logs (id, session_id, agent_role, content, timestamp, token_count) VALUES (?, ?, ?, ?, ?, ?)",
-			)
-			.run(id, sessionId, agentRole, content, Date.now(), tokenCount);
+		this.prep(
+			"INSERT INTO raw_logs (id, session_id, agent_role, content, timestamp, token_count) VALUES (?, ?, ?, ?, ?, ?)",
+		).run(id, sessionId, agentRole, content, Date.now(), tokenCount);
 	}
 
 	getRawLogs(sessionId: string, limit = 100): RawLogRow[] {
-		return this.db
-			.prepare("SELECT * FROM raw_logs WHERE session_id = ? ORDER BY timestamp DESC LIMIT ?")
-			.all(sessionId, limit) as RawLogRow[];
+		return this.prep(
+			"SELECT * FROM raw_logs WHERE session_id = ? ORDER BY timestamp DESC LIMIT ?",
+		).all(sessionId, limit) as RawLogRow[];
 	}
 
 	deleteRawLogsOlderThan(timestamp: number): void {
-		this.db.prepare("DELETE FROM raw_logs WHERE timestamp < ?").run(timestamp);
+		this.prep("DELETE FROM raw_logs WHERE timestamp < ?").run(timestamp);
 	}
 
 	// ---- Memories ----
@@ -257,38 +275,51 @@ export class Storage {
 		commands: string[];
 	}): void {
 		const now = Date.now();
-		this.db
-			.prepare(`
+		this.prep(`
       INSERT INTO memories (id,session_id,bug,investigation,root_cause,fix,reason,confidence,tags,files,commands,created,updated)
       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
-    `)
-			.run(
-				m.id,
-				m.sessionId,
-				m.bug,
-				m.investigation,
-				m.rootCause,
-				m.fix,
-				m.reason,
-				m.confidence,
-				JSON.stringify(m.tags),
-				JSON.stringify(m.files),
-				JSON.stringify(m.commands),
-				now,
-				now,
-			);
+    `).run(
+			m.id,
+			m.sessionId,
+			m.bug,
+			m.investigation,
+			m.rootCause,
+			m.fix,
+			m.reason,
+			m.confidence,
+			JSON.stringify(m.tags),
+			JSON.stringify(m.files),
+			JSON.stringify(m.commands),
+			now,
+			now,
+		);
 
 		// Insert tags into memory_tags junction table for efficient search
 		if (m.tags.length > 0) {
-			const stmt = this.db.prepare("INSERT INTO memory_tags (memory_id, tag) VALUES (?, ?)");
-			for (const tag of m.tags) {
-				stmt.run(m.id, tag);
+			for (let i = 0; i < m.tags.length; i += TAG_INSERT_CHUNK) {
+				const chunk = m.tags.slice(i, i + TAG_INSERT_CHUNK);
+				const placeholders = chunk.map(() => "(?, ?)").join(", ");
+				this.prep(`INSERT INTO memory_tags (memory_id, tag) VALUES ${placeholders}`).run(
+					...chunk.flatMap((tag) => [m.id, tag]),
+				);
 			}
 		}
 	}
 
 	getMemory(id: string): MemoryRow | null {
-		return this.db.prepare("SELECT * FROM memories WHERE id = ?").get(id) as MemoryRow | null;
+		return this.prep("SELECT * FROM memories WHERE id = ?").get(id) as MemoryRow | null;
+	}
+
+	countMemories(): number {
+		const row = this.prep("SELECT COUNT(*) as count FROM memories").get() as {
+			count: number;
+		};
+		return row?.count ?? 0;
+	}
+
+	getAllMemoryIds(): string[] {
+		const rows = this.prep("SELECT id FROM memories").all() as Array<{ id: string }>;
+		return rows.map((r) => r.id);
 	}
 
 	searchMemories(tags: string[], minConfidence = 0.3): MemoryRow[] {
@@ -311,21 +342,18 @@ export class Storage {
 	getLinkedMemories(
 		memoryId: string,
 	): (MemoryRow & { link_type: string; link_confidence: number })[] {
-		return this.db
-			.prepare(`
+		return this.prep(`
       SELECT m.*, l.type as link_type, l.confidence as link_confidence
       FROM memories m JOIN memory_links l ON (l.target_id = m.id OR l.source_id = m.id)
       WHERE (l.source_id = ? OR l.target_id = ?) AND l.confidence >= 0.5
-    `)
-			.all(memoryId, memoryId) as (MemoryRow & {
+    `).all(memoryId, memoryId) as (MemoryRow & {
 			link_type: string;
 			link_confidence: number;
 		})[];
 	}
 
 	getMemoryLinks(memoryId: string): Array<{ type: string; target: string; confidence: number }> {
-		return this.db
-			.prepare(`
+		return this.prep(`
       SELECT type, target_id as target, confidence
       FROM memory_links
       WHERE source_id = ?
@@ -333,8 +361,7 @@ export class Storage {
       SELECT type, source_id as target, confidence
       FROM memory_links
       WHERE target_id = ?
-    `)
-			.all(memoryId, memoryId) as Array<{
+    `).all(memoryId, memoryId) as Array<{
 			type: string;
 			target: string;
 			confidence: number;
@@ -348,11 +375,9 @@ export class Storage {
 		type: string,
 		confidence: number,
 	): void {
-		this.db
-			.prepare(
-				"INSERT INTO memory_links (id, source_id, target_id, type, confidence) VALUES (?, ?, ?, ?, ?)",
-			)
-			.run(id, sourceId, targetId, type, confidence);
+		this.prep(
+			"INSERT INTO memory_links (id, source_id, target_id, type, confidence) VALUES (?, ?, ?, ?, ?)",
+		).run(id, sourceId, targetId, type, confidence);
 	}
 
 	insertEvidence(
@@ -362,11 +387,9 @@ export class Storage {
 		content: string,
 		source: string,
 	): void {
-		this.db
-			.prepare(
-				"INSERT INTO evidence (id, memory_id, type, content, source, timestamp) VALUES (?, ?, ?, ?, ?, ?)",
-			)
-			.run(id, memoryId, type, content, source, Date.now());
+		this.prep(
+			"INSERT INTO evidence (id, memory_id, type, content, source, timestamp) VALUES (?, ?, ?, ?, ?, ?)",
+		).run(id, memoryId, type, content, source, Date.now());
 	}
 
 	getEvidence(memoryId: string): Array<{
@@ -376,9 +399,9 @@ export class Storage {
 		source: string;
 		timestamp: number;
 	}> {
-		return this.db
-			.prepare("SELECT * FROM evidence WHERE memory_id = ? ORDER BY timestamp")
-			.all(memoryId) as Array<{
+		return this.prep("SELECT * FROM evidence WHERE memory_id = ? ORDER BY timestamp").all(
+			memoryId,
+		) as Array<{
 			id: string;
 			type: string;
 			content: string;
@@ -393,14 +416,12 @@ export class Storage {
 		m2_id: string;
 		m2_cause: string;
 	}> {
-		return this.db
-			.prepare(`
+		return this.prep(`
       SELECT m1.id as m1_id, m1.root_cause as m1_cause, m2.id as m2_id, m2.root_cause as m2_cause
       FROM memories m1 JOIN memory_links l ON l.source_id = m1.id
       JOIN memories m2 ON m2.id = l.target_id
       WHERE l.type = 'same_cause' AND m1.root_cause != m2.root_cause AND l.confidence > 0.5
-    `)
-			.all() as Array<{
+    `).all() as Array<{
 			m1_id: string;
 			m1_cause: string;
 			m2_id: string;
@@ -413,13 +434,11 @@ export class Storage {
 		target_id: string;
 		cycle_point: string;
 	}> {
-		return this.db
-			.prepare(`
+		return this.prep(`
       SELECT l1.source_id, l1.target_id, l2.source_id as cycle_point
       FROM memory_links l1 JOIN memory_links l2 ON l1.target_id = l2.source_id
       WHERE l2.target_id = l1.source_id AND l1.id < l2.id
-    `)
-			.all() as Array<{
+    `).all() as Array<{
 			source_id: string;
 			target_id: string;
 			cycle_point: string;
@@ -429,25 +448,25 @@ export class Storage {
 	// ---- Sessions ----
 
 	createSession(id: string, model?: string): void {
-		this.db
-			.prepare(
-				"INSERT INTO sessions (id, start_time, status, model_used) VALUES (?, ?, 'active', ?)",
-			)
-			.run(id, Date.now(), model || "unknown");
+		this.prep(
+			"INSERT INTO sessions (id, start_time, status, model_used) VALUES (?, ?, 'active', ?)",
+		).run(id, Date.now(), model || "unknown");
 	}
 
 	endSession(id: string, status: string): void {
-		this.db
-			.prepare("UPDATE sessions SET end_time = ?, status = ? WHERE id = ?")
-			.run(Date.now(), status, id);
+		this.prep("UPDATE sessions SET end_time = ?, status = ? WHERE id = ?").run(
+			Date.now(),
+			status,
+			id,
+		);
 	}
 
 	getSession(id: string): SessionRow | null {
-		return this.db.prepare("SELECT * FROM sessions WHERE id = ?").get(id) as SessionRow | null;
+		return this.prep("SELECT * FROM sessions WHERE id = ?").get(id) as SessionRow | null;
 	}
 
 	getActiveSessions(): SessionRow[] {
-		return this.db.prepare("SELECT * FROM sessions WHERE status = 'active'").all() as SessionRow[];
+		return this.prep("SELECT * FROM sessions WHERE status = 'active'").all() as SessionRow[];
 	}
 
 	addSessionMessage(
@@ -457,11 +476,9 @@ export class Storage {
 		content: string,
 		tokenCount = 0,
 	): void {
-		this.db
-			.prepare(
-				"INSERT INTO session_messages (id, session_id, role, content, timestamp, token_count) VALUES (?, ?, ?, ?, ?, ?)",
-			)
-			.run(id, sessionId, role, content, Date.now(), tokenCount);
+		this.prep(
+			"INSERT INTO session_messages (id, session_id, role, content, timestamp, token_count) VALUES (?, ?, ?, ?, ?, ?)",
+		).run(id, sessionId, role, content, Date.now(), tokenCount);
 	}
 
 	// ---- Compressed Entries ----
@@ -480,25 +497,23 @@ export class Storage {
 		tokenCount: number;
 		compressedContent: string;
 	}): void {
-		this.db
-			.prepare(`
+		this.prep(`
       INSERT INTO compressed_entries (id,original_id,title,topics,timestamp,entities,files,commands,error_keywords,importance_score,token_count,compressed_content)
       VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
-    `)
-			.run(
-				e.id,
-				e.originalId,
-				e.title,
-				JSON.stringify(e.topics),
-				e.timestamp,
-				JSON.stringify(e.entities),
-				JSON.stringify(e.files),
-				JSON.stringify(e.commands),
-				JSON.stringify(e.errorKeywords),
-				e.importanceScore,
-				e.tokenCount,
-				e.compressedContent,
-			);
+    `).run(
+			e.id,
+			e.originalId,
+			e.title,
+			JSON.stringify(e.topics),
+			e.timestamp,
+			JSON.stringify(e.entities),
+			JSON.stringify(e.files),
+			JSON.stringify(e.commands),
+			JSON.stringify(e.errorKeywords),
+			e.importanceScore,
+			e.tokenCount,
+			e.compressedContent,
+		);
 	}
 
 	insertCompressedEntry(e: {
@@ -527,24 +542,22 @@ export class Storage {
 	}
 
 	getCompressedByOriginalId(originalId: string): CompressedRow | null {
-		return this.db
-			.prepare("SELECT * FROM compressed_entries WHERE original_id = ?")
-			.get(originalId) as CompressedRow | null;
+		return this.prep("SELECT * FROM compressed_entries WHERE original_id = ?").get(
+			originalId,
+		) as CompressedRow | null;
 	}
 
 	// ---- Metadata ----
 
 	setMetadata(key: string, value: string): void {
 		const now = Date.now();
-		this.db
-			.prepare(
-				"INSERT INTO metadata (key, value, updated) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET value = ?, updated = ?",
-			)
-			.run(key, value, now, value, now);
+		this.prep(
+			"INSERT INTO metadata (key, value, updated) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET value = ?, updated = ?",
+		).run(key, value, now, value, now);
 	}
 
 	getMetadata(key: string): string | null {
-		const row = this.db.prepare("SELECT value FROM metadata WHERE key = ?").get(key) as {
+		const row = this.prep("SELECT value FROM metadata WHERE key = ?").get(key) as {
 			value: string;
 		} | null;
 		return row?.value || null;
@@ -583,9 +596,9 @@ export class Storage {
 		tokenCount: number;
 		compressedContent: string;
 	}> {
-		const rows = this.db
-			.prepare("SELECT * FROM compressed_entries ORDER BY timestamp DESC")
-			.all() as Array<Record<string, unknown>>;
+		const rows = this.prep(
+			"SELECT * FROM compressed_entries ORDER BY timestamp DESC",
+		).all() as Array<Record<string, unknown>>;
 		return rows.map((r) => ({
 			id: this.stringVal(r.id),
 			originalId: this.stringVal(r.original_id),
@@ -603,7 +616,7 @@ export class Storage {
 	}
 
 	getAllMetadata(): Record<string, string> {
-		const rows = this.db.prepare("SELECT key, value FROM metadata").all() as Array<{
+		const rows = this.prep("SELECT key, value FROM metadata").all() as Array<{
 			key: string;
 			value: string;
 		}>;
@@ -613,11 +626,9 @@ export class Storage {
 	}
 
 	getRecentSessions(limit = 50): Array<{ id: string; summary: string }> {
-		const rows = this.db
-			.prepare(
-				"SELECT id, status || ' ' || model_used as summary FROM sessions ORDER BY start_time DESC LIMIT ?",
-			)
-			.all(limit) as Array<{ id: string; summary: string }>;
+		const rows = this.prep(
+			"SELECT id, status || ' ' || model_used as summary FROM sessions ORDER BY start_time DESC LIMIT ?",
+		).all(limit) as Array<{ id: string; summary: string }>;
 		return rows;
 	}
 
@@ -635,9 +646,7 @@ export class Storage {
 		tokenCount: number;
 		compressedContent: string;
 	}): void {
-		const existing = this.db
-			.prepare("SELECT id FROM compressed_entries WHERE id = ?")
-			.get(entry.id);
+		const existing = this.prep("SELECT id FROM compressed_entries WHERE id = ?").get(entry.id);
 		if (existing) return;
 		this.runInsertCompressedEntry(entry);
 	}
@@ -645,6 +654,8 @@ export class Storage {
 	// ---- Maintenance ----
 
 	close(): void {
+		for (const stmt of this.stmtCache.values()) stmt.finalize();
+		this.stmtCache.clear();
 		this.db.close();
 		this.logger.info("Database closed");
 	}

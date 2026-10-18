@@ -9,6 +9,7 @@ import type { OpenCodeAPI } from "../api/opencode";
 import type { CompressionManager } from "../compression/index";
 import type { ConfigManager } from "../config/index";
 import type { PipelineEngine } from "../pipeline/index";
+import type { Storage } from "../storage/index";
 import type { DeviceSync } from "../sync/index";
 import type { MCPServerConfig, ModelConfig, ModelEntry, Settings } from "../types";
 import type { StatusInfo, UIManager } from "../ui/index";
@@ -36,7 +37,7 @@ export interface AgentHandle {
 	pipelineData: Record<string, string | undefined>;
 	sessionId: string | null;
 	_startTime: number;
-	storage: any;
+	storage: Storage;
 
 	planner: PlannerAgent;
 	worker: WorkerAgent;
