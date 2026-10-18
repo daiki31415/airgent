@@ -13,6 +13,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { MODEL_ROLES } from "../../types";
 import { ConfigManager } from "../index";
 
 // ---------------------------------------------------------------------------
@@ -224,6 +225,41 @@ describe("ConfigManager", () => {
 		cm.load();
 
 		expect(cm.needsConfig()).toBe(false);
+	});
+
+	test("needsConfig returns true when any single role is unconfigured", () => {
+		for (const missing of MODEL_ROLES) {
+			const models: Record<string, unknown> = { fallback: [] };
+			for (const role of MODEL_ROLES) {
+				models[role] =
+					role === missing ? { provider: "", model: "" } : { provider: "openai", model: "gpt-4" };
+			}
+			writeFile(configDir, "models.json", JSON.stringify(models));
+
+			const cm = new ConfigManager({ configDir });
+			cm.load();
+
+			expect(cm.needsConfig()).toBe(true);
+		}
+	});
+
+	test("load fills a role missing from an older models.json with an empty entry", () => {
+		// Simulates a models.json written before a role existed.
+		writeFile(
+			configDir,
+			"models.json",
+			JSON.stringify({
+				planner: { provider: "openai", model: "gpt-4" },
+				fallback: [],
+			}),
+		);
+
+		const cm = new ConfigManager({ configDir });
+		const config = cm.load();
+
+		expect(config.models.planner.model).toBe("gpt-4");
+		expect(config.models.watchdog).toEqual({ provider: "", model: "" });
+		expect(cm.needsConfig()).toBe(true);
 	});
 
 	// -----------------------------------------------------------------------

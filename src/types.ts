@@ -28,14 +28,22 @@ export interface Persona {
 	rules: string[];
 }
 
-export type ModelRole = "planner" | "generate" | "compression" | "validation" | "watchdog";
+/**
+ * Single source of truth for model roles.
+ * To add a role: append it here, then fix the resulting compile errors
+ * (DEFAULT_MODELS in config/index.ts, ROLE_LABELS in commands/index.ts).
+ */
+export const MODEL_ROLES = [
+	"planner",
+	"generate",
+	"compression",
+	"validation",
+	"watchdog",
+] as const;
 
-export interface ModelConfig {
-	planner: ModelEntry;
-	generate: ModelEntry;
-	compression: ModelEntry;
-	validation: ModelEntry;
-	watchdog: ModelEntry;
+export type ModelRole = (typeof MODEL_ROLES)[number];
+
+export interface ModelConfig extends Record<ModelRole, ModelEntry> {
 	fallback: ModelEntry[];
 }
 
