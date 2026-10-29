@@ -16,6 +16,13 @@ import { MODEL_ROLES } from "../types";
 import type { StatusInfo, UIManager } from "../ui/index";
 import { sanitizeError } from "../utils/logger";
 import { smartCat } from "../utils/smart-cat";
+import {
+	commandNames,
+	formatHelp,
+	isCommandLike,
+	resolveCommand,
+	unknownCommandMessage,
+} from "./registry";
 
 // Typed as Record<ModelRole, string>: adding a role to MODEL_ROLES is a compile
 // error until its label is added here.
@@ -260,10 +267,11 @@ function handleSettingViewConfig(agent: AgentHandle): void {
 }
 
 export async function handleModelCommand(agent: AgentHandle, args: string[]): Promise<void> {
-	if (args[0] === "all") {
+	const sub = args[0]?.toLowerCase();
+	if (sub === "all") {
 		await agent.configureModelForAll();
-	} else if (args[0] && ROLE_CONFIGS.some((r) => r.key === args[0])) {
-		await agent.configureModelForRole(args[0] as ModelRole);
+	} else if (sub && ROLE_CONFIGS.some((r) => r.key === sub)) {
+		await agent.configureModelForRole(sub as ModelRole);
 	} else {
 		const m = agent.config.models;
 		for (const { key } of ROLE_CONFIGS) {
@@ -282,7 +290,7 @@ export async function handleMCPCommand(
 	args: string[],
 	_line: string,
 ): Promise<void> {
-	const sub = args[0];
+	const sub = args[0]?.toLowerCase();
 
 	if (!sub || sub === "list") {
 		try {
@@ -419,30 +427,33 @@ export async function handleMCPCommand(
 	agent.ui.log("warn", "mcp", `Unknown subcommand: ${sub}. See /mcp list`);
 }
 
+// Compile-time exhaustiveness check for the command switch in handleInput.
+function assertNever(value: never): never {
+	throw new Error(`Unhandled command: ${String(value)}`);
+}
+
 export async function handleInput(agent: AgentHandle, line: string): Promise<void> {
 	agent.ui.log("info", "user", line);
-	const lower = line.toLowerCase();
+	// Arguments keep the case the user typed; only the command word is case-insensitive.
+	const [typed = "", ...args] = line.trim().split(/\s+/);
 
-	if (lower.startsWith("/")) {
-		const [cmd, ...args] = lower.split(/\s+/);
+	if (isCommandLike(typed)) {
+		const cmd = resolveCommand(typed);
+		if (!cmd) {
+			agent.ui.log("warn", "airgent", unknownCommandMessage(typed));
+			return;
+		}
 		switch (cmd) {
 			case "/quit":
-			case "/exit":
 				await agent.stop();
 				process.exit(0);
 				return;
 			case "/help":
-				agent.ui.log(
-					"info",
-					"airgent",
-					"/quit /model /mcp /setting /status /session /compress /providers /sync /cat /copy /help /info",
-				);
+				for (const l of formatHelp()) agent.ui.log("info", "airgent", l);
 				return;
 			case "/info": {
 				const health = await agent.api.healthCheck();
-				agent.ui.notice(
-					"Commands: /quit /help /status /info /session /compress /providers /sync /cat /copy",
-				);
+				agent.ui.notice(`Commands: ${commandNames()}`);
 				agent.ui.notice("Airgent v1.0.0");
 				agent.ui.notice(
 					health.healthy
@@ -490,7 +501,7 @@ export async function handleInput(agent: AgentHandle, line: string): Promise<voi
 				}
 				return;
 			case "/sync":
-				if (args[0] === "push") {
+				if (args[0]?.toLowerCase() === "push") {
 					const url = args.slice(1).join(" ");
 					if (url) agent.deviceSync.initGit(url);
 					try {
@@ -499,7 +510,7 @@ export async function handleInput(agent: AgentHandle, line: string): Promise<voi
 					} catch (err) {
 						agent.ui.log("error", "sync", sanitizeError(err));
 					}
-				} else if (args[0] === "pull") {
+				} else if (args[0]?.toLowerCase() === "pull") {
 					try {
 						agent.deviceSync.pull();
 						agent.ui.log("info", "sync", "Pull done");
@@ -540,6 +551,8 @@ export async function handleInput(agent: AgentHandle, line: string): Promise<voi
 			case "/mcp":
 				await handleMCPCommand(agent, args, line);
 				return;
+			default:
+				return assertNever(cmd);
 		}
 	}
 
